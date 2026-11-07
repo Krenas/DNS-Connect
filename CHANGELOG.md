@@ -8,17 +8,12 @@
 - Gradle release требует внешний постоянный JKS и не допускает неявную неподписанную релизную сборку.
 - Финальный локальный прогон: 262 PASS, 0 FAIL.
 
-Примечание: APK asset и манифест latest.json должны публиковаться вместе как согласованный релизный набор. Пока Release asset не загружен, текущая сборка не доступна для обновления через приложение.
+## Публикация обновлений
 
-## Public in-app update setup
+- APK 2.1.0 перенесён из неправильно размеченного релиза `2.1.0` в канонический релиз `v2.1.0`.
+- Контрольная сумма GitHub Release совпадает с локальной сборкой: `c05e9cb8af2b4193ba2c77fb29bcb889e7588af4e61825af34c92af900c09755`.
+- Публичный `latest.json` опубликован и проверен через raw.githubusercontent.com.
+- GitHub Actions workflow завершился успешно: run `42395405220`.
+- Добавлен общий workflow `publish-latest-manifest.yml`: будущие стабильные релизы с корректным тегом и APK автоматически обновляют `latest.json` после проверки SHA-256, типа и размера файла.
 
-- Added a GitHub Actions workflow to copy the already-uploaded APK from the unprefixed tag `2.1.0` to the updater's required `v2.1.0` tag.
-- The workflow verifies exact SHA-256 and size before uploading and publishes `latest.json` only after verifying the target Release asset.
-- One manual workflow_dispatch run is required because the connector's commit did not trigger GitHub Actions automatically.
-
-## In-app update feed is live
-
-- Published `latest.json` to the public main branch.
-- Verified the canonical `v2.1.0` release contains `DNS-Connect-2.1.0-release.apk`.
-- GitHub Actions confirmed the uploaded APK digest and size before publishing the manifest.
-- Workflow run completed successfully: 42395405220.
+Примечание: фактическая установка и запуск APK через Android Package Installer не тестировались на физическом устройстве.
