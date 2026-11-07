@@ -36,9 +36,7 @@
 4. Проверяет пакет, versionCode, Android API и совпадение сертификата подписи.
 5. Передаёт APK системному установщику Android; установка требует подтверждения пользователя.
 
-GitHub Actions workflow, который проверяет asset и обновляет манифест, находится здесь: [Publish DNS Connect release](https://github.com/Krenas/DNS-Connect/actions/workflows/publish-2.1.0-update.yml).
-
-Для следующего выпуска нужно загрузить новый подписанный APK в соответствующий GitHub Release и обновить `latest.json` после проверки контрольной суммы. APK новых версий должен быть подписан тем же закрытым ключом.
+Для следующих выпусков настроен автоматический GitHub Actions workflow: [Publish latest.json after a stable release](https://github.com/Krenas/DNS-Connect/actions/workflows/publish-latest-manifest.yml). После публикации обычного стабильного релиза с тегом `vMAJOR.MINOR.PATCH` и APK с именем `DNS-Connect-MAJOR.MINOR.PATCH-release.apk` workflow проверит файл и обновит `latest.json`. Новый APK обязательно должен быть подписан тем же закрытым ключом, что и установленная версия.
 
 ## Приватность и ограничения
 
