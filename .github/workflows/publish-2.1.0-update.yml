@@ -96,13 +96,23 @@ jobs:
       - name: Confirm the public manifest
         run: |
           set -euo pipefail
-          curl --fail --silent --show-error \
-            "https://raw.githubusercontent.com/Krenas/DNS-Connect/main/latest.json" \
-            -o latest-public.json
-          jq -e '
-            .version == "2.1.0" and
-            .tag == "v2.1.0" and
-            .versionCode == 22 and
-            .sha256 == "c05e9cb8af2b4193ba2c77fb29bcb889e7588af4e61825af34c92af900c09755" and
-            .apk == "https://github.com/Krenas/DNS-Connect/releases/download/v2.1.0/DNS-Connect-2.1.0-release.apk"
-          ' latest-public.json
+          for attempt in $(seq 1 12); do
+            if curl --fail --silent --show-error \
+              "https://raw.githubusercontent.com/Krenas/DNS-Connect/main/latest.json?check=$attempt" \
+              -o latest-public.json; then
+              if jq -e '
+                .version == "2.1.0" and
+                .tag == "v2.1.0" and
+                .versionCode == 22 and
+                .sha256 == "c05e9cb8af2b4193ba2c77fb29bcb889e7588af4e61825af34c92af900c09755" and
+                .apk == "https://github.com/Krenas/DNS-Connect/releases/download/v2.1.0/DNS-Connect-2.1.0-release.apk"
+              ' latest-public.json >/dev/null; then
+                echo "The public updater manifest is valid."
+                exit 0
+              fi
+            fi
+            echo "Public CDN not ready yet (attempt $attempt/12)."
+            sleep 5
+          done
+          echo "The latest.json file did not become readable and valid." >&2
+          exit 1
