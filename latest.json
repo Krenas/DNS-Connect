@@ -1,0 +1,10 @@
+{
+  "version": "2.1.0",
+  "tag": "v2.1.0",
+  "versionCode": 22,
+  "apk": "https://github.com/Krenas/DNS-Connect/releases/download/v2.1.0/DNS-Connect-2.1.0-release.apk",
+  "sha256": "c05e9cb8af2b4193ba2c77fb29bcb889e7588af4e61825af34c92af900c09755",
+  "size": 1189944,
+  "release": "https://github.com/Krenas/DNS-Connect/releases/tag/v2.1.0",
+  "notes": "DNS Connect 2.1.0: исправлена подсветка вкладки Сеть; усилена проверка обновления; исправлены метаданные релиза."
+}
