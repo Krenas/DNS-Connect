@@ -15,3 +15,10 @@
 - Added a GitHub Actions workflow to copy the already-uploaded APK from the unprefixed tag `2.1.0` to the updater's required `v2.1.0` tag.
 - The workflow verifies exact SHA-256 and size before uploading and publishes `latest.json` only after verifying the target Release asset.
 - One manual workflow_dispatch run is required because the connector's commit did not trigger GitHub Actions automatically.
+
+## In-app update feed is live
+
+- Published `latest.json` to the public main branch.
+- Verified the canonical `v2.1.0` release contains `DNS-Connect-2.1.0-release.apk`.
+- GitHub Actions confirmed the uploaded APK digest and size before publishing the manifest.
+- Workflow run completed successfully: 42395405220.
