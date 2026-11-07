@@ -27,6 +27,7 @@ jobs:
             exit 1
           fi
           printf 'VERSION=%s.%s.%s\n' "${BASH_REMATCH[1]}" "${BASH_REMATCH[2]}" "${BASH_REMATCH[3]}" >> "$GITHUB_ENV"
+          printf 'RELEASE_TAG=%s\n' "$RELEASE_TAG" >> "$GITHUB_ENV"
 
       - name: Verify APK release asset and publish update manifest
         env:
