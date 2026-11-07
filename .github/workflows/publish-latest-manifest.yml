@@ -1,0 +1,114 @@
+name: Publish latest.json after a stable DNS Connect release
+
+on:
+  release:
+    types:
+      - published
+
+permissions:
+  contents: write
+
+concurrency:
+  group: dns-connect-latest-manifest
+  cancel-in-progress: false
+
+jobs:
+  update-manifest:
+    if: github.event.release.prerelease == false && github.event.release.draft == false
+    runs-on: ubuntu-latest
+    steps:
+      - name: Validate release tag
+        env:
+          RELEASE_TAG: ${{ github.event.release.tag_name }}
+        run: |
+          set -euo pipefail
+          if [[ ! "$RELEASE_TAG" =~ ^v([0-9]+)\.([0-9]+)\.([0-9]+)$ ]]; then
+            echo "Stable release tag must have the form vMAJOR.MINOR.PATCH." >&2
+            exit 1
+          fi
+          printf 'VERSION=%s.%s.%s\n' "${BASH_REMATCH[1]}" "${BASH_REMATCH[2]}" "${BASH_REMATCH[3]}" >> "$GITHUB_ENV"
+
+      - name: Verify APK release asset and publish update manifest
+        env:
+          GH_TOKEN: ${{ github.token }}
+          RELEASE_TAG: ${{ github.event.release.tag_name }}
+        run: |
+          set -euo pipefail
+          REPO="$GITHUB_REPOSITORY"
+          ASSET_NAME="DNS-Connect-${VERSION}-release.apk"
+          RELEASE_URL="https://github.com/$REPO/releases/tag/$RELEASE_TAG"
+          EXPECTED_APK_URL="https://github.com/$REPO/releases/download/$RELEASE_TAG/$ASSET_NAME"
+
+          gh api "repos/$REPO/releases/tags/$RELEASE_TAG" > release.json
+          jq -e --arg tag "$RELEASE_TAG" '
+            .draft == false and .prerelease == false and .tag_name == $tag
+          ' release.json >/dev/null
+
+          ASSET_COUNT="$(jq --arg name "$ASSET_NAME" '[.assets[] | select(.name == $name)] | length' release.json)"
+          if [ "$ASSET_COUNT" != "1" ]; then
+            echo "Release must contain exactly one $ASSET_NAME asset." >&2
+            exit 1
+          fi
+
+          ASSET="$(jq -c --arg name "$ASSET_NAME" '.assets[] | select(.name == $name)' release.json)"
+          STATE="$(jq -r '.state' <<< "$ASSET")"
+          CONTENT_TYPE="$(jq -r '.content_type // ""' <<< "$ASSET")"
+          ASSET_URL="$(jq -r '.browser_download_url' <<< "$ASSET")"
+          DIGEST="$(jq -r '.digest // ""' <<< "$ASSET")"
+          SIZE="$(jq -r '.size // 0' <<< "$ASSET")"
+
+          [ "$STATE" = "uploaded" ] || { echo "Release asset is not uploaded." >&2; exit 1; }
+          [ "$CONTENT_TYPE" = "application/vnd.android.package-archive" ] || [ "$CONTENT_TYPE" = "application/octet-stream" ] || {
+            echo "Release asset is not an APK content type." >&2; exit 1;
+          }
+          [ "$ASSET_URL" = "$EXPECTED_APK_URL" ] || { echo "APK URL does not match the release tag." >&2; exit 1; }
+          DIGEST="${DIGEST#sha256:}"
+          [[ "$DIGEST" =~ ^[a-fA-F0-9]{64}$ ]] || { echo "GitHub did not provide a valid SHA-256 digest." >&2; exit 1; }
+          [[ "$SIZE" =~ ^[0-9]+$ ]] && [ "$SIZE" -gt 0 ] && [ "$SIZE" -le 104857600 ] || {
+            echo "APK size is invalid or exceeds 100 MB." >&2; exit 1;
+          }
+
+          NOTES="$(jq -r '.body // ""' release.json)"
+          jq -n \
+            --arg version "$VERSION" \
+            --arg tag "$RELEASE_TAG" \
+            --arg apk "$EXPECTED_APK_URL" \
+            --arg sha256 "$DIGEST" \
+            --arg release "$RELEASE_URL" \
+            --arg notes "$NOTES" \
+            --argjson size "$SIZE" \
+            '{version:$version,tag:$tag,apk:$apk,sha256:$sha256,size:$size,release:$release,notes:$notes}' \
+            > latest.json
+
+          CONTENT="$(base64 -w 0 latest.json)"
+          EXISTING_SHA="$(gh api "repos/$REPO/contents/latest.json" --jq .sha 2>/dev/null || true)"
+          if [ -n "$EXISTING_SHA" ]; then
+            gh api --method PUT "repos/$REPO/contents/latest.json" \
+              -f message="Publish DNS Connect $VERSION update manifest" \
+              -f branch=main -f sha="$EXISTING_SHA" -f content="$CONTENT" >/dev/null
+          else
+            gh api --method PUT "repos/$REPO/contents/latest.json" \
+              -f message="Publish DNS Connect $VERSION update manifest" \
+              -f branch=main -f content="$CONTENT" >/dev/null
+          fi
+
+      - name: Confirm the public update manifest
+        run: |
+          set -euo pipefail
+          for attempt in $(seq 1 12); do
+            if curl --fail --silent --show-error \
+              "https://raw.githubusercontent.com/$GITHUB_REPOSITORY/main/latest.json?check=$attempt" \
+              -o latest-public.json; then
+              if jq -e --arg tag "$RELEASE_TAG" --arg version "$VERSION" '
+                .version == $version and .tag == $tag and
+                (.apk | startswith("https://github.com/Krenas/DNS-Connect/releases/download/" + $tag + "/")) and
+                (.sha256 | test("^[0-9a-f]{64}$")) and (.size > 0)
+              ' latest-public.json >/dev/null; then
+                echo "The public updater manifest is valid."
+                exit 0
+              fi
+            fi
+            sleep 5
+          done
+          echo "The public latest.json did not become readable and valid." >&2
+          exit 1
