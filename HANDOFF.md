@@ -67,6 +67,18 @@ publish-uploaded-release.yml публикует заранее собранны�
 - Full `Download Zip.zip` имеет 425,160,739 bytes и превышает 100 MiB raw-materialize limit текущего Files connector. Использовать отдельные platform/build-tools Project files, если full SDK bundle невозможно материализовать; корректную сборочную компоновку SDK подтвердить отдельным build/test, не считать эти два ZIP автоматически готовым SDK root.
 - Private repo `Krenas/DNS-Analytics` содержит app source 1.8.0 и старые ZIP, но не содержит 2.1.0 app tree. Для 2.3.0 использовать Project 2.1.0 source ZIP + public verified patch, не откатываться к 1.8.0.
 
+
+
+## Автоматическая схема «source ZIP → APK → GitHub Release» (2026-11-08)
+- Создан `.github/workflows/build-from-archive.yml`. Trigger: commit/push ZIP `incoming/DNS-Connect-*-source.zip` в `main`; доступен и `workflow_dispatch` для уже commit-нутого ZIP.
+- Workflow проверяет безопасность путей ZIP, запрещает symlink, вложенные JKS/keystore/password-файлы, проверяет Gradle project identity/version/versionCode, устанавливает Java 17 и Android SDK platform 35/build-tools 35, прогоняет тесты, строит signed APK, сверяет package/version/versionCode/certificate SHA-256/zipalign, пакует clean source ZIP и checksums, создаёт GitHub Release, проверяет asset digest и size, публикует Release и обновляет публичный `latest.json`. Для push-trigger исходный ZIP удаляется после успешного выполнения с `[skip ci]`.
+- Инструкция по drop-zone: `incoming/README.md`. Публичный README тоже обновлён.
+- Это и есть предполагаемая схема из описания пользователя: помощник один раз коммитит собранный source ZIP в `incoming/`; Actions сам собирает APK и публикует его, приложение читает `latest.json`. В следующих релизах помощнику не нужно локально строить/подписывать APK — только подготовить source ZIP и положить его в папку.
+- Один раз должны существовать repository Actions secrets (Settings → Secrets and variables → Actions): `ANDROID_KEYSTORE_BASE64`, `ANDROID_KEYSTORE_PASSWORD`, `ANDROID_KEY_ALIAS=dnsconnect`, `ANDROID_KEY_PASSWORD`. Workflow останавливается, если секреты отсутствуют. Значения JKS/password никогда не размещать в public repo/source archive/logs. Инструкция: https://github.com/Krenas/DNS-Connect/settings/secrets/actions.
+- Общий lint/test workflow обновлён: `.github/workflows/verify-patch-payload.yml` запускает actionlint для всех workflow при изменении workflow-файлов, затем проверяет patch payload. Успешный run: https://github.com/Krenas/DNS-Connect/actions/runs/42500505393 — actionlint SUCCESS и 13/13 патч-фрагментов PASS.
+- Был один ранний lint run, стартовавший одновременно до исправления SC2129 shellcheck warnings в двух workflows; он упал. После группировки GITHUB_ENV writes более новый run прошёл полностью. При дальнейшей проверке ориентироваться на последний successful main run.
+- Публичный Release 2.3.0 всё ещё НЕ опубликован, а latest.json остаётся 2.1.0. ZIP 2.3.0 ещё не помещён в `incoming/`, потому что текущий runtime не предоставил работающее локальное shell/Python выполнение для создания/передачи source ZIP. Поэтому Actions сборка пока не запускалась на реальном архиве.
+
 ## Проверка патча GitHub Actions (2026-11-08)
 - Добавлен строгий workflow `.github/workflows/verify-patch-payload.yml`: он проверяет длину и SHA-256 каждой из 13 частей, общий Base64 payload, gzip payload и распакованный unified diff по значениям из `manifest.json`, затем проверяет, что Git может разобрать patch.
 - Успешный строгий run: https://github.com/Krenas/DNS-Connect/actions/runs/42499262769 — 13/13 chunk PASS; общий payload, gzip и diff SHA/size PASS; artifact создан.
