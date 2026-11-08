@@ -59,7 +59,7 @@ jobs:
           unzip -p "$SOURCE_ZIP" app/build.gradle.kts > source-app.gradle.kts
           SOURCE_VERSION="$(sed -nE 's/^[[:space:]]*versionName[[:space:]]*=[[:space:]]*"([^"]+)".*/\1/p' source-app.gradle.kts | head -n1)"
 
-          BADGING="$ANDROID_HOME/build-tools/35.0.0/aapt dump badging "$APK""
+          BADGING="$("$ANDROID_HOME/build-tools/35.0.0/aapt" dump badging "$APK")"
           PACKAGE="$(sed -n "s/^package: name='\([^']*\)'.*/\1/p" <<< "$BADGING" | head -n1)"
           APK_VERSION="$(sed -n "s/^package:.*versionName='\([^']*\)'.*/\1/p" <<< "$BADGING" | head -n1)"
           VERSION_CODE="$(sed -n "s/^package:.*versionCode='\([^']*\)'.*/\1/p" <<< "$BADGING" | head -n1)"
