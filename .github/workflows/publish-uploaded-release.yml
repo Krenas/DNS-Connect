@@ -54,10 +54,10 @@ jobs:
           APK="$RUNNER_TEMP/dns-connect/DNS-Connect-$VERSION-release.apk"
           SOURCE_ZIP="$RUNNER_TEMP/dns-connect/DNS-Connect-$VERSION-source.zip"
 
-          compgen -G "incoming/apk/*.b64" >/dev/null
-          compgen -G "incoming/source/*.b64" >/dev/null
-          cat incoming/apk/*.b64 | base64 --decode > "$APK"
-          cat incoming/source/*.b64 | base64 --decode > "$SOURCE_ZIP"
+          compgen -G "incoming/apk/*.part" >/dev/null
+          compgen -G "incoming/source/*.part" >/dev/null
+          cat incoming/apk/*.part > "$APK"
+          cat incoming/source/*.part > "$SOURCE_ZIP"
 
           [ "$(wc -c < "$APK" | tr -d ' ')" = "$EXPECTED_APK_SIZE" ]
           [ "$(wc -c < "$SOURCE_ZIP" | tr -d ' ')" = "$EXPECTED_SOURCE_SIZE" ]
