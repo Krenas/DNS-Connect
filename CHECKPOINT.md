@@ -1,36 +1,35 @@
-# DNS Connect — per-turn checkpoint
+# DNS Connect — контрольная точка на 2026-11-08
 
-Последняя проверка: 2026-11-08, clean build-from-Project-Files pipeline.
+## Проверенное состояние в этом чате
+- Project Files: только `2.1.0.zip`, `Download Zip.zip`, `HB_AI_Xbox_DNS.exe`. APK/source ZIP 2.3.0 в Project Files нет.
+- Library: поиск и полный просмотр текущего каталога не обнаружили артефакты 2.3.0. Попытка сохранить source ZIP 2.1.0 в Library вернула `library_storage_limit_exceeded`; существующие файлы не удалялись.
+- Публичная ветка main: `48409545ab4b38d79b342e92b902747f248674d7` при первоначальной проверке. После исправления HANDOFF.md создан commit `190279a7ac631eff5bcc979007c0330f4f2212de`.
+- В main отсутствует Android-проект (нет app/, settings.gradle.kts, app/build.gradle.kts).
+- Releases: только дубликаты 2.1.0 с тегами `v2.1.0` и `2.1.0`; APK digest `c05e9cb8af2b4193ba2c77fb29bcb889e7588af4e61825af34c92af900c09755`, size 1,189,944.
+- latest.json публично указывает на 2.1.0 / versionCode 22.
+- 2.3.0 hashes ранее записаны, но файл и реальный build log недоступны. Нельзя публиковать 2.3.0 по этим строкам.
+- Private signing repo есть; сертификат 2.2.x+ `4dc48085b7ea161b57e6266611c5d6a28514df6f2ddfc26df14f3ac972debf90`. Не выводить keystore/password.
+- Source ZIP, извлечённый из 2.1.0.zip: SHA-256 `4a762424e131333b90c424527f443f60b2a4d8659f016566ef09d5c9bba5a112`. APK 2.1 SHA-256 `c05e9cb8af2b4193ba2c77fb29bcb889e7588af4e61825af34c92af900c09755`.
 
-## Кандидат 2.3.0
-- versionCode 24; package ru.krenas.dnsanalytics; minSdk 26; targetSdk 35.
-- APK SHA-256: 852c7c744b96dd5e855cdd4a039f4d092cdf00128e60dc5325e5b46f203d839d (459641 bytes).
-- Source ZIP SHA-256: b16cc38d657ea4ce8e8690dc060070dfbac6d086f80b7e757bc52e211118068f.
-- Release pack SHA-256: b9151cfc8c3a5c4b6f595acb546f53b594f9d29b007163863fc34918e1db1273.
-- APK signer fingerprint: 4dc48085b7ea161b57e6266611c5d6a28514df6f2ddfc26df14f3ac972debf90.
+## Как работал успешный Release 2.1.0
+Успешный workflow run: https://github.com/Krenas/DNS-Connect/actions/runs/42395405220
+Логи подтверждают: скачать готовый APK из staging Release с тегом 2.1.0 → SHA/size verify → загрузить его в canonical Release v2.1.0 → проверить digest/asset → обновить latest.json → проверить публичный raw manifest. Workflow не собирал APK из исходников.
 
-## Последние проверки
-- Clean build from source ZIP + Download Zip.zip: PASS (offline SDK prep, Java compile, D8, signing, zipalign, package).
-- DNS/logical self-tests: 115 PASS / 0 FAIL.
-- Catalogue: 17 PASS / 0 FAIL.
-- Build drivers: 11 PASS / 0 FAIL.
-- UI/resource/navigation/theme/updater audit: PASS; integrated log 263 PASS lines / 0 FAIL lines.
-- Release package integrity: 14 PASS / 0 FAIL.
-- APK v2/v3 signature and package/version identity: PASS.
-- Real handset, user network, widget/Quick Settings runtime and in-app installer: NOT TESTED.
+## Workflow GitHub
+- publish-uploaded-release.yml: временная ветка с Base64-decoded Git blobs *.part, publisher проверяет и публикует готовые APK/source; сборки нет и успешный запуск этой версии ещё не был проверен.
+- build-release.yml: Gradle build из исходников, но ожидает приложение в main и четыре Actions secrets, которые не настроены.
+- bootstrap-source.yml: импортирует уже опубликованный source ZIP/ APK из Release.
+- Старые failed runs 42461667249–42462017764 не доказывают неисправность текущего publisher; они завершались без jobs.
 
-## GitHub status (recheck before each claim)
-- Release v2.3.0: NOT PUBLISHED.
-- latest.json: still 2.1.0.
-- Public main Android source: NOT IMPORTED.
-- Publisher workflow exists and expects binary .part chunks in branch apk-upload/v2.3.0.
+## Новый чат / непрерывность
+Пользователь не должен повторно загружать исходные Project Files или вручную переносить handoff. В новом чате внутри Project DNS найти и прочитать этот файл и HANDOFF.md, затем просмотреть Project Files/Library и GitHub. Всегда сверять реальные артефакты, не полагаться на ссылки/пути из прежних runtime. После каждого существенного действия обновлять оба документа.
 
-## Continuity
-Every new chat must be created inside the same ChatGPT Project DNS. Retrieve latest APK/source/log/QA/handoff from Project Files. The user must not re-upload originals. Every substantial assistant response updates this checkpoint, HANDOFF.md and the Project Files latest artifacts.
+## Следующие реальные шаги
+1. Из 2.1 source + Project SDK archive восстановить реальный исходный проект в новом чате и аудитировать код.
+2. Реализовать пользовательские изменения как настоящий source change, повысить versionCode; сохранить старый signing key 2.2.x+.
+3. Выбрать один фактически работоспособный путь: локальная сборка и безопасный binary chunk publisher, либо GitHub Actions build при настройке Actions secrets.
+4. Опубликовать Release только после реального APK/source assets с совпадающими hashes/sizes; затем обновить latest.json.
+5. Верифицировать обнаружение, загрузку и проверку APK updater-кодом; Android installer requires user confirmation. Физическая установка на устройстве — NOT TESTED, пока не проведена.
 
-## Next action
-Transfer the verified APK/source through the binary-chunk publisher workflow. Verify Release asset digests and latest.json, then verify app sources imported into public main. Only then test live update detection/download/install on a real Android device.
-
-
-## Project Files reality check
-The current Project Files still contain the earlier 2.3.0 snapshot (APK ae521322...; source b9f565...). The latest clean rebuild files (APK 852c7c...; source b16cc3...) are verified in the current chat's local artifact folder and linked in its final response, but could not be copied into Project Files due a temporary Data Analysis file-save limit. Do not tell a new chat that these latest files are already in Project Files. The user still need not upload files: start inside Project DNS, use the existing earlier snapshot and this handoff to continue/rebuild, or complete the GitHub binary upload so GitHub becomes the source of truth.
+## Ограничения проверки
+В этом окружении не было установлено приложение на реальный телефон. DNS на Wi-Fi/mobile, Quick Settings/widgets и установка через PackageInstaller не тестировались на устройстве. PASS не присваивать таким тестам.
