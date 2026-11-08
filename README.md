@@ -14,6 +14,21 @@
 
 [Все релизы](https://github.com/Krenas/DNS-Connect/releases)
 
+## Публикация APK без ручной загрузки в Releases
+
+Для загрузки готового APK используется временная ветка `apk-upload/vMAJOR.MINOR.PATCH` и папка `incoming/`. Бинарный APK можно записать в Git-объекты GitHub через Git Data API (blob в Base64 → tree → commit → ref), не помещая его в историю основной ветки.
+
+После push GitHub Actions автоматически:
+1. Проверяет package name, versionName, versionCode, имя файла, размер и SHA-256.
+2. Сверяет сертификат подписи с постоянным ключом DNS Connect 2.2.x.
+3. Создаёт черновик Release, прикрепляет APK и проверяет данные вложения.
+4. Публикует Release и обновляет `latest.json` с прямой ссылкой, SHA-256 и размером.
+5. Удаляет временную ветку загрузки.
+
+Путь APK в upload-ветке: `incoming/DNS-Connect-VERSION-release.apk`. Ветка должна называться `apk-upload/vVERSION`. Обычный пользователь и установленное приложение не получают GitHub-токен. Приложение продолжает загружать APK только из публичных Release Assets и сверять подпись.
+
+Workflow: [Publish APK uploaded by ChatGPT](.github/workflows/publish-uploaded-apk.yml).
+
 ## Возможности
 
 - Проверка DNS-серверов UDP, DoT и DoH.
