@@ -32,20 +32,30 @@ jobs:
             cp "$file" "$RUNNER_TEMP/patch/$(printf '%03d' "$index").b64"
           done
 
-      - name: Reassemble and verify the actual patch payload
+      - name: Reassemble and verify full payload against manifest
         shell: bash
         run: |
           set -euo pipefail
+          MANIFEST=bootstrap/patch-2.3.0/manifest.json
+          EXPECTED_B64_SHA="$(jq -r '.patch.base64Sha256' "$MANIFEST")"
+          EXPECTED_GZIP_SHA="$(jq -r '.patch.gzipSha256' "$MANIFEST")"
+          EXPECTED_DIFF_SHA="$(jq -r '.patch.diffSha256' "$MANIFEST")"
+          EXPECTED_B64_LENGTH="$(jq -r '.patch.base64Length' "$MANIFEST")"
+          EXPECTED_GZIP_SIZE="$(jq -r '.patch.gzipSize' "$MANIFEST")"
+          EXPECTED_DIFF_SIZE="$(jq -r '.patch.diffSize' "$MANIFEST")"
+
           cat "$RUNNER_TEMP/patch"/{000..012}.b64 > "$RUNNER_TEMP/patch.b64"
-          test "$(wc -c < "$RUNNER_TEMP/patch.b64" | tr -d ' ')" = "38132"
-          sha256sum "$RUNNER_TEMP/patch.b64"
+          [[ "$(wc -c < "$RUNNER_TEMP/patch.b64" | tr -d ' ')" = "$EXPECTED_B64_LENGTH" ]]
+          echo "$EXPECTED_B64_SHA  $RUNNER_TEMP/patch.b64" | sha256sum --check
+
           base64 --decode "$RUNNER_TEMP/patch.b64" > "$RUNNER_TEMP/patch.gz"
-          test "$(wc -c < "$RUNNER_TEMP/patch.gz" | tr -d ' ')" = "28598"
-          sha256sum "$RUNNER_TEMP/patch.gz"
+          [[ "$(wc -c < "$RUNNER_TEMP/patch.gz" | tr -d ' ')" = "$EXPECTED_GZIP_SIZE" ]]
+          echo "$EXPECTED_GZIP_SHA  $RUNNER_TEMP/patch.gz" | sha256sum --check
           gzip -t "$RUNNER_TEMP/patch.gz"
+
           gzip --decompress --stdout "$RUNNER_TEMP/patch.gz" > "$RUNNER_TEMP/DNS-Connect-2.3.0.patch"
-          test "$(wc -c < "$RUNNER_TEMP/DNS-Connect-2.3.0.patch" | tr -d ' ')" = "119074"
-          sha256sum "$RUNNER_TEMP/DNS-Connect-2.3.0.patch"
+          [[ "$(wc -c < "$RUNNER_TEMP/DNS-Connect-2.3.0.patch" | tr -d ' ')" = "$EXPECTED_DIFF_SIZE" ]]
+          echo "$EXPECTED_DIFF_SHA  $RUNNER_TEMP/DNS-Connect-2.3.0.patch" | sha256sum --check
           git apply --numstat "$RUNNER_TEMP/DNS-Connect-2.3.0.patch" > "$RUNNER_TEMP/patch-numstat.txt"
           cat "$RUNNER_TEMP/patch-numstat.txt"
 
