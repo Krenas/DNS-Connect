@@ -1,0 +1,223 @@
+name: Publish uploaded DNS Connect APK and source
+
+on:
+  push:
+    branches:
+      - "apk-upload/**"
+
+permissions:
+  contents: write
+
+concurrency:
+  group: dns-connect-upload-{{ github.ref_name }}
+  cancel-in-progress: false
+
+jobs:
+  publish:
+    runs-on: ubuntu-latest
+    steps:
+      - name: Check out temporary upload branch
+        uses: actions/checkout@v4
+        with:
+          fetch-depth: 0
+
+      - name: Install Android build tools
+        uses: android-actions/setup-android@v3
+
+      - name: Rebuild binary files from GitHub upload chunks
+        id: files
+        shell: bash
+        run: |
+          set -euo pipefail
+          sdkmanager --install "build-tools;35.0.0"
+
+          test -s incoming/release.json
+          VERSION="$(jq -r '.version' incoming/release.json)"
+          TAG="$(jq -r '.tag' incoming/release.json)"
+          EXPECTED_PACKAGE="$(jq -r '.package' incoming/release.json)"
+          EXPECTED_VERSION_CODE="$(jq -r '.versionCode' incoming/release.json)"
+          EXPECTED_APK_SHA256="$(jq -r '.apkSha256' incoming/release.json)"
+          EXPECTED_SOURCE_SHA256="$(jq -r '.sourceSha256' incoming/release.json)"
+          EXPECTED_APK_SIZE="$(jq -r '.apkSize' incoming/release.json)"
+          EXPECTED_SOURCE_SIZE="$(jq -r '.sourceSize' incoming/release.json)"
+          NOTES="$(jq -r '.notes // ""' incoming/release.json)"
+
+          [[ "$GITHUB_REF_NAME" == "apk-upload/$TAG" ]]
+          [[ "$TAG" == "v$VERSION" ]]
+          [[ "$VERSION" =~ ^[0-9]+\.[0-9]+\.[0-9]+$ ]]
+          [ "$EXPECTED_PACKAGE" = "ru.krenas.dnsanalytics" ]
+          [[ "$EXPECTED_VERSION_CODE" =~ ^[0-9]+$ ]]
+          [[ "$EXPECTED_APK_SHA256" =~ ^[0-9a-f]{64}$ ]]
+          [[ "$EXPECTED_SOURCE_SHA256" =~ ^[0-9a-f]{64}$ ]]
+
+          mkdir -p "$RUNNER_TEMP/dns-connect"
+          APK="$RUNNER_TEMP/dns-connect/DNS-Connect-$VERSION-release.apk"
+          SOURCE_ZIP="$RUNNER_TEMP/dns-connect/DNS-Connect-$VERSION-source.zip"
+
+          compgen -G "incoming/apk/*.b64" >/dev/null
+          compgen -G "incoming/source/*.b64" >/dev/null
+          cat incoming/apk/*.b64 | base64 --decode > "$APK"
+          cat incoming/source/*.b64 | base64 --decode > "$SOURCE_ZIP"
+
+          [ "$(wc -c < "$APK" | tr -d ' ')" = "$EXPECTED_APK_SIZE" ]
+          [ "$(wc -c < "$SOURCE_ZIP" | tr -d ' ')" = "$EXPECTED_SOURCE_SIZE" ]
+          echo "$EXPECTED_APK_SHA256  $APK" | sha256sum --check
+          echo "$EXPECTED_SOURCE_SHA256  $SOURCE_ZIP" | sha256sum --check
+
+          unzip -tq "$SOURCE_ZIP" >/dev/null
+          unzip -Z1 "$SOURCE_ZIP" > "$RUNNER_TEMP/source-files.txt"
+          grep -qx 'app/build.gradle.kts' "$RUNNER_TEMP/source-files.txt"
+          grep -qx 'settings.gradle.kts' "$RUNNER_TEMP/source-files.txt"
+          grep -qx 'gradle/wrapper/gradle-wrapper.jar' "$RUNNER_TEMP/source-files.txt"
+          grep -qx 'app/src/main/AndroidManifest.xml' "$RUNNER_TEMP/source-files.txt"
+          if grep -Eq '(^/|(^|/)\.\.(/|$))' "$RUNNER_TEMP/source-files.txt"; then
+            echo "Unsafe source archive path." >&2
+            exit 1
+          fi
+          if grep -Eiq '\.(jks|keystore|p12|pfx|pem|pk8)$|(^|/)[^/]*password[^/]*$' "$RUNNER_TEMP/source-files.txt"; then
+            echo "Signing material or password file found in source archive." >&2
+            exit 1
+          fi
+
+          unzip -p "$SOURCE_ZIP" app/build.gradle.kts > "$RUNNER_TEMP/source-app.gradle.kts"
+          SOURCE_VERSION="$(sed -nE 's/^[[:space:]]*versionName[[:space:]]*=[[:space:]]*"([^"]+)".*/\1/p' "$RUNNER_TEMP/source-app.gradle.kts" | head -n1)"
+          SOURCE_CODE="$(sed -nE 's/^[[:space:]]*versionCode[[:space:]]*=[[:space:]]*([0-9]+).*/\1/p' "$RUNNER_TEMP/source-app.gradle.kts" | head -n1)"
+          SOURCE_PACKAGE="$(sed -nE 's/^[[:space:]]*applicationId[[:space:]]*=[[:space:]]*"([^"]+)".*/\1/p' "$RUNNER_TEMP/source-app.gradle.kts" | head -n1)"
+          [ "$SOURCE_VERSION" = "$VERSION" ]
+          [ "$SOURCE_CODE" = "$EXPECTED_VERSION_CODE" ]
+          [ "$SOURCE_PACKAGE" = "$EXPECTED_PACKAGE" ]
+
+          BADGING="$("$ANDROID_HOME/build-tools/35.0.0/aapt" dump badging "$APK")"
+          APK_PACKAGE="$(sed -n "s/^package: name='\([^']*\)'.*/\1/p" <<< "$BADGING" | head -n1)"
+          APK_VERSION="$(sed -n "s/^package:.*versionName='\([^']*\)'.*/\1/p" <<< "$BADGING" | head -n1)"
+          APK_VERSION_CODE="$(sed -n "s/^package:.*versionCode='\([^']*\)'.*/\1/p" <<< "$BADGING" | head -n1)"
+          [ "$APK_PACKAGE" = "$EXPECTED_PACKAGE" ]
+          [ "$APK_VERSION" = "$VERSION" ]
+          [ "$APK_VERSION_CODE" = "$EXPECTED_VERSION_CODE" ]
+
+          SIGNATURE="$("$ANDROID_HOME/build-tools/35.0.0/apksigner" verify --print-certs "$APK")"
+          CERT="$(sed -n 's/^Signer #1 certificate SHA-256 digest: *//p' <<< "$SIGNATURE" | head -n1 | tr '[:upper:]' '[:lower:]')"
+          [ "$CERT" = "4dc48085b7ea161b57e6266611c5d6a28514df6f2ddfc26df14f3ac972debf90" ]
+
+          CURRENT="$(curl -fsSL "https://raw.githubusercontent.com/$GITHUB_REPOSITORY/main/latest.json")"
+          CURRENT_VERSION="$(jq -r '.version // "0.0.0"' <<< "$CURRENT")"
+          CURRENT_CODE="$(jq -r '.versionCode // 0' <<< "$CURRENT")"
+          dpkg --compare-versions "$VERSION" gt "$CURRENT_VERSION"
+          [ "$EXPECTED_VERSION_CODE" -gt "$CURRENT_CODE" ]
+
+          {
+            echo "VERSION=$VERSION"
+            echo "TAG=$TAG"
+            echo "VERSION_CODE=$EXPECTED_VERSION_CODE"
+            echo "APK_SHA256=$EXPECTED_APK_SHA256"
+            echo "SOURCE_SHA256=$EXPECTED_SOURCE_SHA256"
+            echo "APK_SIZE=$EXPECTED_APK_SIZE"
+            echo "SOURCE_SIZE=$EXPECTED_SOURCE_SIZE"
+            echo "APK_PATH=$APK"
+            echo "SOURCE_PATH=$SOURCE_ZIP"
+            echo "RELEASE_NOTES=$NOTES"
+          } >> "$GITHUB_ENV"
+
+      - name: Import released source snapshot into main
+        shell: bash
+        run: |
+          set -euo pipefail
+          mkdir -p "$RUNNER_TEMP/dns-connect/source"
+          unzip -q "$SOURCE_PATH" -d "$RUNNER_TEMP/dns-connect/source"
+
+          git fetch origin main
+          git checkout -B main origin/main
+          rsync -a --delete \
+            --exclude='.git/' --exclude='.github/' \
+            --exclude='README.md' --exclude='HANDOFF.md' \
+            --exclude='latest.json' --exclude='SHA256SUMS.txt' \
+            "$RUNNER_TEMP/dns-connect/source/" "$GITHUB_WORKSPACE/"
+          chmod +x ./gradlew
+
+          test -s app/build.gradle.kts
+          test -s app/src/main/AndroidManifest.xml
+          git config user.name "github-actions[bot]"
+          git config user.email "41898282+github-actions[bot]@users.noreply.github.com"
+          git add -A
+          if ! git diff --cached --quiet; then
+            git commit -m "Import DNS Connect $VERSION source"
+            git push origin HEAD:main
+          fi
+
+      - name: Create draft release and upload APK, source and checksums
+        env:
+          GH_TOKEN: ${{ github.token }}
+        shell: bash
+        run: |
+          set -euo pipefail
+          if gh release view "$TAG" --repo "$GITHUB_REPOSITORY" >/dev/null 2>&1; then
+            echo "Release tag $TAG already exists. Refusing to overwrite." >&2
+            exit 1
+          fi
+
+          CHECKSUMS="$RUNNER_TEMP/dns-connect/DNS-Connect-$VERSION-SHA256SUMS.txt"
+          sha256sum "$APK_PATH" "$SOURCE_PATH" > "$CHECKSUMS"
+
+          gh release create "$TAG" --repo "$GITHUB_REPOSITORY" \
+            --target main --draft --title "DNS Connect $VERSION" \
+            --notes "$RELEASE_NOTES"
+
+          gh release upload "$TAG" "$APK_PATH" "$SOURCE_PATH" "$CHECKSUMS" \
+            --repo "$GITHUB_REPOSITORY"
+
+          gh api "repos/$GITHUB_REPOSITORY/releases/tags/$TAG" > "$RUNNER_TEMP/dns-connect/release.json"
+          jq -e --arg apk "DNS-Connect-$VERSION-release.apk" \
+            --arg src "DNS-Connect-$VERSION-source.zip" \
+            --arg ad "sha256:$APK_SHA256" --arg sd "sha256:$SOURCE_SHA256" \
+            --argjson asize "$APK_SIZE" --argjson ssize "$SOURCE_SIZE" '
+            ([.assets[] | select(.name == $apk and .state == "uploaded" and .digest == $ad and .size == $asize)] | length == 1) and
+            ([.assets[] | select(.name == $src and .state == "uploaded" and .digest == $sd and .size == $ssize)] | length == 1)
+          ' "$RUNNER_TEMP/dns-connect/release.json" >/dev/null
+
+          gh release edit "$TAG" --repo "$GITHUB_REPOSITORY" --draft=false
+
+      - name: Publish the verified in-app update manifest
+        env:
+          GH_TOKEN: ${{ github.token }}
+        shell: bash
+        run: |
+          set -euo pipefail
+          APK_URL="https://github.com/$GITHUB_REPOSITORY/releases/download/$TAG/DNS-Connect-$VERSION-release.apk"
+          SOURCE_URL="https://github.com/$GITHUB_REPOSITORY/releases/download/$TAG/DNS-Connect-$VERSION-source.zip"
+          RELEASE_URL="https://github.com/$GITHUB_REPOSITORY/releases/tag/$TAG"
+
+          jq -n \
+            --arg version "$VERSION" --arg tag "$TAG" \
+            --arg apk "$APK_URL" --arg sha256 "$APK_SHA256" \
+            --arg source "$SOURCE_URL" --arg sourceSha256 "$SOURCE_SHA256" \
+            --arg release "$RELEASE_URL" --arg notes "$RELEASE_NOTES" \
+            --argjson versionCode "$VERSION_CODE" \
+            --argjson size "$APK_SIZE" --argjson sourceSize "$SOURCE_SIZE" \
+            '{version:$version,tag:$tag,versionCode:$versionCode,apk:$apk,sha256:$sha256,size:$size,sourceArchive:$source,sourceSha256:$sourceSha256,sourceSize:$sourceSize,release:$release,notes:$notes}' \
+            > "$RUNNER_TEMP/dns-connect/latest.json"
+
+          EXISTING_SHA="$(gh api "repos/$GITHUB_REPOSITORY/contents/latest.json?ref=main" --jq .sha)"
+          CONTENT="$(base64 -w 0 "$RUNNER_TEMP/dns-connect/latest.json")"
+          gh api --method PUT "repos/$GITHUB_REPOSITORY/contents/latest.json" \
+            -f message="Publish DNS Connect $VERSION update manifest" \
+            -f branch=main -f sha="$EXISTING_SHA" -f content="$CONTENT" >/dev/null
+
+          for attempt in $(seq 1 12); do
+            if curl -fsSL "https://raw.githubusercontent.com/$GITHUB_REPOSITORY/main/latest.json?check=$attempt" -o "$RUNNER_TEMP/dns-connect/latest-public.json" && \
+              jq -e --arg v "$VERSION" --arg t "$TAG" --arg sha "$APK_SHA256" --arg src "$SOURCE_URL" \
+                '.version == $v and .tag == $t and .sha256 == $sha and .sourceArchive == $src and .versionCode > 0' \
+                "$RUNNER_TEMP/dns-connect/latest-public.json" >/dev/null; then
+              echo "Public latest.json verified."
+              exit 0
+            fi
+            sleep 5
+          done
+          echo "Public latest.json verification failed." >&2
+          exit 1
+
+      - name: Delete temporary upload branch
+        if: success()
+        env:
+          GH_TOKEN: ${{ github.token }}
+        run: |
+          gh api --method DELETE "repos/$GITHUB_REPOSITORY/git/refs/heads/$GITHUB_REF_NAME"
