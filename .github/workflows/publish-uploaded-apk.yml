@@ -58,12 +58,13 @@ jobs:
           grep -qx 'gradle/wrapper/gradle-wrapper.jar' source-files.txt
           unzip -p "$SOURCE_ZIP" app/build.gradle.kts > source-app.gradle.kts
           SOURCE_VERSION="$(sed -nE 's/^[[:space:]]*versionName[[:space:]]*=[[:space:]]*"([^"]+)".*/\1/p' source-app.gradle.kts | head -n1)"
+          SOURCE_CODE="$(sed -nE 's/^[[:space:]]*versionCode[[:space:]]*=[[:space:]]*([0-9]+).*/\1/p' source-app.gradle.kts | head -n1)"
 
           BADGING="$("$ANDROID_HOME/build-tools/35.0.0/aapt" dump badging "$APK")"
           PACKAGE="$(sed -n "s/^package: name='\([^']*\)'.*/\1/p" <<< "$BADGING" | head -n1)"
           APK_VERSION="$(sed -n "s/^package:.*versionName='\([^']*\)'.*/\1/p" <<< "$BADGING" | head -n1)"
           VERSION_CODE="$(sed -n "s/^package:.*versionCode='\([^']*\)'.*/\1/p" <<< "$BADGING" | head -n1)"
-          [ "$PACKAGE" = "$EXPECTED_PACKAGE" ] && [ "$APK_VERSION" = "$VERSION" ] && [ "$SOURCE_VERSION" = "$VERSION" ]
+          [ "$PACKAGE" = "$EXPECTED_PACKAGE" ] && [ "$APK_VERSION" = "$VERSION" ] && [ "$SOURCE_VERSION" = "$VERSION" ] && [ "$SOURCE_CODE" = "$VERSION_CODE" ]
           [[ "$VERSION_CODE" =~ ^[0-9]+$ ]] && [ "$VERSION_CODE" -gt 0 ]
           SIGNATURE="$("$ANDROID_HOME/build-tools/35.0.0/apksigner" verify --print-certs "$APK")"
           CERT="$(sed -n 's/^Signer #1 certificate SHA-256 digest: *//p' <<< "$SIGNATURE" | head -n1 | tr '[:upper:]' '[:lower:]')"
@@ -107,12 +108,12 @@ jobs:
           gh api "repos/$GITHUB_REPOSITORY/releases/tags/$TAG" > release.json
           jq -e --arg apk "DNS-Connect-$VERSION-release.apk" --arg src "DNS-Connect-$VERSION-source.zip" \
             --arg ad "sha256:$APK_SHA256" --arg sd "sha256:$SOURCE_SHA256" \
-            --argjson as "$APK_SIZE" --argjson ss "$SOURCE_SIZE" '
-            [.assets[] | select(.name == $apk and .state == "uploaded" and .digest == $ad and .size == $as)] | length == 1
+            --argjson apk_size "$APK_SIZE" --argjson source_size "$SOURCE_SIZE" '
+            [.assets[] | select(.name == $apk and .state == "uploaded" and .digest == $ad and .size == $apk_size)] | length == 1
           ' release.json >/dev/null
           jq -e --arg src "DNS-Connect-$VERSION-source.zip" --arg sd "sha256:$SOURCE_SHA256" \
             --argjson ss "$SOURCE_SIZE" '
-            [.assets[] | select(.name == $src and .state == "uploaded" and .digest == $sd and .size == $ss)] | length == 1
+            [.assets[] | select(.name == $src and .state == "uploaded" and .digest == $sd and .size == $source_size)] | length == 1
           ' release.json >/dev/null
           gh release edit "$TAG" --repo "$GITHUB_REPOSITORY" --draft=false
 
