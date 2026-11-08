@@ -1,0 +1,61 @@
+name: Verify DNS Connect 2.3.0 rebuild patch
+
+on:
+  push:
+    branches:
+      - "patch-verify/**"
+
+permissions:
+  contents: read
+
+jobs:
+  verify-patch:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+
+      - name: Verify every stored patch fragment
+        shell: bash
+        run: |
+          set -euo pipefail
+          MANIFEST=bootstrap/patch-2.3.0/manifest.json
+          COUNT="$(jq -r '.patch.chunkCount' "$MANIFEST")"
+          [[ "$COUNT" = "13" ]]
+          mkdir -p "$RUNNER_TEMP/patch"
+          for index in $(seq 0 12); do
+            file="$(printf 'bootstrap/patch-2.3.0/%03d.b64' "$index")"
+            expected_length="$(jq -r ".patch.chunks[$index].length" "$MANIFEST")"
+            expected_sha="$(jq -r ".patch.chunks[$index].sha256" "$MANIFEST")"
+            actual_length="$(wc -c < "$file" | tr -d ' ')"
+            [[ "$actual_length" = "$expected_length" ]]
+            echo "$expected_sha  $file" | sha256sum --check
+            cp "$file" "$RUNNER_TEMP/patch/$(printf '%03d' "$index").b64"
+          done
+
+      - name: Reassemble and verify the actual patch payload
+        shell: bash
+        run: |
+          set -euo pipefail
+          cat "$RUNNER_TEMP/patch"/{000..012}.b64 > "$RUNNER_TEMP/patch.b64"
+          test "$(wc -c < "$RUNNER_TEMP/patch.b64" | tr -d ' ')" = "38132"
+          echo "fc6df52a6a036bc54201b3151ae2f50499bf0361fabdc2983d7c8b792c7c34a6  $RUNNER_TEMP/patch.b64" | sha256sum --check
+          base64 --decode "$RUNNER_TEMP/patch.b64" > "$RUNNER_TEMP/patch.gz"
+          test "$(wc -c < "$RUNNER_TEMP/patch.gz" | tr -d ' ')" = "28598"
+          echo "c08066e4be234e3405baa0dc0a563b3e5dce07036a81194846169807033c4f47  $RUNNER_TEMP/patch.gz" | sha256sum --check
+          gzip -t "$RUNNER_TEMP/patch.gz"
+          gzip --decompress --stdout "$RUNNER_TEMP/patch.gz" > "$RUNNER_TEMP/DNS-Connect-2.3.0.patch"
+          test "$(wc -c < "$RUNNER_TEMP/DNS-Connect-2.3.0.patch" | tr -d ' ')" = "119074"
+          echo "0d2e4baaa30f1d336f32a6f92f293536f3b12498681f641d4870ff9c16a756d1  $RUNNER_TEMP/DNS-Connect-2.3.0.patch" | sha256sum --check
+          git apply --numstat "$RUNNER_TEMP/DNS-Connect-2.3.0.patch" > "$RUNNER_TEMP/patch-numstat.txt"
+          cat "$RUNNER_TEMP/patch-numstat.txt"
+
+      - name: Publish verified patch reconstruction as a workflow artifact
+        uses: actions/upload-artifact@v4
+        with:
+          name: dns-connect-2.3.0-verified-patch
+          path: |
+            ${{ runner.temp }}/patch.gz
+            ${{ runner.temp }}/DNS-Connect-2.3.0.patch
+            ${{ runner.temp }}/patch-numstat.txt
+          if-no-files-found: error
+          retention-days: 30
