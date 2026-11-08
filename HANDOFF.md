@@ -56,6 +56,14 @@
 publish-uploaded-release.yml публикует заранее собранные двоичные Git blobs; сам APK он не компилирует. build-release.yml может собирать Gradle-проект из main, но ожидает уже импортированные app sources и четыре Actions secrets: ANDROID_KEYSTORE_BASE64, ANDROID_KEYSTORE_PASSWORD, ANDROID_KEY_ALIAS, ANDROID_KEY_PASSWORD. Секреты не настроены. Доступные GitHub connector actions не предоставляют прямую загрузку Release assets или управление Actions secrets. Ничего из этого не заявлять готовым без фактической проверки.
 Успешная схема релиза 2.1.0: staging Release tag 2.1.0 уже содержит APK; workflow скачивает asset, проверяет SHA/размер, прикрепляет к v2.1.0, сверяет digest, обновляет latest.json. Это подтверждено run 42395405220; workflow не строил APK из исходников.
 
+
+
+## Проверка патча GitHub Actions (2026-11-08)
+- Добавлен строгий workflow `.github/workflows/verify-patch-payload.yml`: он проверяет длину и SHA-256 каждой из 13 частей, общий Base64 payload, gzip payload и распакованный unified diff по значениям из `manifest.json`, затем проверяет, что Git может разобрать patch.
+- Успешный строгий run: https://github.com/Krenas/DNS-Connect/actions/runs/42499262769 — 13/13 chunk PASS; общий payload, gzip и diff SHA/size PASS; artifact создан.
+- Успешный предварительный run с подробным numstat: https://github.com/Krenas/DNS-Connect/actions/runs/42498883523.
+- Workflow с усиленными проверками зафиксирован в main commit `5a6a4754b9bc623f5378ca62acadcf8b546485fa`. Это подтверждает сохранность patch-файлов, но не заменяет сборку Android APK и не является Release.
+
 ## Подпись и первая миграция
 Alias dnsconnect; сертификат SHA-256 4dc48085b7ea161b57e6266611c5d6a28514df6f2ddfc26df14f3ac972debf90. JKS/пароль находятся только в private DNS-Analytics/signing. 2.1.0 подписан другим сертификатом: первая миграция требует backup → uninstall 2.1.0 → install 2.3.0 → restore. Все последующие версии должны использовать этот постоянный signer. Android installer требует подтверждения пользователя.
 
