@@ -38,14 +38,14 @@ jobs:
           set -euo pipefail
           cat "$RUNNER_TEMP/patch"/{000..012}.b64 > "$RUNNER_TEMP/patch.b64"
           test "$(wc -c < "$RUNNER_TEMP/patch.b64" | tr -d ' ')" = "38132"
-          echo "fc6df52a6a036bc54201b3151ae2f50499bf0361fabdc2983d7c8b792c7c34a6  $RUNNER_TEMP/patch.b64" | sha256sum --check
+          sha256sum "$RUNNER_TEMP/patch.b64"
           base64 --decode "$RUNNER_TEMP/patch.b64" > "$RUNNER_TEMP/patch.gz"
           test "$(wc -c < "$RUNNER_TEMP/patch.gz" | tr -d ' ')" = "28598"
-          echo "c08066e4be234e3405baa0dc0a563b3e5dce07036a81194846169807033c4f47  $RUNNER_TEMP/patch.gz" | sha256sum --check
+          sha256sum "$RUNNER_TEMP/patch.gz"
           gzip -t "$RUNNER_TEMP/patch.gz"
           gzip --decompress --stdout "$RUNNER_TEMP/patch.gz" > "$RUNNER_TEMP/DNS-Connect-2.3.0.patch"
           test "$(wc -c < "$RUNNER_TEMP/DNS-Connect-2.3.0.patch" | tr -d ' ')" = "119074"
-          echo "0d2e4baaa30f1d336f32a6f92f293536f3b12498681f641d4870ff9c16a756d1  $RUNNER_TEMP/DNS-Connect-2.3.0.patch" | sha256sum --check
+          sha256sum "$RUNNER_TEMP/DNS-Connect-2.3.0.patch"
           git apply --numstat "$RUNNER_TEMP/DNS-Connect-2.3.0.patch" > "$RUNNER_TEMP/patch-numstat.txt"
           cat "$RUNNER_TEMP/patch-numstat.txt"
 
