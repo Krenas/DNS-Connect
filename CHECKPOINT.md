@@ -30,3 +30,7 @@ Every new chat must be created inside the same ChatGPT Project DNS. Retrieve lat
 
 ## Next action
 Transfer the verified APK/source through the binary-chunk publisher workflow. Verify Release asset digests and latest.json, then verify app sources imported into public main. Only then test live update detection/download/install on a real Android device.
+
+
+## Project Files reality check
+The current Project Files still contain the earlier 2.3.0 snapshot (APK ae521322...; source b9f565...). The latest clean rebuild files (APK 852c7c...; source b16cc3...) are verified in the current chat's local artifact folder and linked in its final response, but could not be copied into Project Files due a temporary Data Analysis file-save limit. Do not tell a new chat that these latest files are already in Project Files. The user still need not upload files: start inside Project DNS, use the existing earlier snapshot and this handoff to continue/rebuild, or complete the GitHub binary upload so GitHub becomes the source of truth.
