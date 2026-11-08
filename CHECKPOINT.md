@@ -37,6 +37,13 @@
 - Current GitHub connector exposes no direct Release asset upload and no Actions secret create/update tool. Do not claim publication or automatic cloud build is operational.
 
 
+
+## Дополнительные источники для сборки
+- `DNS-Connect-2.1.0-source.zip` доступен как Project-generated file `file_000000000d148210a4c2ab19680a94fc` (981,497 bytes).
+- Отдельные Project-generated SDK components: `platform-35.zip` (64,273,788 bytes) и `build-tools-35.zip` (61,958,799 bytes).
+- Полный Download Zip.zip 425,160,739 bytes больше лимита raw materialization 100 MiB текущего Files API; если его нельзя прочитать целиком, собирать SDK из этих двух components только после проверки структуры и отдельного build/test.
+- Private DNS-Analytics repo contains 1.8.0 source but no current 2.1.0 tree; retain 2.1.0 Project base as canonical.
+
 ## Проверка patch payload на GitHub Actions
 - Строгий run https://github.com/Krenas/DNS-Connect/actions/runs/42499262769 — SUCCESS.
 - 13/13 chunk hashes and sizes pass; combined Base64 SHA/size, gzip SHA/size, unified diff SHA/size all match manifest; git apply --numstat passes; workflow artifact uploaded.
