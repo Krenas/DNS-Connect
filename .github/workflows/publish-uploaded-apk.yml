@@ -1,0 +1,145 @@
+name: Publish APK uploaded by ChatGPT
+
+on:
+  push:
+    branches:
+      - "apk-upload/**"
+    paths:
+      - "incoming/*.apk"
+
+permissions:
+  contents: write
+
+concurrency:
+  group: dns-connect-apk-upload-${{ github.ref }}
+  cancel-in-progress: false
+
+jobs:
+  validate-and-publish:
+    if: startsWith(github.ref, 'refs/heads/apk-upload/')
+    runs-on: ubuntu-latest
+    steps:
+      - name: Check out uploaded branch
+        uses: actions/checkout@v4
+
+      - name: Install Android build tools
+        uses: android-actions/setup-android@v3
+
+      - name: Validate APK, version and signing certificate
+        id: validate
+        env:
+          EXPECTED_PACKAGE: ru.krenas.dnsanalytics
+          EXPECTED_CERT_SHA256: 4dc48085b7ea161b57e6266611c5d6a28514df6f2ddfc26df14f3ac972debf90
+          GH_TOKEN: ${{ github.token }}
+        shell: bash
+        run: |
+          set -euo pipefail
+          sdkmanager --install "build-tools;35.0.0"
+
+          shopt -s nullglob
+          files=(incoming/*.apk)
+          if [ "${#files[@]}" -ne 1 ]; then
+            echo "Upload branch must contain exactly one APK in incoming/." >&2
+            exit 1
+          fi
+          APK="${files[0]}"
+
+          BRANCH="${GITHUB_REF_NAME}"
+          case "$BRANCH" in
+            apk-upload/v*) TAG="${BRANCH#apk-upload/}" ;;
+            *) echo "Branch must be named apk-upload/vMAJOR.MINOR.PATCH." >&2; exit 1 ;;
+          esac
+          if [[ ! "$TAG" =~ ^v([0-9]+)\.([0-9]+)\.([0-9]+)$ ]]; then
+            echo "Upload branch must contain a stable semantic version." >&2
+            exit 1
+          fi
+          VERSION="${TAG#v}"
+          EXPECTED_NAME="DNS-Connect-${VERSION}-release.apk"
+          if [ "$(basename "$APK")" != "$EXPECTED_NAME" ]; then
+            echo "APK filename must be $EXPECTED_NAME." >&2
+            exit 1
+          fi
+
+          BADGING="$("$ANDROID_HOME/build-tools/35.0.0/aapt" dump badging "$APK")"
+          PACKAGE="$(sed -n "s/^package: name='\\([^']*\\)'.*/\\1/p" <<< "$BADGING" | head -n1)"
+          APK_VERSION="$(sed -n "s/^package:.*versionName='\\([^']*\\)'.*/\\1/p" <<< "$BADGING" | head -n1)"
+          VERSION_CODE="$(sed -n "s/^package:.*versionCode='\\([^']*\\)'.*/\\1/p" <<< "$BADGING" | head -n1)"
+          [ "$PACKAGE" = "$EXPECTED_PACKAGE" ] || { echo "Unexpected APK package: $PACKAGE" >&2; exit 1; }
+          [ "$APK_VERSION" = "$VERSION" ] || { echo "APK versionName does not match upload branch." >&2; exit 1; }
+          [[ "$VERSION_CODE" =~ ^[0-9]+$ ]] && [ "$VERSION_CODE" -gt 0 ] || { echo "Invalid APK versionCode." >&2; exit 1; }
+
+          SIGNATURE_OUTPUT="$("$ANDROID_HOME/build-tools/35.0.0/apksigner" verify --print-certs "$APK")"
+          CERT="$(sed -n 's/^Signer #1 certificate SHA-256 digest: *//p' <<< "$SIGNATURE_OUTPUT" | head -n1 | tr '[:upper:]' '[:lower:]')"
+          [ "$CERT" = "$EXPECTED_CERT_SHA256" ] || {
+            echo "APK signing certificate does not match the DNS Connect 2.2.x release key." >&2
+            exit 1
+          }
+
+          APK_SIZE="$(wc -c < "$APK" | tr -d ' ')"
+          APK_SHA256="$(sha256sum "$APK" | awk '{print $1}')"
+          [ "$APK_SIZE" -gt 0 ] && [ "$APK_SIZE" -le 104857600 ] || { echo "APK size is invalid or exceeds 100 MB." >&2; exit 1; }
+
+          curl --fail --silent --show-error \
+            "https://raw.githubusercontent.com/$GITHUB_REPOSITORY/main/latest.json" \
+            -o current-latest.json
+          CURRENT_VERSION="$(jq -r '.version // "0.0.0"' current-latest.json)"
+          if ! dpkg --compare-versions "$VERSION" gt "$CURRENT_VERSION"; then
+            echo "Uploaded APK version $VERSION is not newer than published $CURRENT_VERSION." >&2
+            exit 1
+          fi
+
+          {
+            echo "APK_PATH=$APK"
+            echo "VERSION=$VERSION"
+            echo "TAG=$TAG"
+            echo "APK_SIZE=$APK_SIZE"
+            echo "APK_SHA256=$APK_SHA256"
+          } >> "$GITHUB_ENV"
+
+      - name: Create or reuse draft release and upload APK
+        env:
+          GH_TOKEN: ${{ github.token }}
+        shell: bash
+        run: |
+          set -euo pipefail
+          if gh release view "$TAG" --repo "$GITHUB_REPOSITORY" >/dev/null 2>&1; then
+            IS_DRAFT="$(gh release view "$TAG" --repo "$GITHUB_REPOSITORY" --json isDraft --jq '.isDraft')"
+            [ "$IS_DRAFT" = "true" ] || {
+              echo "A published release already exists for $TAG; refusing to replace it." >&2
+              exit 1
+            }
+          else
+            gh release create "$TAG" \
+              --repo "$GITHUB_REPOSITORY" \
+              --target main \
+              --draft \
+              --title "DNS Connect $VERSION" \
+              --notes "DNS Connect $VERSION. APK проверен автоматической проверкой пакета, версии, подписи и SHA-256."
+          fi
+
+          gh release upload "$TAG" "$APK_PATH" --repo "$GITHUB_REPOSITORY" --clobber
+
+          gh api "repos/$GITHUB_REPOSITORY/releases/tags/$TAG" > release-check.json
+          ASSET_COUNT="$(jq --arg name "$(basename "$APK_PATH")" '[.assets[] | select(.name == $name)] | length' release-check.json)"
+          [ "$ASSET_COUNT" = "1" ] || { echo "Release must contain exactly one expected APK asset." >&2; exit 1; }
+          jq -e \
+            --arg name "$(basename "$APK_PATH")" \
+            --arg digest "sha256:$APK_SHA256" \
+            --argjson size "$APK_SIZE" \
+            '.assets[] | select(.name == $name and .state == "uploaded" and .digest == $digest and .size == $size)' \
+            release-check.json >/dev/null
+
+      - name: Publish release after verifying its APK asset
+        env:
+          GH_TOKEN: ${{ github.token }}
+        run: gh release edit "$TAG" --repo "$GITHUB_REPOSITORY" --draft=false
+
+      - name: Remove temporary upload branch
+        if: success()
+        env:
+          GH_TOKEN: ${{ github.token }}
+        shell: bash
+        run: |
+          gh api --method DELETE "repos/$GITHUB_REPOSITORY/git/refs/heads/$GITHUB_REF_NAME" || {
+            echo "Release is published; temporary branch cleanup can be done manually."
+          }
