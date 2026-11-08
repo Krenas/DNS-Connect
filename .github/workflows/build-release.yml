@@ -93,6 +93,7 @@ jobs:
       - name: Run source regression checks
         run: |
           set -euo pipefail
+          chmod +x ./gradlew
           bash tests/verify-ui.sh
           python3 tests/verify-catalogue.py
           python3 tests/verify-icons.py
