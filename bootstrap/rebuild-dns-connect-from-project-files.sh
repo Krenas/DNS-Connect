@@ -73,7 +73,7 @@ for index in $(seq 0 12); do
 done
 
 cat "$PATCH_DIR"/{000..012}.b64 > "$WORK/patch.b64"
-echo "9a77468bebbe2b5b5e5f412a125f9dec160c5f9e85e2dbd4971388c7a93233ba  $WORK/patch.b64" | sha256sum --check
+echo "fc6df52a6a036bc54201b3151ae2f50499bf0361fabdc2983d7c8b792c7c34a6  $WORK/patch.b64" | sha256sum --check
 base64 --decode "$WORK/patch.b64" > "$WORK/patch.gz"
 echo "c08066e4be234e3405baa0dc0a563b3e5dce07036a81194846169807033c4f47  $WORK/patch.gz" | sha256sum --check
 gzip -t "$WORK/patch.gz"
