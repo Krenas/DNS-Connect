@@ -61,6 +61,7 @@ jobs:
           mkdir -p "$SOURCE_ROOT"
           unzip -q "$SOURCE_ZIP" -d "$SOURCE_ROOT"
           SOURCE_VERSION="$(sed -nE 's/^[[:space:]]*versionName[[:space:]]*=[[:space:]]*"([^"]+)".*/\1/p' "$SOURCE_ROOT/app/build.gradle.kts" | head -n1)"
+          SOURCE_CODE="$(sed -nE 's/^[[:space:]]*versionCode[[:space:]]*=[[:space:]]*([0-9]+).*/\1/p' "$SOURCE_ROOT/app/build.gradle.kts" | head -n1)"
           [ "$SOURCE_VERSION" = "$VERSION" ] || {
             echo "Source archive version does not match release tag." >&2; exit 1;
           }
@@ -72,11 +73,14 @@ jobs:
           [ "$PACKAGE" = "ru.krenas.dnsanalytics" ]
           [ "$APK_VERSION" = "$VERSION" ]
           [[ "$VERSION_CODE" =~ ^[0-9]+$ ]] && [ "$VERSION_CODE" -gt 0 ]
+          [ "$SOURCE_CODE" = "$VERSION_CODE" ] || { echo "Source archive versionCode does not match the APK." >&2; exit 1; }
           SIGNATURE="$("$ANDROID_HOME/build-tools/35.0.0/apksigner" verify --print-certs "$APK")"
           CERT="$(sed -n 's/^Signer #1 certificate SHA-256 digest: *//p' <<< "$SIGNATURE" | head -n1 | tr '[:upper:]' '[:lower:]')"
           [ "$CERT" = "$EXPECTED_CERT_SHA256" ] || {
             echo "APK signing certificate does not match the preserved DNS Connect 2.2.x key." >&2; exit 1;
           }
+          CURRENT_VERSION="$(curl -fsSL "https://raw.githubusercontent.com/$GITHUB_REPOSITORY/main/latest.json" | jq -r '.version // "0.0.0"')"
+          dpkg --compare-versions "$VERSION" gt "$CURRENT_VERSION" || { echo "Release version is not newer than the current manifest." >&2; exit 1; }
           APK_SHA256="$(sha256sum "$APK" | awk '{print $1}')"
           SOURCE_SHA256="$(sha256sum "$SOURCE_ZIP" | awk '{print $1}')"
           APK_SIZE="$(wc -c < "$APK" | tr -d ' ')"
@@ -118,6 +122,7 @@ jobs:
           # Preserve repository-owned automation. The source archive contains project code,
           # Gradle wrapper, tests, README and changelog, but intentionally no .github folder.
           rsync -a --exclude='.github/' "$SOURCE_ROOT/" "$GITHUB_WORKSPACE/"
+          chmod +x ./gradlew
           jq -n \
             --arg version "$VERSION" --arg tag "$RELEASE_TAG" \
             --arg apk "$APK_URL" --arg sha256 "$APK_SHA256" \
