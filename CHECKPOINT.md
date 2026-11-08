@@ -1,15 +1,32 @@
 # DNS Connect — per-turn checkpoint
 
-Last rebuilt: 2026-11-08 13:14 UTC.
+Последняя проверка: 2026-11-08, clean build-from-Project-Files pipeline.
 
-- Version: 2.3.0 / versionCode 24.
-- Latest local rebuild APK SHA-256: d00426a2cef98d74fcf266b9f0a85d057d15687c5ca3de26c5b72bc9e4a76727 (459641 bytes). Earlier APK snapshot ae521322989b1fe0d5c7fee8c3133db63bde5b060a760bc4a8ae6954198f367d already remains attached to Project Files.
-- Latest local source ZIP SHA-256: 51628bd59d2f6ebb431871ea0170925f94d62e601b31b2f2f21c5fa2fab44e0f. Earlier Project Files source snapshot b9f5652429e24aca776083befae9bfeb287012aa0f53906712eef81f8b53b907 contains the same app code.
-- Release pack SHA-256: 0f2ff4070f990c9f5def1a63e6fa835224caed8fb5f716d22877dbe378162486.
-- Tests: 234 PASS / 0 FAIL. Release package: 14 PASS / 0 FAIL.
-- APK signature v2/v3, zipalign, applicationId and version metadata: PASS.
-- Real device, user network, widget and in-app installation: NOT TESTED.
-- Public GitHub Release v2.3.0: NOT PUBLISHED. latest.json still 2.1.0. Public main still has no Android source.
-- New chats must be created inside the same ChatGPT Project DNS, retrieve source/APK/build logs from Project Files, and never ask user to re-upload.
-- Every substantial turn must update this checkpoint, HANDOFF.md, and latest Project Files artifacts before finishing.
-- Publisher workflow is ready for Base64 chunk branch transfer. This chat's Base64 retrieval is truncated before a complete binary can be sent; do not claim release completion. Next chat should use the existing 2.3.0 source snapshot in Project Files, rebuild if needed, and continue the upload with a binary-capable GitHub upload path or shorter safe chunks.
+## Кандидат 2.3.0
+- versionCode 24; package ru.krenas.dnsanalytics; minSdk 26; targetSdk 35.
+- APK SHA-256: 852c7c744b96dd5e855cdd4a039f4d092cdf00128e60dc5325e5b46f203d839d (459641 bytes).
+- Source ZIP SHA-256: b16cc38d657ea4ce8e8690dc060070dfbac6d086f80b7e757bc52e211118068f.
+- Release pack SHA-256: b9151cfc8c3a5c4b6f595acb546f53b594f9d29b007163863fc34918e1db1273.
+- APK signer fingerprint: 4dc48085b7ea161b57e6266611c5d6a28514df6f2ddfc26df14f3ac972debf90.
+
+## Последние проверки
+- Clean build from source ZIP + Download Zip.zip: PASS (offline SDK prep, Java compile, D8, signing, zipalign, package).
+- DNS/logical self-tests: 115 PASS / 0 FAIL.
+- Catalogue: 17 PASS / 0 FAIL.
+- Build drivers: 11 PASS / 0 FAIL.
+- UI/resource/navigation/theme/updater audit: PASS; integrated log 263 PASS lines / 0 FAIL lines.
+- Release package integrity: 14 PASS / 0 FAIL.
+- APK v2/v3 signature and package/version identity: PASS.
+- Real handset, user network, widget/Quick Settings runtime and in-app installer: NOT TESTED.
+
+## GitHub status (recheck before each claim)
+- Release v2.3.0: NOT PUBLISHED.
+- latest.json: still 2.1.0.
+- Public main Android source: NOT IMPORTED.
+- Publisher workflow exists and expects binary .part chunks in branch apk-upload/v2.3.0.
+
+## Continuity
+Every new chat must be created inside the same ChatGPT Project DNS. Retrieve latest APK/source/log/QA/handoff from Project Files. The user must not re-upload originals. Every substantial assistant response updates this checkpoint, HANDOFF.md and the Project Files latest artifacts.
+
+## Next action
+Transfer the verified APK/source through the binary-chunk publisher workflow. Verify Release asset digests and latest.json, then verify app sources imported into public main. Only then test live update detection/download/install on a real Android device.
