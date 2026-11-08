@@ -58,6 +58,15 @@ publish-uploaded-release.yml публикует заранее собранны�
 
 
 
+
+
+## Дополнительно найденные входные файлы проекта (2026-11-08)
+- Отдельный Project-generated `DNS-Connect-2.1.0-source.zip`, file_id `file_000000000d148210a4c2ab19680a94fc`, размер 981,497 bytes — можно использовать напрямую вместо извлечения из outer `2.1.0.zip`.
+- Project-generated `platform-35.zip`, file_id `file_0000000032f082108d7228e22e470a95`, размер 64,273,788 bytes.
+- Project-generated `build-tools-35.zip`, file_id `file_000000005330821085260905fcfacb97`, размер 61,958,799 bytes.
+- Full `Download Zip.zip` имеет 425,160,739 bytes и превышает 100 MiB raw-materialize limit текущего Files connector. Использовать отдельные platform/build-tools Project files, если full SDK bundle невозможно материализовать; корректную сборочную компоновку SDK подтвердить отдельным build/test, не считать эти два ZIP автоматически готовым SDK root.
+- Private repo `Krenas/DNS-Analytics` содержит app source 1.8.0 и старые ZIP, но не содержит 2.1.0 app tree. Для 2.3.0 использовать Project 2.1.0 source ZIP + public verified patch, не откатываться к 1.8.0.
+
 ## Проверка патча GitHub Actions (2026-11-08)
 - Добавлен строгий workflow `.github/workflows/verify-patch-payload.yml`: он проверяет длину и SHA-256 каждой из 13 частей, общий Base64 payload, gzip payload и распакованный unified diff по значениям из `manifest.json`, затем проверяет, что Git может разобрать patch.
 - Успешный строгий run: https://github.com/Krenas/DNS-Connect/actions/runs/42499262769 — 13/13 chunk PASS; общий payload, gzip и diff SHA/size PASS; artifact создан.
