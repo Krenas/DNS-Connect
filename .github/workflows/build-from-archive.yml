@@ -152,10 +152,10 @@ jobs:
         run: |
           set -euo pipefail
           chmod +x ./gradlew
-          [[ -f tests/verify-ui.sh ]] && bash tests/verify-ui.sh
-          [[ -f tests/verify-catalogue.py ]] && python3 tests/verify-catalogue.py
-          [[ -f tests/verify-icons.py ]] && python3 tests/verify-icons.py
-          [[ -f tests/verify-previews.py ]] && python3 tests/verify-previews.py
+          if [[ -f tests/verify-ui.sh ]]; then bash tests/verify-ui.sh; fi
+          if [[ -f tests/verify-catalogue.py ]]; then python3 tests/verify-catalogue.py; fi
+          if [[ -f tests/verify-icons.py ]]; then python3 tests/verify-icons.py; fi
+          if [[ -f tests/verify-previews.py ]]; then python3 tests/verify-previews.py; fi
 
       - name: Build signed release APK
         working-directory: ${{ runner.temp }}/dns-source
@@ -202,10 +202,12 @@ jobs:
             echo "$(basename "$file")_SHA256=$(sha256sum "$file" | awk '{print $1}')" >> "$GITHUB_ENV"
             echo "$(basename "$file")_SIZE=$(wc -c < "$file" | tr -d ' ')" >> "$GITHUB_ENV"
           done
-          echo "APK_SHA256=$(sha256sum "$RUNNER_TEMP/release/DNS-Connect-$VERSION-release.apk" | awk '{print $1}')" >> "$GITHUB_ENV"
-          echo "APK_SIZE=$(wc -c < "$RUNNER_TEMP/release/DNS-Connect-$VERSION-release.apk" | tr -d ' ')" >> "$GITHUB_ENV"
-          echo "SOURCE_SHA256=$(sha256sum "$RUNNER_TEMP/release/DNS-Connect-$VERSION-source.zip" | awk '{print $1}')" >> "$GITHUB_ENV"
-          echo "SOURCE_SIZE=$(wc -c < "$RUNNER_TEMP/release/DNS-Connect-$VERSION-source.zip" | tr -d ' ')" >> "$GITHUB_ENV"
+          {
+            echo "APK_SHA256=$(sha256sum "$RUNNER_TEMP/release/DNS-Connect-$VERSION-release.apk" | awk '{print $1}')"
+            echo "APK_SIZE=$(wc -c < "$RUNNER_TEMP/release/DNS-Connect-$VERSION-release.apk" | tr -d ' ')"
+            echo "SOURCE_SHA256=$(sha256sum "$RUNNER_TEMP/release/DNS-Connect-$VERSION-source.zip" | awk '{print $1}')"
+            echo "SOURCE_SIZE=$(wc -c < "$RUNNER_TEMP/release/DNS-Connect-$VERSION-source.zip" | tr -d ' ')"
+          } >> "$GITHUB_ENV"
 
       - name: Import verified source tree into main
         shell: bash
