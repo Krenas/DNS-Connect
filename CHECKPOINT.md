@@ -94,3 +94,13 @@ Tests above are automated offline checks. They do not certify real-world DNS beh
 - One-time setup link: https://github.com/Krenas/DNS-Connect/settings/secrets/actions.
 - Latest complete regression run https://github.com/Krenas/DNS-Connect/actions/runs/42501298298 passed: actionlint across all workflows + patch chunks/payload integrity.
 - No secret values were printed or saved in public files.
+
+
+## Новая контрольная точка — 2026-11-08, продолжение
+- Сверены Releases/latest.json: публичен только 2.1.0; latest.json не переведён на 2.3.0.
+- Build-from-archive workflow, incoming drop-zone и постоянный patch 2.3.0 находятся в main; lint + проверка patch hashes завершились SUCCESS: https://github.com/Krenas/DNS-Connect/actions/runs/42501298298.
+- Материализация Project Files успешна: source ZIP 2.1.0 (981,497 bytes), platform-35.zip (64,273,788 bytes), build-tools-35.zip (61,958,799 bytes) доступны в /mnt/data/dnsconnect-project-inputs/.
+- Локальная обработка файлов не выполнена: container/Python runtime недоступны; Python/data analysis сообщил временный лимит с оценкой восстановления около 20 ч 26 мин (не гарантия). Не обходить это ограничение другим исполнителем.
+- ZIP 2.3.0 не создан/не загружен в incoming; build workflow на реальном архиве не запускался; APK 2.3.0 не опубликован; latest.json и живое обновление приложения не проверены.
+- В GitHub всё ещё отсутствуют 4 Actions secrets: ANDROID_KEYSTORE_BASE64, ANDROID_KEYSTORE_PASSWORD, ANDROID_KEY_ALIAS, ANDROID_KEY_PASSWORD. Настройка владельцем: https://github.com/Krenas/DNS-Connect/settings/secrets/actions; alias dnsconnect. Никогда не публиковать JKS/пароли.
+- Следующий шаг после восстановления разрешённой обработки файлов: применить verified 2.3.0 patch к исходному 2.1.0, собрать source ZIP, добавить в incoming/, затем Actions build/release → проверить assets/digests/latest.json → live updater. Телефонная установка остаётся NOT TESTED.
