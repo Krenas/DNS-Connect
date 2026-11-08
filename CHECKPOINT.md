@@ -48,6 +48,12 @@
 - ZIP 2.3.0 ещё не committed в incoming и реальная сборка из папки пока не запускалась (shell/Python runtime в текущем запуске вернул ClientError).
 
 
+
+## GitHub history/artifact search
+- Branches: main + temporary patch-verify branches; no source-upload branch with 2.3.0 ZIP.
+- Old APK publication runs ended in failure and uploaded no workflow artifacts. Latest good artifact is patch-verification output, not APK/source.
+- Next technical operation: materialize Project source base, apply permanent patch, create ZIP and commit it under incoming/. Current shell/Python runtime ClientError prevented that file operation; no user re-upload needed.
+
 ## Library and continuity re-check
 - Project Library was searched again. No DNS Connect 2.3.0 APK or source ZIP are stored there; only older checksums/signing metadata. Do not assume 2.3.0 artifacts can be reused from Library.
 - For every chat that might be the last: checkpoint BEFORE each long/risky step and update HANDOFF + CHECKPOINT after every substantial result. Do not wait until the final message.
