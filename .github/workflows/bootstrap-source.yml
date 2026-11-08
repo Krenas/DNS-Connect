@@ -129,8 +129,6 @@ jobs:
           } >> "$GITHUB_ENV"
 
       - name: Import source code and publish latest.json
-        env:
-          RELEASE_NOTES: ${{ github.event.release.body }}
         shell: bash
         run: |
           set -euo pipefail
