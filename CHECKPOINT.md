@@ -47,6 +47,12 @@
 - Lint workflow в main проверяет все Actions YAML через actionlint и затем патч. Последний успешный run: https://github.com/Krenas/DNS-Connect/actions/runs/42500505393 — actionlint and patch verification success.
 - ZIP 2.3.0 ещё не committed в incoming и реальная сборка из папки пока не запускалась (shell/Python runtime в текущем запуске вернул ClientError).
 
+
+## Library and continuity re-check
+- Project Library was searched again. No DNS Connect 2.3.0 APK or source ZIP are stored there; only older checksums/signing metadata. Do not assume 2.3.0 artifacts can be reused from Library.
+- For every chat that might be the last: checkpoint BEFORE each long/risky step and update HANDOFF + CHECKPOINT after every substantial result. Do not wait until the final message.
+- Never update latest.json until APK and source assets are published and SHA/size verified.
+
 ## Дополнительные источники для сборки
 - `DNS-Connect-2.1.0-source.zip` доступен как Project-generated file `file_000000000d148210a4c2ab19680a94fc` (981,497 bytes).
 - Отдельные Project-generated SDK components: `platform-35.zip` (64,273,788 bytes) и `build-tools-35.zip` (61,958,799 bytes).
