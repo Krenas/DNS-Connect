@@ -104,3 +104,15 @@ Tests above are automated offline checks. They do not certify real-world DNS beh
 - ZIP 2.3.0 не создан/не загружен в incoming; build workflow на реальном архиве не запускался; APK 2.3.0 не опубликован; latest.json и живое обновление приложения не проверены.
 - В GitHub всё ещё отсутствуют 4 Actions secrets: ANDROID_KEYSTORE_BASE64, ANDROID_KEYSTORE_PASSWORD, ANDROID_KEY_ALIAS, ANDROID_KEY_PASSWORD. Настройка владельцем: https://github.com/Krenas/DNS-Connect/settings/secrets/actions; alias dnsconnect. Никогда не публиковать JKS/пароли.
 - Следующий шаг после восстановления разрешённой обработки файлов: применить verified 2.3.0 patch к исходному 2.1.0, собрать source ZIP, добавить в incoming/, затем Actions build/release → проверить assets/digests/latest.json → live updater. Телефонная установка остаётся NOT TESTED.
+
+
+## Текущая точка после повторной проверки — 2026-11-08
+- Public main still has no app Gradle project (app/build.gradle.kts and AndroidManifest return 404). latest.json and both public Releases still point to 2.1.0 / code 22; no 2.3.0 Release or source asset exists.
+- Latest patch/workflow lint run 42501298298 SUCCESS. It validates workflow syntax and stored patch fragments only; no Android APK build was run.
+- Signing check run 42501222010 SUCCESS but reports four missing protected repo secrets: ANDROID_KEYSTORE_BASE64, ANDROID_KEYSTORE_PASSWORD, ANDROID_KEY_ALIAS, ANDROID_KEY_PASSWORD. Settings URL: https://github.com/Krenas/DNS-Connect/settings/secrets/actions.
+- Private continuity signer confirmed in Krenas/DNS-Analytics/signing: JKS + Base64 password-file path, alias dnsconnect, cert fingerprint 4dc48085b7ea161b57e6266611c5d6a28514df6f2ddfc26df14f3ac972debf90. Password content was not read or disclosed; never copy signing files to public repo.
+- Project inputs were rematerialized this run: base source ZIP file_id file_000000000d148210a4c2ab19680a94fc; outer 2.1.0.zip file_id file_00000000b52c8210b3f9387cf7fd5984; platform-35.zip file_id file_0000000032f082108d7228e22e470a95; build-tools-35.zip file_id file_000000005330821085260905fcfacb97. No user re-upload needed.
+- Source ZIP 2.3.0 was NOT created or committed to incoming: local archive processing was blocked by execution/runtime availability. Do not claim patch applied, app built, published or updater working.
+- GitHub Actions workflow has been reviewed and actionlint passed, but it has never been run with a real incoming source ZIP. It requires the four protected secrets and a validated source archive.
+- Current GitHub integration tools do not expose create/update Actions repository secrets. GitHub's REST endpoint requires Secrets: write authorization and an encrypted value. This remains a one-time owner-side setup unless an appropriate GitHub credential/permission becomes available.
+- Next: apply permanent 2.3.0 patch to Project source base; create clean ZIP; commit into incoming/; configure protected signing secrets; run actual build, verify release APK/source digests and latest.json; then verify in-app update and device installer behavior.
