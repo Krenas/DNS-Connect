@@ -38,6 +38,15 @@
 
 
 
+
+## Автоматическая публикация из ZIP — создана
+- `.github/workflows/build-from-archive.yml`: commit ZIP в `incoming/DNS-Connect-*-source.zip` в main → автозапуск Actions → Java17/Android SDK35 → tests → signed APK → verify package/version/certificate/zipalign → source ZIP + checksums → Release → verify GitHub asset SHA/size → publish Release → update latest.json → delete temporary input ZIP.
+- Manual workflow_dispatch также принимает путь к уже committed source ZIP.
+- `incoming/README.md` и публичный README объясняют порядок работы.
+- До первого запуска владелец должен один раз добавить 4 protected Actions repository secrets: ANDROID_KEYSTORE_BASE64, ANDROID_KEYSTORE_PASSWORD, ANDROID_KEY_ALIAS=dnsconnect, ANDROID_KEY_PASSWORD. Link: https://github.com/Krenas/DNS-Connect/settings/secrets/actions. Не добавлять ключ/пароль в public files.
+- Lint workflow в main проверяет все Actions YAML через actionlint и затем патч. Последний успешный run: https://github.com/Krenas/DNS-Connect/actions/runs/42500505393 — actionlint and patch verification success.
+- ZIP 2.3.0 ещё не committed в incoming и реальная сборка из папки пока не запускалась (shell/Python runtime в текущем запуске вернул ClientError).
+
 ## Дополнительные источники для сборки
 - `DNS-Connect-2.1.0-source.zip` доступен как Project-generated file `file_000000000d148210a4c2ab19680a94fc` (981,497 bytes).
 - Отдельные Project-generated SDK components: `platform-35.zip` (64,273,788 bytes) и `build-tools-35.zip` (61,958,799 bytes).
