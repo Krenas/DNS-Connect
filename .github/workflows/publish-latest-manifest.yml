@@ -58,7 +58,219 @@ jobs:
           grep -qx 'settings.gradle.kts' "$RUNNER_TEMP/source-files.txt"
           grep -qx 'gradle/wrapper/gradle-wrapper.jar' "$RUNNER_TEMP/source-files.txt"
           grep -qx 'app/src/main/AndroidManifest.xml' "$RUNNER_TEMP/source-files.txt"
-          if grep -Eiq '(^|/)([^/]*\.(jks|keystore|p12|pem|pk8)|[^/]*password[^/]*)
+          if grep -Eiq '\\.(jks|keystore|p12|pfx|pem|pk8)$|(^|/)[^/]*password[^/]*          SOURCE_ROOT="$RUNNER_TEMP/source-tree"
+          mkdir -p "$SOURCE_ROOT"
+          unzip -q "$SOURCE_ZIP" -d "$SOURCE_ROOT"
+          SOURCE_VERSION="$(sed -nE 's/^[[:space:]]*versionName[[:space:]]*=[[:space:]]*"([^"]+)".*/\1/p' "$SOURCE_ROOT/app/build.gradle.kts" | head -n1)"
+          SOURCE_CODE="$(sed -nE 's/^[[:space:]]*versionCode[[:space:]]*=[[:space:]]*([0-9]+).*/\1/p' "$SOURCE_ROOT/app/build.gradle.kts" | head -n1)"
+          SOURCE_PACKAGE="$(sed -nE 's/^[[:space:]]*applicationId[[:space:]]*=[[:space:]]*"([^"]+)".*/\1/p' "$SOURCE_ROOT/app/build.gradle.kts" | head -n1)"
+          [ "$SOURCE_PACKAGE" = "ru.krenas.dnsanalytics" ] || { echo "Source package does not match the app." >&2; exit 1; }
+          [ "$SOURCE_VERSION" = "$VERSION" ] || {
+            echo "Source archive version does not match release tag." >&2; exit 1;
+          }
+
+          BADGING="$("$ANDROID_HOME/build-tools/35.0.0/aapt" dump badging "$APK")"
+          PACKAGE="$(sed -n "s/^package: name='\([^']*\)'.*/\1/p" <<< "$BADGING" | head -n1)"
+          APK_VERSION="$(sed -n "s/^package:.*versionName='\([^']*\)'.*/\1/p" <<< "$BADGING" | head -n1)"
+          VERSION_CODE="$(sed -n "s/^package:.*versionCode='\([^']*\)'.*/\1/p" <<< "$BADGING" | head -n1)"
+          [ "$PACKAGE" = "ru.krenas.dnsanalytics" ]
+          [ "$APK_VERSION" = "$VERSION" ]
+          [[ "$VERSION_CODE" =~ ^[0-9]+$ ]] && [ "$VERSION_CODE" -gt 0 ]
+          [ "$SOURCE_CODE" = "$VERSION_CODE" ] || { echo "Source archive versionCode does not match the APK." >&2; exit 1; }
+          SIGNATURE="$("$ANDROID_HOME/build-tools/35.0.0/apksigner" verify --print-certs "$APK")"
+          CERT="$(sed -n 's/^Signer #1 certificate SHA-256 digest: *//p' <<< "$SIGNATURE" | head -n1 | tr '[:upper:]' '[:lower:]')"
+          [ "$CERT" = "$EXPECTED_CERT_SHA256" ] || {
+            echo "APK signing certificate does not match the preserved DNS Connect 2.2.x key." >&2; exit 1;
+          }
+          CURRENT_VERSION="$(curl -fsSL "https://raw.githubusercontent.com/$GITHUB_REPOSITORY/main/latest.json" | jq -r '.version // "0.0.0"')"
+          dpkg --compare-versions "$VERSION" gt "$CURRENT_VERSION" || { echo "Release version is not newer than the current manifest." >&2; exit 1; }
+          CURRENT_CODE="$(curl -fsSL "https://raw.githubusercontent.com/$GITHUB_REPOSITORY/main/latest.json" | jq -r '.versionCode // 0')"
+          [ "$VERSION_CODE" -gt "$CURRENT_CODE" ] || { echo "APK versionCode is not newer than the current manifest." >&2; exit 1; }
+          APK_SHA256="$(sha256sum "$APK" | awk '{print $1}')"
+          SOURCE_SHA256="$(sha256sum "$SOURCE_ZIP" | awk '{print $1}')"
+          APK_SIZE="$(wc -c < "$APK" | tr -d ' ')"
+          SOURCE_SIZE="$(wc -c < "$SOURCE_ZIP" | tr -d ' ')"
+          [ "$APK_SIZE" -gt 0 ] && [ "$APK_SIZE" -le 104857600 ]
+          [ "$SOURCE_SIZE" -gt 0 ] && [ "$SOURCE_SIZE" -le 52428800 ]
+
+          RELEASE_JSON="$(gh api "repos/$GITHUB_REPOSITORY/releases/tags/$RELEASE_TAG")"
+          jq -e --arg apk "$APK_NAME" --arg source "$SOURCE_NAME" \
+            --arg apk_digest "sha256:$APK_SHA256" --arg source_digest "sha256:$SOURCE_SHA256" \
+            --argjson apk_size "$APK_SIZE" --argjson source_size "$SOURCE_SIZE" '
+            [.assets[] | select(.name == $apk and .state == "uploaded" and .digest == $apk_digest and .size == $apk_size)] | length == 1
+          ' <<< "$RELEASE_JSON" >/dev/null
+          jq -e --arg source "$SOURCE_NAME" --arg source_digest "sha256:$SOURCE_SHA256" \
+            --argjson source_size "$SOURCE_SIZE" '
+            [.assets[] | select(.name == $source and .state == "uploaded" and .digest == $source_digest and .size == $source_size)] | length == 1
+          ' <<< "$RELEASE_JSON" >/dev/null
+
+          {
+            echo "VERSION=$VERSION"
+            echo "RELEASE_TAG=$RELEASE_TAG"
+            echo "VERSION_CODE=$VERSION_CODE"
+            echo "APK_SHA256=$APK_SHA256"
+            echo "SOURCE_SHA256=$SOURCE_SHA256"
+            echo "APK_SIZE=$APK_SIZE"
+            echo "SOURCE_SIZE=$SOURCE_SIZE"
+            echo "APK_URL=https://github.com/$GITHUB_REPOSITORY/releases/download/$RELEASE_TAG/$APK_NAME"
+            echo "SOURCE_URL=https://github.com/$GITHUB_REPOSITORY/releases/download/$RELEASE_TAG/$SOURCE_NAME"
+            echo "RELEASE_URL=https://github.com/$GITHUB_REPOSITORY/releases/tag/$RELEASE_TAG"
+          } >> "$GITHUB_ENV"
+          echo "SOURCE_ROOT=$SOURCE_ROOT" >> "$GITHUB_ENV"
+
+      - name: Import the exact released source snapshot into main
+        env:
+          RELEASE_NOTES: ${{ github.event.release.body }}
+        shell: bash
+        run: |
+          set -euo pipefail
+          # Preserve repository-owned automation. The source archive contains project code,
+          # Gradle wrapper, tests, README and changelog, but intentionally no .github folder.
+          rsync -a --delete --exclude='.git/' --exclude='.github/' --exclude='HANDOFF.md' --exclude='README.md' "$SOURCE_ROOT/" "$GITHUB_WORKSPACE/"
+          chmod +x ./gradlew
+          jq -n \
+            --arg version "$VERSION" --arg tag "$RELEASE_TAG" \
+            --arg apk "$APK_URL" --arg sha256 "$APK_SHA256" \
+            --arg source "$SOURCE_URL" --arg sourceSha256 "$SOURCE_SHA256" \
+            --arg release "$RELEASE_URL" --arg notes "$RELEASE_NOTES" \
+            --argjson versionCode "$VERSION_CODE" --argjson size "$APK_SIZE" --argjson sourceSize "$SOURCE_SIZE" \
+            '{version:$version,tag:$tag,versionCode:$versionCode,apk:$apk,sha256:$sha256,size:$size,sourceArchive:$source,sourceSha256:$sourceSha256,sourceSize:$sourceSize,release:$release,notes:$notes}' \
+            > latest.json
+
+          git config user.name "github-actions[bot]"
+          git config user.email "41898282+github-actions[bot]@users.noreply.github.com"
+          git add -A
+          if ! git diff --cached --quiet; then
+            git commit -m "Import DNS Connect $VERSION source and update release manifest"
+            git push origin HEAD:main
+          fi
+
+      - name: Confirm public source tree and update manifest
+        run: |
+          set -euo pipefail
+          for attempt in $(seq 1 12); do
+            if curl -fsSL "https://raw.githubusercontent.com/$GITHUB_REPOSITORY/main/latest.json?check=$attempt" -o latest-public.json && \
+               jq -e --arg version "$VERSION" --arg tag "$RELEASE_TAG" \
+                 --arg sha "$APK_SHA256" --arg source "$SOURCE_URL" \
+                 '.version == $version and .tag == $tag and .sha256 == $sha and .sourceArchive == $source and .versionCode > 0' \
+                 latest-public.json >/dev/null; then
+              test -s app/build.gradle.kts
+              test -s app/src/main/AndroidManifest.xml
+              echo "Public latest.json and imported source tree verified."
+              exit 0
+            fi
+            sleep 5
+          done
+          echo "Public manifest/source verification failed." >&2
+          exit 1
+ "$RUNNER_TEMP/source-files.txt"; then
+            echo "Signing material or password file found in the source archive." >&2; exit 1;
+          fi
+          SOURCE_ROOT="$RUNNER_TEMP/source-tree"
+          mkdir -p "$SOURCE_ROOT"
+          unzip -q "$SOURCE_ZIP" -d "$SOURCE_ROOT"
+          SOURCE_VERSION="$(sed -nE 's/^[[:space:]]*versionName[[:space:]]*=[[:space:]]*"([^"]+)".*/\1/p' "$SOURCE_ROOT/app/build.gradle.kts" | head -n1)"
+          SOURCE_CODE="$(sed -nE 's/^[[:space:]]*versionCode[[:space:]]*=[[:space:]]*([0-9]+).*/\1/p' "$SOURCE_ROOT/app/build.gradle.kts" | head -n1)"
+          [ "$SOURCE_VERSION" = "$VERSION" ] || {
+            echo "Source archive version does not match release tag." >&2; exit 1;
+          }
+
+          BADGING="$("$ANDROID_HOME/build-tools/35.0.0/aapt" dump badging "$APK")"
+          PACKAGE="$(sed -n "s/^package: name='\([^']*\)'.*/\1/p" <<< "$BADGING" | head -n1)"
+          APK_VERSION="$(sed -n "s/^package:.*versionName='\([^']*\)'.*/\1/p" <<< "$BADGING" | head -n1)"
+          VERSION_CODE="$(sed -n "s/^package:.*versionCode='\([^']*\)'.*/\1/p" <<< "$BADGING" | head -n1)"
+          [ "$PACKAGE" = "ru.krenas.dnsanalytics" ]
+          [ "$APK_VERSION" = "$VERSION" ]
+          [[ "$VERSION_CODE" =~ ^[0-9]+$ ]] && [ "$VERSION_CODE" -gt 0 ]
+          [ "$SOURCE_CODE" = "$VERSION_CODE" ] || { echo "Source archive versionCode does not match the APK." >&2; exit 1; }
+          SIGNATURE="$("$ANDROID_HOME/build-tools/35.0.0/apksigner" verify --print-certs "$APK")"
+          CERT="$(sed -n 's/^Signer #1 certificate SHA-256 digest: *//p' <<< "$SIGNATURE" | head -n1 | tr '[:upper:]' '[:lower:]')"
+          [ "$CERT" = "$EXPECTED_CERT_SHA256" ] || {
+            echo "APK signing certificate does not match the preserved DNS Connect 2.2.x key." >&2; exit 1;
+          }
+          CURRENT_VERSION="$(curl -fsSL "https://raw.githubusercontent.com/$GITHUB_REPOSITORY/main/latest.json" | jq -r '.version // "0.0.0"')"
+          dpkg --compare-versions "$VERSION" gt "$CURRENT_VERSION" || { echo "Release version is not newer than the current manifest." >&2; exit 1; }
+          APK_SHA256="$(sha256sum "$APK" | awk '{print $1}')"
+          SOURCE_SHA256="$(sha256sum "$SOURCE_ZIP" | awk '{print $1}')"
+          APK_SIZE="$(wc -c < "$APK" | tr -d ' ')"
+          SOURCE_SIZE="$(wc -c < "$SOURCE_ZIP" | tr -d ' ')"
+          [ "$APK_SIZE" -gt 0 ] && [ "$APK_SIZE" -le 104857600 ]
+          [ "$SOURCE_SIZE" -gt 0 ] && [ "$SOURCE_SIZE" -le 52428800 ]
+
+          RELEASE_JSON="$(gh api "repos/$GITHUB_REPOSITORY/releases/tags/$RELEASE_TAG")"
+          jq -e --arg apk "$APK_NAME" --arg source "$SOURCE_NAME" \
+            --arg apk_digest "sha256:$APK_SHA256" --arg source_digest "sha256:$SOURCE_SHA256" \
+            --argjson apk_size "$APK_SIZE" --argjson source_size "$SOURCE_SIZE" '
+            [.assets[] | select(.name == $apk and .state == "uploaded" and .digest == $apk_digest and .size == $apk_size)] | length == 1
+          ' <<< "$RELEASE_JSON" >/dev/null
+          jq -e --arg source "$SOURCE_NAME" --arg source_digest "sha256:$SOURCE_SHA256" \
+            --argjson source_size "$SOURCE_SIZE" '
+            [.assets[] | select(.name == $source and .state == "uploaded" and .digest == $source_digest and .size == $source_size)] | length == 1
+          ' <<< "$RELEASE_JSON" >/dev/null
+
+          {
+            echo "VERSION=$VERSION"
+            echo "RELEASE_TAG=$RELEASE_TAG"
+            echo "VERSION_CODE=$VERSION_CODE"
+            echo "APK_SHA256=$APK_SHA256"
+            echo "SOURCE_SHA256=$SOURCE_SHA256"
+            echo "APK_SIZE=$APK_SIZE"
+            echo "SOURCE_SIZE=$SOURCE_SIZE"
+            echo "APK_URL=https://github.com/$GITHUB_REPOSITORY/releases/download/$RELEASE_TAG/$APK_NAME"
+            echo "SOURCE_URL=https://github.com/$GITHUB_REPOSITORY/releases/download/$RELEASE_TAG/$SOURCE_NAME"
+            echo "RELEASE_URL=https://github.com/$GITHUB_REPOSITORY/releases/tag/$RELEASE_TAG"
+          } >> "$GITHUB_ENV"
+          echo "SOURCE_ROOT=$SOURCE_ROOT" >> "$GITHUB_ENV"
+
+      - name: Import the exact released source snapshot into main
+        env:
+          RELEASE_NOTES: ${{ github.event.release.body }}
+        shell: bash
+        run: |
+          set -euo pipefail
+          # Preserve repository-owned automation. The source archive contains project code,
+          # Gradle wrapper, tests, README and changelog, but intentionally no .github folder.
+          rsync -a --exclude='.github/' "$SOURCE_ROOT/" "$GITHUB_WORKSPACE/"
+          chmod +x ./gradlew
+          jq -n \
+            --arg version "$VERSION" --arg tag "$RELEASE_TAG" \
+            --arg apk "$APK_URL" --arg sha256 "$APK_SHA256" \
+            --arg source "$SOURCE_URL" --arg sourceSha256 "$SOURCE_SHA256" \
+            --arg release "$RELEASE_URL" --arg notes "$RELEASE_NOTES" \
+            --argjson versionCode "$VERSION_CODE" --argjson size "$APK_SIZE" --argjson sourceSize "$SOURCE_SIZE" \
+            '{version:$version,tag:$tag,versionCode:$versionCode,apk:$apk,sha256:$sha256,size:$size,sourceArchive:$source,sourceSha256:$sourceSha256,sourceSize:$sourceSize,release:$release,notes:$notes}' \
+            > latest.json
+
+          git config user.name "github-actions[bot]"
+          git config user.email "41898282+github-actions[bot]@users.noreply.github.com"
+          git add -A
+          if ! git diff --cached --quiet; then
+            git commit -m "Import DNS Connect $VERSION source and update release manifest"
+            git push origin HEAD:main
+          fi
+
+      - name: Confirm public source tree and update manifest
+        run: |
+          set -euo pipefail
+          for attempt in $(seq 1 12); do
+            if curl -fsSL "https://raw.githubusercontent.com/$GITHUB_REPOSITORY/main/latest.json?check=$attempt" -o latest-public.json && \
+               jq -e --arg version "$VERSION" --arg tag "$RELEASE_TAG" \
+                 --arg sha "$APK_SHA256" --arg source "$SOURCE_URL" \
+                 '.version == $version and .tag == $tag and .sha256 == $sha and .sourceArchive == $source and .versionCode > 0' \
+                 latest-public.json >/dev/null; then
+              test -s app/build.gradle.kts
+              test -s app/src/main/AndroidManifest.xml
+              echo "Public latest.json and imported source tree verified."
+              exit 0
+            fi
+            sleep 5
+          done
+          echo "Public manifest/source verification failed." >&2
+          exit 1
+ "$RUNNER_TEMP/source-files.txt"; then
+            echo "Signing material or password file found in source archive." >&2
+            exit 1
+          fi
           SOURCE_ROOT="$RUNNER_TEMP/source-tree"
           mkdir -p "$SOURCE_ROOT"
           unzip -q "$SOURCE_ZIP" -d "$SOURCE_ROOT"
