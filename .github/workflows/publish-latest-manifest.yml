@@ -127,7 +127,7 @@ jobs:
           set -euo pipefail
           # Preserve repository-owned automation. The source archive contains project code,
           # Gradle wrapper, tests, README and changelog, but intentionally no .github folder.
-          rsync -a --delete --exclude='.git/' --exclude='.github/' --exclude='HANDOFF.md' "$SOURCE_ROOT/" "$GITHUB_WORKSPACE/"
+          rsync -a --delete --exclude='.git/' --exclude='.github/' --exclude='HANDOFF.md' --exclude='README.md' "$SOURCE_ROOT/" "$GITHUB_WORKSPACE/"
           chmod +x ./gradlew
           jq -n \
             --arg version "$VERSION" --arg tag "$RELEASE_TAG" \
