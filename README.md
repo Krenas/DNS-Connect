@@ -2,33 +2,53 @@
 
 Android-приложение для диагностики DNS-резолверов, интернет-подключения и выбранных сервисов.
 
-- Package: ru.krenas.dnsanalytics
+- Package: `ru.krenas.dnsanalytics`
 - Android 8.0+ (API 26)
 - Публичный репозиторий: https://github.com/Krenas/DNS-Connect
-- Постоянная инструкция: HANDOFF.md
-- Контрольная точка: CHECKPOINT.md
+- Постоянная инструкция: [HANDOFF.md](HANDOFF.md)
+- Контрольная точка: [CHECKPOINT.md](CHECKPOINT.md)
 
 ## Скачать
 - Последний опубликованный релиз: https://github.com/Krenas/DNS-Connect/releases/latest
 - Все релизы: https://github.com/Krenas/DNS-Connect/releases
 - Манифест встроенного обновления: https://raw.githubusercontent.com/Krenas/DNS-Connect/main/latest.json
 
+## Автоматическая сборка из ZIP
+
+Сборка устроена по схеме «архив исходников → папка incoming → GitHub Actions → APK → GitHub Release → latest.json».
+
+1. Поместить архив с чистым Gradle-проектом в `incoming/DNS-Connect-MAJOR.MINOR.PATCH-source.zip`.
+2. Commit/push ZIP в `main`. Workflow `.github/workflows/build-from-archive.yml` запустится автоматически.
+3. GitHub Actions проверит структуру ZIP и отсутствие ключей подписи, установит Java 17 и Android SDK 35, запустит тесты и соберёт APK.
+4. Workflow проверит пакет, версию, сертификат подписи и zipalign; создаст Release, загрузит APK/source ZIP/checksums и сверит размер/SHA-256.
+5. После публикации обновится `latest.json`. DNS Connect сможет найти новую версию через кнопку проверки обновлений.
+6. После успешной публикации временный ZIP будет удалён из `incoming`.
+
+Ручной запуск тоже доступен в [GitHub Actions](https://github.com/Krenas/DNS-Connect/actions/workflows/build-from-archive.yml).
+
+### Однократная настройка подписи
+
+Перед первым build workflow владелец репозитория должен добавить в [Settings → Secrets and variables → Actions](https://github.com/Krenas/DNS-Connect/settings/secrets/actions) четыре защищённых repository secrets:
+
+- `ANDROID_KEYSTORE_BASE64` — Base64 постоянного JKS.
+- `ANDROID_KEYSTORE_PASSWORD` — пароль хранилища ключей.
+- `ANDROID_KEY_ALIAS` — `dnsconnect`.
+- `ANDROID_KEY_PASSWORD` — пароль ключа.
+
+Эти значения нельзя помещать в публичный репозиторий, исходный ZIP, коммиты или логи. Workflow остановится, если secrets отсутствуют или сертификат не совпадает с сохранённым signer.
+
+**Пользователю не нужно собирать APK или вручную загружать архив в GitHub.** Эту операцию выполняет помощник, коммитя ZIP в указанную папку проекта. После этого APK собирается и публикуется на GitHub.
+
 ## Продолжение без повторной загрузки файлов
-Создавайте новый чат внутри существующего ChatGPT Project DNS. Project Files проекта уже содержат входную базу 2.1.0.zip, Android SDK tooling Download Zip.zip и HB_AI_Xbox_DNS.exe. Новый чат должен прочитать HANDOFF.md и CHECKPOINT.md, затем использовать постоянный патч из bootstrap/patch-2.3.0/ и скрипт bootstrap/rebuild-dns-connect-from-project-files.sh. Повторно загружать эти файлы в ChatGPT не нужно.
 
-## Повторяемая сборка 2.3.0
-Публичный bootstrap/patch-2.3.0 содержит проверенные 13 фрагментов патча, manifest.json и инструкции. Rebuild driver извлекает 2.1.0 source из Project ZIP, проверяет и применяет патч, создаёт source ZIP, использует SDK archive, компилирует, прогоняет тесты и подписывает APK постоянным ключом из private DNS-Analytics/signing. Пароль подписи передаётся только через защищённую переменную среды; никогда не включайте signing files в public repo/source ZIP.
+Создавайте новый чат внутри существующего ChatGPT Project DNS. Project Files проекта уже содержат исходную базу 2.1.0.zip, отдельный `DNS-Connect-2.1.0-source.zip`, компоненты Android SDK и `HB_AI_Xbox_DNS.exe`. Новый чат должен прочитать HANDOFF.md и CHECKPOINT.md, затем использовать постоянный патч из `bootstrap/patch-2.3.0/`. Повторно загружать эти файлы не нужно.
 
-## Проверенный кандидат 2.3.0
-- Version 2.3.0, versionCode 24, package ru.krenas.dnsanalytics.
-- APK SHA-256: 9cc3bb050e4efd9fa74d161e4f2e2ec6e034b8f9ec2095f79233c178aaa1bc56.
-- Source ZIP SHA-256: cb3f80e694d81fe8b615e374260b9b2e5ffdb759660ad8e4d160bdb2c982edc2.
-- Automated QA: 266 PASS / 0 FAIL; signature v2/v3 and zipalign passed.
-- Physical Android device, real Wi-Fi/mobile DNS, widgets/Quick Settings runtime and live updater install: NOT TESTED.
+## Постоянный патч 2.3.0
 
-## Статус публикации / обновлений
-Важное отличие: Release 2.3.0 пока НЕ опубликован. latest.json всё ещё указывает на 2.1.0 и versionCode 22. Поэтому in-app updater не может обнаружить 2.3.0, пока публичный Release и манифест не будут обновлены. Не утверждайте, что кнопка обновления уже работает для 2.3.0 без проверки live manifest и release asset.
-Встроенный updater валидирует URL, версию, размер, SHA-256, package ID и сертификат APK перед открытием системного Android Installer. Установка требует подтверждения пользователя.
+Публичный `bootstrap/patch-2.3.0/` содержит 13 проверенных фрагментов, manifest и инструкции. Строгая проверка GitHub Actions сверяет каждый chunk, полный Base64, gzip и unified diff с SHA-256 в manifest.
 
-## Первая миграция и подпись
-2.1.0 подписан другим сертификатом. Для первого перехода: сделайте резервную копию данных, удалите 2.1.0, установите 2.3.0 и восстановите копию. Все дальнейшие версии должны сохранять сертификат 2.2.x+.
+## Статус публикации
+
+Кандидат 2.3.0 локально собирался и прошёл автоматические проверки в предыдущем runtime, а его постоянный patch независимо проверен GitHub Actions. Однако публичный Release 2.3.0 пока не опубликован: `latest.json` на данный момент указывает на 2.1.0. Не сообщайте, что кнопка обновления уже предлагает 2.3.0, пока новый Release и публичный manifest не будут проверены.
+
+Встроенный updater валидирует URL, версию, размер, SHA-256, package ID и сертификат APK, затем передаёт установку системному Android Installer. Android требует подтверждения установки пользователем.
