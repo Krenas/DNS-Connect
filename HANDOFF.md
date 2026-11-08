@@ -1,52 +1,53 @@
 # DNS Connect — постоянный handoff и контрольная точка
 
-## Обязательное правило на каждый ответ
-Любое сообщение может оказаться последним в чате. После каждого существенного изменения сохраняй текущее состояние, а не откладывай до завершения диалога:
-1. Обнови этот HANDOFF и CHECKPOINT.md: версия, изменённые файлы, точные хеши, пройденные/непройденные проверки, коммиты и следующий конкретный шаг.
-2. Сохрани новые APK, source ZIP, build log, QA, audit и release pack в Project Files проекта ChatGPT DNS. Не проси пользователя загружать повторно то, что уже там есть.
-3. Если источник/релиз изменились и GitHub доступен, синхронизируй main, README, handoff и release manifest.
-4. Чётко различай локальную сборку, вложения Project Files, commit в GitHub, опубликованный GitHub Release и тест на устройстве. Не выдавай одно за другое.
+## Правило каждого ответа
+Любое сообщение может быть последним в чате. После каждого существенного действия обновлять этот файл и CHECKPOINT.md; сохранять новые APK/source ZIP/QA/build log/audit/release pack в Project Files проекта ChatGPT DNS; синхронизировать этот GitHub handoff, если доступен. Не просить пользователя повторно прикреплять файлы, которые уже есть в Project Files. Чётко различать локальную сборку, Project Files, GitHub commit, опубликованный Release и тест на устройстве.
 
-## Как начать новый чат без отправки файлов
-Новый чат нужно создавать ВНУТРИ существующего ChatGPT Project «DNS». Project Files доступны чатам этого проекта. Новый чат должен сам найти самый новый DNS-Connect-*-source.zip, DNS-Connect-*-release.apk, QA и CHECKPOINT.md через Files/Project Files. Оригиналы 2.1.0.zip, Download Zip.zip и HB_AI_Xbox_DNS.exe также находятся там. Пользователь не должен их пересылать.
-Важно: Download Zip.zip — архив инструментов Android SDK/Gradle, а не исходники Android-приложения.
+## Новый чат без повторной загрузки
+Создавать новый чат внутри существующего ChatGPT Project «DNS». Project Files видны чатам внутри этого проекта. Новый чат должен сам найти последние DNS-Connect-2.3.0-source.zip, DNS-Connect-2.3.0-release.apk, QA, logs, CHECKPOINT.md, а также оригинальные 2.1.0.zip, Download Zip.zip и HB_AI_Xbox_DNS.exe. Пользователь ничего не пересылает. Download Zip.zip — Android SDK/Gradle tooling archive, не app source.
 
-## Постоянные ссылки
-- Публичный проект: https://github.com/Krenas/DNS-Connect
+## Ссылки
+- Public repo: https://github.com/Krenas/DNS-Connect
 - Releases: https://github.com/Krenas/DNS-Connect/releases
-- latest.json: https://raw.githubusercontent.com/Krenas/DNS-Connect/main/latest.json
-- Этот handoff: https://github.com/Krenas/DNS-Connect/blob/main/HANDOFF.md
-- Приватное хранилище signing key: https://github.com/Krenas/DNS-Analytics/tree/main/signing
+- Update manifest: https://raw.githubusercontent.com/Krenas/DNS-Connect/main/latest.json
+- This handoff: https://github.com/Krenas/DNS-Connect/blob/main/HANDOFF.md
+- Private signing store: https://github.com/Krenas/DNS-Analytics/tree/main/signing
+- Confirmed prior 2.1.0 uploader run: https://github.com/Krenas/DNS-Connect/actions/runs/42395405220
 
-## Точный статус на 2026-11-08
-- Кандидат DNS Connect 2.3.0, versionCode=24, package ru.krenas.dnsanalytics, minSdk 26, targetSdk 35.
-- Latest verified local rebuild in this chat: APK SHA-256 d00426a2cef98d74fcf266b9f0a85d057d15687c5ca3de26c5b72bc9e4a76727; the older 2.3.0 snapshot already attached to Project Files has APK SHA-256 ae521322989b1fe0d5c7fee8c3133db63bde5b060a760bc4a8ae6954198f367d.
-- APK size: 459641 bytes.
-- Latest verified local source ZIP in this chat: SHA-256 51628bd59d2f6ebb431871ea0170925f94d62e601b31b2f2f21c5fa2fab44e0f. The earlier source snapshot already attached to Project Files has SHA-256 b9f5652429e24aca776083befae9bfeb287012aa0f53906712eef81f8b53b907 and the same app code; its documentation is older.
-- Release pack SHA-256: 0f2ff4070f990c9f5def1a63e6fa835224caed8fb5f716d22877dbe378162486.
-- APK signing certificate SHA-256: 4dc48085b7ea161b57e6266611c5d6a28514df6f2ddfc26df14f3ac972debf90 (same key family as 2.2.x+; private key must never enter public repo).
-- Fresh build-local.sh: 234 PASS / 0 FAIL across logic, catalogue, icons, previews, UI, navigation, theme and updater checks.
-- package-release.sh: 14 PASS / 0 FAIL.
-- Java compile, D8, APK v2/v3 signature, zipalign, metadata: PASS.
-- Physical Android device, real-life network and real update install: NOT TESTED.
-- Public latest.json still reports 2.1.0. Public Release v2.3.0 does not yet exist. Public main/app/build.gradle.kts is not present. 2.3.0 is not a published GitHub release. The older 2.3.0 source/APK snapshot is already in this Project's Files; the refreshed d004/5162 build is a local artifact from the latest chat and should be used via its current sandbox links or rebuilt from that existing project source.
+## Текущий проверенный кандидат 2.3.0
+- Version 2.3.0, versionCode 24, package ru.krenas.dnsanalytics, minSdk 26, targetSdk 35.
+- APK SHA-256: 852c7c744b96dd5e855cdd4a039f4d092cdf00128e60dc5325e5b46f203d839d, size 459641 bytes.
+- Source ZIP SHA-256: b16cc38d657ea4ce8e8690dc060070dfbac6d086f80b7e757bc52e211118068f.
+- Release pack SHA-256: b9151cfc8c3a5c4b6f595acb546f53b594f9d29b007163863fc34918e1db1273.
+- APK certificate SHA-256: 4dc48085b7ea161b57e6266611c5d6a28514df6f2ddfc26df14f3ac972debf90 (preserved 2.2.x+ signer).
+- Clean build from source ZIP + user SDK ZIP passed. Android SDK 35 was extracted offline; Java compile/D8/sign/zipalign passed.
+- DNS/logical tests: 115 PASS / 0 FAIL. DNS catalogue: 17 PASS / 0 FAIL. Build driver regression tests: 11 PASS / 0 FAIL. UI/resources/navigation/theme/updater audit passed. Complete build log has 263 PASS lines and 0 FAIL lines (includes repeated icon/widget audits). Release package validation: 14 PASS / 0 FAIL.
+- Physical Android device, real Wi-Fi/mobile DNS coverage, widget/Quick Settings runtime and live in-app update installation: NOT TESTED.
+- Public v2.3.0 Release is NOT published yet. Public latest.json still points to 2.1.0; public main still lacks app/build.gradle.kts. Thus 2.3.0 is a tested local + Project Files candidate, not a live public update.
 
-## Изменения 2.3.0
-Перестроена логика экранов вокруг обзора/единого действия. Инструменты и настройки разделены на самостоятельные меню/окна. Добавлены 20 акцентных цветов, выделение выбранных категорий, тёмная нижняя системная панель, независимые DNS-purpose filters, отдельный выбор сервисов, сняты ограничения на общее количество выбранных DNS. Проверки работают потоком, одновременно максимум 8 сетевых задач. Updater проверяет версию, ожидаемый GitHub URL, размер, SHA-256, application ID и сертификат до открытия системного установщика.
+## Основные изменения 2.3.0
+Home overview and primary action redesigned; tools are in a separate menu and settings in a distinct sheet. Twenty accent colours, selected-category fill, dark navigation bar, independent DNS purpose filters, separate service selection. No total selected-DNS limit; at most eight network tasks are concurrently active and results stream as checks finish. Updater verifies manifest, exact public GitHub Release URL, version, size, SHA-256, package ID and certificate before opening Android Installer. Android requires user confirmation.
 
-## Проверенный метод GitHub публикации 2.1.0
-История успешного run: https://github.com/Krenas/DNS-Connect/actions/runs/42395405220. Workflow скачал готовый APK из временного Release, сверил hash/size, прикрепил asset к публичному тегу v2.1.0, проверил asset и затем обновил latest.json. Это подтверждённый пример.
+## Повторяемая сборка из Project Files
+Source ZIP contains four drivers:
+- prepare-android-sdk.sh extracts build-tools 35 and platform 35 from the SDK archive without downloading SDK components from the network.
+- build-local.sh reads versionName/versionCode/applicationId from app/build.gradle.kts; compiles, tests, creates DEX, aligns and signs.
+- package-release.sh creates versioned source ZIP, latest.json, SHA256SUMS and release pack; version is dynamic.
+- build-from-project-files.sh is the single entry point: validates/extracts source ZIP, prepares SDK from Download Zip.zip, compiles/signs, packages and copies outputs.
 
-## Текущий binary publisher workflow
-В public repo: .github/workflows/publish-uploaded-release.yml. Он слушает push ветки apk-upload/**. Ветка с тегом apk-upload/v2.3.0 должна содержать:
+Example for an assistant runtime where Project Files are materialized:
+DNS_RELEASE_KEYSTORE_PASSWORD is injected as a secure environment variable; never print/save it. The JKS remains outside source ZIP.
+./build-from-project-files.sh DNS-Connect-2.3.0-source.zip 'Download Zip.zip' /secure/path/signing-key.jks /output/dns-connect
+
+The key exists in private Krenas/DNS-Analytics/signing. It is not configured as a GitHub Actions Secret. A future cloud-only Actions build needs a secure authenticated route to the private key or an Actions secret; don't claim that is configured.
+
+## GitHub release publisher
+Public workflow: .github/workflows/publish-uploaded-release.yml. It listens for push to branch apk-upload/**. For v2.3.0, push:
 - incoming/release.json
-- incoming/apk/000.b64, 001.b64, ... — отсортированные Base64 text chunks APK
-- incoming/source/000.b64, 001.b64, ... — Base64 text chunks source ZIP
+- ordered binary blobs incoming/apk/000.part, 001.part, ... (binary chunks created from Base64 API input)
+- ordered binary blobs incoming/source/000.part, 001.part, ...
 
-Workflow восстанавливает файлы, проверяет размеры/SHA-256, package/version/versionCode, signing fingerprint и source archive, импортирует source в main, создаёт Release, прикрепляет APK/source/SHA256SUMS и обновляет latest.json только после проверки release assets. Workflow подготовлен и формат Base64 восстановлен, но ветка ещё не отправлена: GitHub connector в этом чате обрезает длинные Base64-ответы до завершения файла. Поэтому не заявлять, что 2.3.0 уже опубликован.
+Important: GitHub Git Data API create_blob(encoding=base64) stores decoded binary in the repository. Therefore workflow concatenates .part files directly; it must not Base64-decode them again. Workflow validates sizes, SHA-256, package/version/versionCode, signer and source archive, imports source into main, creates the Release, attaches APK/source/SHA256SUMS, then updates latest.json. The branch transfer and actual Release are still pending. Do not claim success until public Release asset digests and latest.json are verified.
 
-## Подпись и первая установка
-2.1.0 использовал другой сертификат. Переход с 2.1.0 на 2.3.0 требует backup export, uninstall, install новой версии, restore backup. Будущие релизы обязаны сохранять 2.2.x+ signing key. Ключ хранится в приватном DNS-Analytics/signing. Не публиковать JKS, Base64 keystore или password.
-
-## Следующий обязательный шаг
-В новом или текущем чате получить свежие 2.3.0 APK/source из Project Files и завершить перенос в public GitHub Release через workflow выше. После публикации проверить v2.3.0 assets с верными digest/size; source code в main; public latest.json version 2.3.0 / versionCode 24. Затем провести реальную проверку на устройстве. Каждый ответ завершать актуализацией checkpoint и Project Files.
+## First install and signature
+2.1.0 has a different signer. To migrate: export app backup, uninstall 2.1.0, install 2.3.0, restore backup. All later releases must retain the saved 2.2.x+ key. Never create a new signing key for an update.
