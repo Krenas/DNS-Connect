@@ -88,3 +88,9 @@ Workflow downloads APK from a pre-existing staging Release with tag 2.1.0, valid
 
 ## Limits
 Tests above are automated offline checks. They do not certify real-world DNS behavior on the user's network, physical UI appearance, widget runtime, or real Android installer success.
+
+## Signing secrets check
+- Safe check workflow run https://github.com/Krenas/DNS-Connect/actions/runs/42501222010 succeeded; it reports that all four repository secrets are missing: ANDROID_KEYSTORE_BASE64, ANDROID_KEYSTORE_PASSWORD, ANDROID_KEY_ALIAS, ANDROID_KEY_PASSWORD.
+- One-time setup link: https://github.com/Krenas/DNS-Connect/settings/secrets/actions.
+- Latest complete regression run https://github.com/Krenas/DNS-Connect/actions/runs/42501298298 passed: actionlint across all workflows + patch chunks/payload integrity.
+- No secret values were printed or saved in public files.
