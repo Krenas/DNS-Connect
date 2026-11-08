@@ -20,16 +20,16 @@
 
 ## Точный статус на 2026-11-08
 - Кандидат DNS Connect 2.3.0, versionCode=24, package ru.krenas.dnsanalytics, minSdk 26, targetSdk 35.
-- APK SHA-256: d00426a2cef98d74fcf266b9f0a85d057d15687c5ca3de26c5b72bc9e4a76727.
+- Latest verified local rebuild in this chat: APK SHA-256 d00426a2cef98d74fcf266b9f0a85d057d15687c5ca3de26c5b72bc9e4a76727; the older 2.3.0 snapshot already attached to Project Files has APK SHA-256 ae521322989b1fe0d5c7fee8c3133db63bde5b060a760bc4a8ae6954198f367d.
 - APK size: 459641 bytes.
-- Source ZIP SHA-256: 51628bd59d2f6ebb431871ea0170925f94d62e601b31b2f2f21c5fa2fab44e0f.
+- Latest verified local source ZIP in this chat: SHA-256 51628bd59d2f6ebb431871ea0170925f94d62e601b31b2f2f21c5fa2fab44e0f. The earlier source snapshot already attached to Project Files has SHA-256 b9f5652429e24aca776083befae9bfeb287012aa0f53906712eef81f8b53b907 and the same app code; its documentation is older.
 - Release pack SHA-256: 0f2ff4070f990c9f5def1a63e6fa835224caed8fb5f716d22877dbe378162486.
 - APK signing certificate SHA-256: 4dc48085b7ea161b57e6266611c5d6a28514df6f2ddfc26df14f3ac972debf90 (same key family as 2.2.x+; private key must never enter public repo).
 - Fresh build-local.sh: 234 PASS / 0 FAIL across logic, catalogue, icons, previews, UI, navigation, theme and updater checks.
 - package-release.sh: 14 PASS / 0 FAIL.
 - Java compile, D8, APK v2/v3 signature, zipalign, metadata: PASS.
 - Physical Android device, real-life network and real update install: NOT TESTED.
-- Public latest.json still reports 2.1.0. Public Release v2.3.0 does not yet exist. Public main/app/build.gradle.kts is not present. 2.3.0 is a locally rebuilt candidate and Project Files attachment, not a published GitHub release.
+- Public latest.json still reports 2.1.0. Public Release v2.3.0 does not yet exist. Public main/app/build.gradle.kts is not present. 2.3.0 is not a published GitHub release. The older 2.3.0 source/APK snapshot is already in this Project's Files; the refreshed d004/5162 build is a local artifact from the latest chat and should be used via its current sandbox links or rebuilt from that existing project source.
 
 ## Изменения 2.3.0
 Перестроена логика экранов вокруг обзора/единого действия. Инструменты и настройки разделены на самостоятельные меню/окна. Добавлены 20 акцентных цветов, выделение выбранных категорий, тёмная нижняя системная панель, независимые DNS-purpose filters, отдельный выбор сервисов, сняты ограничения на общее количество выбранных DNS. Проверки работают потоком, одновременно максимум 8 сетевых задач. Updater проверяет версию, ожидаемый GitHub URL, размер, SHA-256, application ID и сертификат до открытия системного установщика.
@@ -43,7 +43,7 @@
 - incoming/apk/000.b64, 001.b64, ... — отсортированные Base64 text chunks APK
 - incoming/source/000.b64, 001.b64, ... — Base64 text chunks source ZIP
 
-Workflow восстанавливает файлы, проверяет размеры/SHA-256, package/version/versionCode, signing fingerprint и source archive, импортирует source в main, создаёт Release, прикрепляет APK/source/SHA256SUMS и обновляет latest.json только после проверки release assets. Не считать публикацию завершённой, пока public endpoints не подтвердили assets и манифест.
+Workflow восстанавливает файлы, проверяет размеры/SHA-256, package/version/versionCode, signing fingerprint и source archive, импортирует source в main, создаёт Release, прикрепляет APK/source/SHA256SUMS и обновляет latest.json только после проверки release assets. Workflow подготовлен и формат Base64 восстановлен, но ветка ещё не отправлена: GitHub connector в этом чате обрезает длинные Base64-ответы до завершения файла. Поэтому не заявлять, что 2.3.0 уже опубликован.
 
 ## Подпись и первая установка
 2.1.0 использовал другой сертификат. Переход с 2.1.0 на 2.3.0 требует backup export, uninstall, install новой версии, restore backup. Будущие релизы обязаны сохранять 2.2.x+ signing key. Ключ хранится в приватном DNS-Analytics/signing. Не публиковать JKS, Base64 keystore или password.
