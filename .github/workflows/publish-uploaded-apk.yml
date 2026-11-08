@@ -60,7 +60,7 @@ jobs:
 
           unzip -tq "$SOURCE_ZIP" >/dev/null
           unzip -Z1 "$SOURCE_ZIP" > "$RUNNER_TEMP/source-files.txt"
-          if grep -Eq '(^/|(^|/)\.\.(/|$))' source-files.txt; then
+          if grep -Eq '(^/|(^|/)\.\.(/|$))' "$RUNNER_TEMP/source-files.txt"; then
             echo "Unsafe path found in source archive." >&2
             exit 1
           fi
