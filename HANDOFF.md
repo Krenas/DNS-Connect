@@ -114,3 +114,10 @@ Alias dnsconnect; сертификат SHA-256 4dc48085b7ea161b57e6266611c5d6a28
 5. Не смешивать локальную сборку с фактом публичной публикации.
 6. Перед заявлением о готовности проверить public Release assets/digests/sizes, app sources в main, latest.json и логику updater. Установка на реальном телефоне остаётся NOT TESTED, пока её реально не выполнят.
 7. После каждого существенного действия обновлять HANDOFF.md и CHECKPOINT.md.
+
+
+## Проверка signing secrets (2026-11-08)
+- Добавлен безопасный workflow `.github/workflows/check-release-secrets.yml`, выводит только имена отсутствующих secrets и никогда их значения.
+- Run: https://github.com/Krenas/DNS-Connect/actions/runs/42501222010 — SUCCESS; отсутствуют все 4: `ANDROID_KEYSTORE_BASE64`, `ANDROID_KEYSTORE_PASSWORD`, `ANDROID_KEY_ALIAS`, `ANDROID_KEY_PASSWORD`.
+- Workflow fixed after a ShellCheck SC2016 finding in the Markdown summary. Latest all-workflow actionlint + patch integrity run: https://github.com/Krenas/DNS-Connect/actions/runs/42501298298 — SUCCESS (actionlint all workflows, 13/13 chunk files, Base64/gzip/diff checksum validation).
+- One-time settings URL: https://github.com/Krenas/DNS-Connect/settings/secrets/actions. User/admin must create four secrets using existing private JKS and credentials. Do not put values into chat, public files, commits or logs.
