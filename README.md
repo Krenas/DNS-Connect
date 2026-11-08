@@ -14,7 +14,7 @@ Android-приложение для диагностики DNS-резолвер�
 - Манифест встроенного обновления: https://raw.githubusercontent.com/Krenas/DNS-Connect/main/latest.json
 
 ## Продолжение без повторной загрузки файлов
-Создавайте новый чат внутри того же ChatGPT Project DNS. Все Project Files доступны чатам проекта; повторно отправлять APK, исходники, SDK ZIP и исходные файлы пользователю не нужно. Новый чат читает HANDOFF.md и CHECKPOINT.md и использует наиболее свежие файлы из Project Files.
+Создавайте новый чат внутри того же ChatGPT Project DNS. Все Project Files доступны чатам проекта; повторно отправлять исходные файлы пользователю не нужно. Project Files сейчас содержат предыдущий snapshot 2.3.0; свежая clean rebuild 2.3.0 пока доступна в локальных артефактах текущего чата, но не добавлена в Project Files из-за временного ограничения сохранения. Сверяйте HANDOFF.md и CHECKPOINT.md и не считайте GitHub Release 2.3.0 опубликованным.
 
 ## Повторяемая сборка
 Source ZIP содержит build-from-project-files.sh. Он использует SDK-комплект Download Zip.zip, извлекает Android build-tools 35/platform 35, компилирует, проверяет, подписывает APK постоянным ключом и создаёт versioned source ZIP, latest.json, SHA256SUMS и release pack. Версия автоматически считывается из Gradle. Пароль ключа — только через защищённую переменную среды; JKS никогда не включается в public source ZIP.
