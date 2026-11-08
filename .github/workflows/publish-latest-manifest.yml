@@ -65,7 +65,7 @@ jobs:
             echo "Source archive version does not match release tag." >&2; exit 1;
           }
 
-          BADGING="$ANDROID_HOME/build-tools/35.0.0/aapt dump badging "$APK""
+          BADGING="$("$ANDROID_HOME/build-tools/35.0.0/aapt" dump badging "$APK")"
           PACKAGE="$(sed -n "s/^package: name='\([^']*\)'.*/\1/p" <<< "$BADGING" | head -n1)"
           APK_VERSION="$(sed -n "s/^package:.*versionName='\([^']*\)'.*/\1/p" <<< "$BADGING" | head -n1)"
           VERSION_CODE="$(sed -n "s/^package:.*versionCode='\([^']*\)'.*/\1/p" <<< "$BADGING" | head -n1)"
