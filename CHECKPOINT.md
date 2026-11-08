@@ -36,6 +36,13 @@
 - build-release.yml can compile source in public main but needs app sources imported and four Actions secrets (keystore base64/password/alias/key password), currently not configured.
 - Current GitHub connector exposes no direct Release asset upload and no Actions secret create/update tool. Do not claim publication or automatic cloud build is operational.
 
+
+## Проверка patch payload на GitHub Actions
+- Строгий run https://github.com/Krenas/DNS-Connect/actions/runs/42499262769 — SUCCESS.
+- 13/13 chunk hashes and sizes pass; combined Base64 SHA/size, gzip SHA/size, unified diff SHA/size all match manifest; git apply --numstat passes; workflow artifact uploaded.
+- Strict workflow is now in main commit 5a6a4754b9bc623f5378ca62acadcf8b546485fa.
+- This verifies the persistent source patch. It does not build or publish APK and does not prove the in-app updater is live.
+
 ## Successful prior publication method 2.1.0
 https://github.com/Krenas/DNS-Connect/actions/runs/42395405220
 Workflow downloads APK from a pre-existing staging Release with tag 2.1.0, validates SHA/size, attaches the same APK to canonical Release v2.1.0, verifies asset digest, then updates latest.json. It does not build APK from source.
