@@ -59,24 +59,24 @@ jobs:
           cp "$SOURCE_ZIP" "$RUNNER_TEMP/$SOURCE_NAME"
 
           unzip -tq "$SOURCE_ZIP" >/dev/null
-          unzip -Z1 "$SOURCE_ZIP" > source-files.txt
+          unzip -Z1 "$SOURCE_ZIP" > "$RUNNER_TEMP/source-files.txt"
           if grep -Eq '(^/|(^|/)\.\.(/|$))' source-files.txt; then
             echo "Unsafe path found in source archive." >&2
             exit 1
           fi
-          grep -qx 'app/build.gradle.kts' source-files.txt
-          grep -qx 'settings.gradle.kts' source-files.txt
-          grep -qx 'gradle/wrapper/gradle-wrapper.jar' source-files.txt
-          grep -qx 'app/src/main/AndroidManifest.xml' source-files.txt
-          if grep -Eiq '\.(jks|keystore|p12|pfx|pem|pk8)$|(^|/)[^/]*password[^/]*$' source-files.txt; then
+          grep -qx 'app/build.gradle.kts' "$RUNNER_TEMP/source-files.txt"
+          grep -qx 'settings.gradle.kts' "$RUNNER_TEMP/source-files.txt"
+          grep -qx 'gradle/wrapper/gradle-wrapper.jar' "$RUNNER_TEMP/source-files.txt"
+          grep -qx 'app/src/main/AndroidManifest.xml' "$RUNNER_TEMP/source-files.txt"
+          if grep -Eiq '\.(jks|keystore|p12|pfx|pem|pk8)$|(^|/)[^/]*password[^/]*$' "$RUNNER_TEMP/source-files.txt"; then
             echo "Signing material or password file found in source archive." >&2
             exit 1
           fi
 
-          unzip -p "$SOURCE_ZIP" app/build.gradle.kts > source-app.gradle.kts
-          SOURCE_VERSION="$(sed -nE 's/^[[:space:]]*versionName[[:space:]]*=[[:space:]]*"([^"]+)".*/\1/p' source-app.gradle.kts | head -n1)"
-          SOURCE_CODE="$(sed -nE 's/^[[:space:]]*versionCode[[:space:]]*=[[:space:]]*([0-9]+).*/\1/p' source-app.gradle.kts | head -n1)"
-          SOURCE_PACKAGE="$(sed -nE 's/^[[:space:]]*applicationId[[:space:]]*=[[:space:]]*"([^"]+)".*/\1/p' source-app.gradle.kts | head -n1)"
+          unzip -p "$SOURCE_ZIP" app/build.gradle.kts > "$RUNNER_TEMP/source-app.gradle.kts"
+          SOURCE_VERSION="$(sed -nE 's/^[[:space:]]*versionName[[:space:]]*=[[:space:]]*"([^"]+)".*/\1/p' "$RUNNER_TEMP/source-app.gradle.kts" | head -n1)"
+          SOURCE_CODE="$(sed -nE 's/^[[:space:]]*versionCode[[:space:]]*=[[:space:]]*([0-9]+).*/\1/p' "$RUNNER_TEMP/source-app.gradle.kts" | head -n1)"
+          SOURCE_PACKAGE="$(sed -nE 's/^[[:space:]]*applicationId[[:space:]]*=[[:space:]]*"([^"]+)".*/\1/p' "$RUNNER_TEMP/source-app.gradle.kts" | head -n1)"
 
           BADGING="$("$ANDROID_HOME/build-tools/35.0.0/aapt" dump badging "${APKS[0]}")"
           PACKAGE="$(sed -n "s/^package: name='\([^']*\)'.*/\1/p" <<< "$BADGING" | head -n1)"
@@ -114,6 +114,8 @@ jobs:
             echo "SOURCE_SIZE=$SOURCE_SIZE"
             echo "APK_SHA256=$APK_SHA256"
             echo "SOURCE_SHA256=$SOURCE_SHA256"
+            echo "APK_NAME=$APK_NAME"
+            echo "SOURCE_NAME=$SOURCE_NAME"
             echo "UPLOAD_APK=$RUNNER_TEMP/$APK_NAME"
             echo "UPLOAD_SOURCE=$RUNNER_TEMP/$SOURCE_NAME"
           } >> "$GITHUB_ENV"
