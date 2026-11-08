@@ -11,7 +11,7 @@ permissions:
   contents: write
 
 concurrency:
-  group: dns-connect-apk-upload-${{ github.ref }}
+  group: dns-connect-apk-release-pipeline
   cancel-in-progress: false
 
 jobs:
@@ -94,6 +94,7 @@ jobs:
             echo "TAG=$TAG"
             echo "APK_SIZE=$APK_SIZE"
             echo "APK_SHA256=$APK_SHA256"
+            echo "APK_VERSION_CODE=$VERSION_CODE"
           } >> "$GITHUB_ENV"
 
       - name: Create or reuse draft release and upload APK
@@ -133,6 +134,73 @@ jobs:
         env:
           GH_TOKEN: ${{ github.token }}
         run: gh release edit "$TAG" --repo "$GITHUB_REPOSITORY" --draft=false
+
+
+      - name: Publish verified latest.json for the in-app updater
+        env:
+          GH_TOKEN: ${{ github.token }}
+        shell: bash
+        run: |
+          set -euo pipefail
+          gh api "repos/$GITHUB_REPOSITORY/releases/tags/$TAG" > release-final.json
+
+          ASSET_NAME="$(basename "$APK_PATH")"
+          ASSET_COUNT="$(jq --arg name "$ASSET_NAME" '[.assets[] | select(.name == $name)] | length' release-final.json)"
+          [ "$ASSET_COUNT" = "1" ] || { echo "Published release does not contain exactly one APK asset." >&2; exit 1; }
+
+          ASSET="$(jq -c --arg name "$ASSET_NAME" '.assets[] | select(.name == $name)' release-final.json)"
+          ASSET_STATE="$(jq -r '.state' <<< "$ASSET")"
+          ASSET_TYPE="$(jq -r '.content_type // ""' <<< "$ASSET")"
+          ASSET_URL="$(jq -r '.browser_download_url' <<< "$ASSET")"
+          ASSET_DIGEST="$(jq -r '.digest // ""' <<< "$ASSET")"
+          ASSET_SIZE="$(jq -r '.size // 0' <<< "$ASSET")"
+          EXPECTED_URL="https://github.com/$GITHUB_REPOSITORY/releases/download/$TAG/$ASSET_NAME"
+
+          [ "$ASSET_STATE" = "uploaded" ] || { echo "Release APK is not uploaded." >&2; exit 1; }
+          [ "$ASSET_TYPE" = "application/vnd.android.package-archive" ] || [ "$ASSET_TYPE" = "application/octet-stream" ] || {
+            echo "Release asset content type is not an APK." >&2; exit 1;
+          }
+          [ "$ASSET_URL" = "$EXPECTED_URL" ] || { echo "Release APK URL does not match its tag." >&2; exit 1; }
+          [ "$ASSET_DIGEST" = "sha256:$APK_SHA256" ] || { echo "GitHub release digest does not match the local APK." >&2; exit 1; }
+          [ "$ASSET_SIZE" = "$APK_SIZE" ] || { echo "GitHub release size does not match the local APK." >&2; exit 1; }
+
+          RELEASE_URL="https://github.com/$GITHUB_REPOSITORY/releases/tag/$TAG"
+          NOTES="$(jq -r '.body // ""' release-final.json)"
+          jq -n \
+            --arg version "$VERSION" \
+            --arg tag "$TAG" \
+            --arg apk "$ASSET_URL" \
+            --arg sha256 "$APK_SHA256" \
+            --arg release "$RELEASE_URL" \
+            --arg notes "$NOTES" \
+            --argjson versionCode "$APK_VERSION_CODE" \
+            --argjson size "$APK_SIZE" \
+            '{version:$version,tag:$tag,versionCode:$versionCode,apk:$apk,sha256:$sha256,size:$size,release:$release,notes:$notes}' \
+            > latest.json
+
+          CONTENT="$(base64 -w 0 latest.json)"
+          EXISTING_SHA="$(gh api "repos/$GITHUB_REPOSITORY/contents/latest.json?ref=main" --jq .sha)"
+          gh api --method PUT "repos/$GITHUB_REPOSITORY/contents/latest.json" \
+            -f message="Publish DNS Connect $VERSION update manifest" \
+            -f branch=main \
+            -f sha="$EXISTING_SHA" \
+            -f content="$CONTENT" >/dev/null
+
+          for attempt in $(seq 1 12); do
+            if curl --fail --silent --show-error \
+              "https://raw.githubusercontent.com/$GITHUB_REPOSITORY/main/latest.json?check=$attempt" \
+              -o latest-public.json; then
+              if jq -e --arg version "$VERSION" --arg tag "$TAG" --arg digest "$APK_SHA256" \
+                '.version == $version and .tag == $tag and .sha256 == $digest and .size > 0 and (.apk | startswith("https://github.com/Krenas/DNS-Connect/releases/download/"))' \
+                latest-public.json >/dev/null; then
+                echo "Public latest.json verified."
+                exit 0
+              fi
+            fi
+            sleep 5
+          done
+          echo "The public updater manifest did not become readable and valid." >&2
+          exit 1
 
       - name: Remove temporary upload branch
         if: success()
