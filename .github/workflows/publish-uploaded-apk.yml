@@ -57,7 +57,211 @@ jobs:
           grep -qx 'settings.gradle.kts' source-files.txt
           grep -qx 'gradle/wrapper/gradle-wrapper.jar' source-files.txt
           grep -qx 'app/src/main/AndroidManifest.xml' source-files.txt
-          if grep -Eiq '(^|/)([^/]*\.(jks|keystore|p12|pem|pk8)|[^/]*password[^/]*)
+          if grep -Eiq '\\.(jks|keystore|p12|pfx|pem|pk8)$|(^|/)[^/]*password[^/]*          unzip -p "$SOURCE_ZIP" app/build.gradle.kts > source-app.gradle.kts
+          SOURCE_VERSION="$(sed -nE 's/^[[:space:]]*versionName[[:space:]]*=[[:space:]]*"([^"]+)".*/\1/p' source-app.gradle.kts | head -n1)"
+          SOURCE_CODE="$(sed -nE 's/^[[:space:]]*versionCode[[:space:]]*=[[:space:]]*([0-9]+).*/\1/p' source-app.gradle.kts | head -n1)"
+          SOURCE_PACKAGE="$(sed -nE 's/^[[:space:]]*applicationId[[:space:]]*=[[:space:]]*"([^"]+)".*/\1/p' source-app.gradle.kts | head -n1)"
+          [ "$SOURCE_PACKAGE" = "$EXPECTED_PACKAGE" ]
+
+          BADGING="$("$ANDROID_HOME/build-tools/35.0.0/aapt" dump badging "$APK")"
+          PACKAGE="$(sed -n "s/^package: name='\([^']*\)'.*/\1/p" <<< "$BADGING" | head -n1)"
+          APK_VERSION="$(sed -n "s/^package:.*versionName='\([^']*\)'.*/\1/p" <<< "$BADGING" | head -n1)"
+          VERSION_CODE="$(sed -n "s/^package:.*versionCode='\([^']*\)'.*/\1/p" <<< "$BADGING" | head -n1)"
+          [ "$PACKAGE" = "$EXPECTED_PACKAGE" ] && [ "$APK_VERSION" = "$VERSION" ] && [ "$SOURCE_VERSION" = "$VERSION" ] && [ "$SOURCE_CODE" = "$VERSION_CODE" ]
+          [[ "$VERSION_CODE" =~ ^[0-9]+$ ]] && [ "$VERSION_CODE" -gt 0 ]
+          SIGNATURE="$("$ANDROID_HOME/build-tools/35.0.0/apksigner" verify --print-certs "$APK")"
+          CERT="$(sed -n 's/^Signer #1 certificate SHA-256 digest: *//p' <<< "$SIGNATURE" | head -n1 | tr '[:upper:]' '[:lower:]')"
+          [ "$CERT" = "$EXPECTED_CERT_SHA256" ] || { echo "Signing certificate mismatch." >&2; exit 1; }
+
+          APK_SIZE="$(wc -c < "$APK" | tr -d ' ')"
+          SOURCE_SIZE="$(wc -c < "$SOURCE_ZIP" | tr -d ' ')"
+          APK_SHA256="$(sha256sum "$APK" | awk '{print $1}')"
+          SOURCE_SHA256="$(sha256sum "$SOURCE_ZIP" | awk '{print $1}')"
+          [ "$APK_SIZE" -gt 0 ] && [ "$APK_SIZE" -le 104857600 ]
+          [ "$SOURCE_SIZE" -gt 0 ] && [ "$SOURCE_SIZE" -le 52428800 ]
+          CURRENT_VERSION="$(curl -fsSL "https://raw.githubusercontent.com/$GITHUB_REPOSITORY/main/latest.json" | jq -r '.version // "0.0.0"')"
+          dpkg --compare-versions "$VERSION" gt "$CURRENT_VERSION" || { echo "Version is not newer than published $CURRENT_VERSION." >&2; exit 1; }
+          {
+            echo "APK_PATH=$APK"; echo "SOURCE_PATH=$SOURCE_ZIP"; echo "VERSION=$VERSION"; echo "TAG=$TAG";
+            echo "VERSION_CODE=$VERSION_CODE"; echo "APK_SIZE=$APK_SIZE"; echo "SOURCE_SIZE=$SOURCE_SIZE";
+            echo "APK_SHA256=$APK_SHA256"; echo "SOURCE_SHA256=$SOURCE_SHA256";
+          } >> "$GITHUB_ENV"
+
+      - name: Create draft release and upload versioned assets
+        env:
+          GH_TOKEN: ${{ github.token }}
+        shell: bash
+        run: |
+          set -euo pipefail
+          if gh release view "$TAG" --repo "$GITHUB_REPOSITORY" >/dev/null 2>&1; then
+            IS_DRAFT="$(gh release view "$TAG" --repo "$GITHUB_REPOSITORY" --json isDraft --jq '.isDraft')"
+            [ "$IS_DRAFT" = "true" ] || { echo "Release already published; refusing overwrite." >&2; exit 1; }
+          else
+            gh release create "$TAG" --repo "$GITHUB_REPOSITORY" --target main --draft \
+              --title "DNS Connect $VERSION" \
+              --notes "DNS Connect $VERSION. APK, source archive, package version and signing certificate were validated."
+          fi
+          gh release upload "$TAG" "$APK_PATH" "$SOURCE_PATH" --repo "$GITHUB_REPOSITORY"
+
+      - name: Verify assets and publish release
+        env:
+          GH_TOKEN: ${{ github.token }}
+        run: |
+          set -euo pipefail
+          gh api "repos/$GITHUB_REPOSITORY/releases/tags/$TAG" > release.json
+          jq -e --arg apk "DNS-Connect-$VERSION-release.apk" --arg src "DNS-Connect-$VERSION-source.zip" \
+            --arg ad "sha256:$APK_SHA256" --arg sd "sha256:$SOURCE_SHA256" \
+            --argjson apk_size "$APK_SIZE" --argjson source_size "$SOURCE_SIZE" '
+            [.assets[] | select(.name == $apk and .state == "uploaded" and .digest == $ad and .size == $apk_size)] | length == 1
+          ' release.json >/dev/null
+          jq -e --arg src "DNS-Connect-$VERSION-source.zip" --arg sd "sha256:$SOURCE_SHA256" \
+            --argjson ss "$SOURCE_SIZE" '
+            [.assets[] | select(.name == $src and .state == "uploaded" and .digest == $sd and .size == $source_size)] | length == 1
+          ' release.json >/dev/null
+          gh release edit "$TAG" --repo "$GITHUB_REPOSITORY" --draft=false
+
+      - name: Publish latest.json directly (GITHUB_TOKEN does not trigger another workflow)
+        env:
+          GH_TOKEN: ${{ github.token }}
+        shell: bash
+        run: |
+          set -euo pipefail
+          RELEASE_URL="https://github.com/$GITHUB_REPOSITORY/releases/tag/$TAG"
+          APK_URL="https://github.com/$GITHUB_REPOSITORY/releases/download/$TAG/DNS-Connect-$VERSION-release.apk"
+          SOURCE_URL="https://github.com/$GITHUB_REPOSITORY/releases/download/$TAG/DNS-Connect-$VERSION-source.zip"
+          jq -n --arg version "$VERSION" --arg tag "$TAG" --arg apk "$APK_URL" \
+            --arg sha256 "$APK_SHA256" --arg source "$SOURCE_URL" --arg sourceSha256 "$SOURCE_SHA256" \
+            --arg release "$RELEASE_URL" \
+            --argjson versionCode "$VERSION_CODE" --argjson size "$APK_SIZE" --argjson sourceSize "$SOURCE_SIZE" \
+            '{version:$version,tag:$tag,versionCode:$versionCode,apk:$apk,sha256:$sha256,size:$size,sourceArchive:$source,sourceSha256:$sourceSha256,sourceSize:$sourceSize,release:$release,notes:"Verified by GitHub Actions"}' \
+            > latest.json
+          EXISTING_SHA="$(gh api "repos/$GITHUB_REPOSITORY/contents/latest.json?ref=main" --jq .sha)"
+          CONTENT="$(base64 -w 0 latest.json)"
+          gh api --method PUT "repos/$GITHUB_REPOSITORY/contents/latest.json" \
+            -f message="Publish DNS Connect $VERSION update manifest" \
+            -f branch=main -f sha="$EXISTING_SHA" -f content="$CONTENT" >/dev/null
+          for attempt in $(seq 1 12); do
+            curl -fsSL "https://raw.githubusercontent.com/$GITHUB_REPOSITORY/main/latest.json?check=$attempt" -o latest-public.json || true
+            if jq -e --arg v "$VERSION" --arg t "$TAG" --arg s "$APK_SHA256" \
+              '.version == $v and .tag == $t and .sha256 == $s and .sourceArchive != null' latest-public.json >/dev/null 2>&1; then
+              echo "Public manifest is verified."
+              exit 0
+            fi
+            sleep 5
+          done
+          exit 1
+
+      - name: Remove temporary upload branch
+        if: success()
+        env:
+          GH_TOKEN: ${{ github.token }}
+        run: |
+          gh api --method DELETE "repos/$GITHUB_REPOSITORY/git/refs/heads/$GITHUB_REF_NAME" || true
+ source-files.txt; then exit 1; fi
+          unzip -p "$SOURCE_ZIP" app/build.gradle.kts > source-app.gradle.kts
+          SOURCE_VERSION="$(sed -nE 's/^[[:space:]]*versionName[[:space:]]*=[[:space:]]*"([^"]+)".*/\1/p' source-app.gradle.kts | head -n1)"
+          SOURCE_CODE="$(sed -nE 's/^[[:space:]]*versionCode[[:space:]]*=[[:space:]]*([0-9]+).*/\1/p' source-app.gradle.kts | head -n1)"
+          SOURCE_PACKAGE="$(sed -nE 's/^[[:space:]]*applicationId[[:space:]]*=[[:space:]]*"([^"]+)".*/\1/p' source-app.gradle.kts | head -n1)"
+          [ "$SOURCE_PACKAGE" = "$EXPECTED_PACKAGE" ]
+
+          BADGING="$("$ANDROID_HOME/build-tools/35.0.0/aapt" dump badging "$APK")"
+          PACKAGE="$(sed -n "s/^package: name='\([^']*\)'.*/\1/p" <<< "$BADGING" | head -n1)"
+          APK_VERSION="$(sed -n "s/^package:.*versionName='\([^']*\)'.*/\1/p" <<< "$BADGING" | head -n1)"
+          VERSION_CODE="$(sed -n "s/^package:.*versionCode='\([^']*\)'.*/\1/p" <<< "$BADGING" | head -n1)"
+          [ "$PACKAGE" = "$EXPECTED_PACKAGE" ] && [ "$APK_VERSION" = "$VERSION" ] && [ "$SOURCE_VERSION" = "$VERSION" ] && [ "$SOURCE_CODE" = "$VERSION_CODE" ]
+          [[ "$VERSION_CODE" =~ ^[0-9]+$ ]] && [ "$VERSION_CODE" -gt 0 ]
+          SIGNATURE="$("$ANDROID_HOME/build-tools/35.0.0/apksigner" verify --print-certs "$APK")"
+          CERT="$(sed -n 's/^Signer #1 certificate SHA-256 digest: *//p' <<< "$SIGNATURE" | head -n1 | tr '[:upper:]' '[:lower:]')"
+          [ "$CERT" = "$EXPECTED_CERT_SHA256" ] || { echo "Signing certificate mismatch." >&2; exit 1; }
+
+          APK_SIZE="$(wc -c < "$APK" | tr -d ' ')"
+          SOURCE_SIZE="$(wc -c < "$SOURCE_ZIP" | tr -d ' ')"
+          APK_SHA256="$(sha256sum "$APK" | awk '{print $1}')"
+          SOURCE_SHA256="$(sha256sum "$SOURCE_ZIP" | awk '{print $1}')"
+          [ "$APK_SIZE" -gt 0 ] && [ "$APK_SIZE" -le 104857600 ]
+          [ "$SOURCE_SIZE" -gt 0 ] && [ "$SOURCE_SIZE" -le 52428800 ]
+          CURRENT_VERSION="$(curl -fsSL "https://raw.githubusercontent.com/$GITHUB_REPOSITORY/main/latest.json" | jq -r '.version // "0.0.0"')"
+          dpkg --compare-versions "$VERSION" gt "$CURRENT_VERSION" || { echo "Version is not newer than published $CURRENT_VERSION." >&2; exit 1; }
+          {
+            echo "APK_PATH=$APK"; echo "SOURCE_PATH=$SOURCE_ZIP"; echo "VERSION=$VERSION"; echo "TAG=$TAG";
+            echo "VERSION_CODE=$VERSION_CODE"; echo "APK_SIZE=$APK_SIZE"; echo "SOURCE_SIZE=$SOURCE_SIZE";
+            echo "APK_SHA256=$APK_SHA256"; echo "SOURCE_SHA256=$SOURCE_SHA256";
+          } >> "$GITHUB_ENV"
+
+      - name: Create draft release and upload versioned assets
+        env:
+          GH_TOKEN: ${{ github.token }}
+        shell: bash
+        run: |
+          set -euo pipefail
+          if gh release view "$TAG" --repo "$GITHUB_REPOSITORY" >/dev/null 2>&1; then
+            IS_DRAFT="$(gh release view "$TAG" --repo "$GITHUB_REPOSITORY" --json isDraft --jq '.isDraft')"
+            [ "$IS_DRAFT" = "true" ] || { echo "Release already published; refusing overwrite." >&2; exit 1; }
+          else
+            gh release create "$TAG" --repo "$GITHUB_REPOSITORY" --target main --draft \
+              --title "DNS Connect $VERSION" \
+              --notes "DNS Connect $VERSION. APK, source archive, package version and signing certificate were validated."
+          fi
+          gh release upload "$TAG" "$APK_PATH" "$SOURCE_PATH" --repo "$GITHUB_REPOSITORY"
+
+      - name: Verify assets and publish release
+        env:
+          GH_TOKEN: ${{ github.token }}
+        run: |
+          set -euo pipefail
+          gh api "repos/$GITHUB_REPOSITORY/releases/tags/$TAG" > release.json
+          jq -e --arg apk "DNS-Connect-$VERSION-release.apk" --arg src "DNS-Connect-$VERSION-source.zip" \
+            --arg ad "sha256:$APK_SHA256" --arg sd "sha256:$SOURCE_SHA256" \
+            --argjson apk_size "$APK_SIZE" --argjson source_size "$SOURCE_SIZE" '
+            [.assets[] | select(.name == $apk and .state == "uploaded" and .digest == $ad and .size == $apk_size)] | length == 1
+          ' release.json >/dev/null
+          jq -e --arg src "DNS-Connect-$VERSION-source.zip" --arg sd "sha256:$SOURCE_SHA256" \
+            --argjson ss "$SOURCE_SIZE" '
+            [.assets[] | select(.name == $src and .state == "uploaded" and .digest == $sd and .size == $source_size)] | length == 1
+          ' release.json >/dev/null
+          gh release edit "$TAG" --repo "$GITHUB_REPOSITORY" --draft=false
+
+      - name: Publish latest.json directly (GITHUB_TOKEN does not trigger another workflow)
+        env:
+          GH_TOKEN: ${{ github.token }}
+        shell: bash
+        run: |
+          set -euo pipefail
+          RELEASE_URL="https://github.com/$GITHUB_REPOSITORY/releases/tag/$TAG"
+          APK_URL="https://github.com/$GITHUB_REPOSITORY/releases/download/$TAG/DNS-Connect-$VERSION-release.apk"
+          SOURCE_URL="https://github.com/$GITHUB_REPOSITORY/releases/download/$TAG/DNS-Connect-$VERSION-source.zip"
+          jq -n --arg version "$VERSION" --arg tag "$TAG" --arg apk "$APK_URL" \
+            --arg sha256 "$APK_SHA256" --arg source "$SOURCE_URL" --arg sourceSha256 "$SOURCE_SHA256" \
+            --arg release "$RELEASE_URL" \
+            --argjson versionCode "$VERSION_CODE" --argjson size "$APK_SIZE" --argjson sourceSize "$SOURCE_SIZE" \
+            '{version:$version,tag:$tag,versionCode:$versionCode,apk:$apk,sha256:$sha256,size:$size,sourceArchive:$source,sourceSha256:$sourceSha256,sourceSize:$sourceSize,release:$release,notes:"Verified by GitHub Actions"}' \
+            > latest.json
+          EXISTING_SHA="$(gh api "repos/$GITHUB_REPOSITORY/contents/latest.json?ref=main" --jq .sha)"
+          CONTENT="$(base64 -w 0 latest.json)"
+          gh api --method PUT "repos/$GITHUB_REPOSITORY/contents/latest.json" \
+            -f message="Publish DNS Connect $VERSION update manifest" \
+            -f branch=main -f sha="$EXISTING_SHA" -f content="$CONTENT" >/dev/null
+          for attempt in $(seq 1 12); do
+            curl -fsSL "https://raw.githubusercontent.com/$GITHUB_REPOSITORY/main/latest.json?check=$attempt" -o latest-public.json || true
+            if jq -e --arg v "$VERSION" --arg t "$TAG" --arg s "$APK_SHA256" \
+              '.version == $v and .tag == $t and .sha256 == $s and .sourceArchive != null' latest-public.json >/dev/null 2>&1; then
+              echo "Public manifest is verified."
+              exit 0
+            fi
+            sleep 5
+          done
+          exit 1
+
+      - name: Remove temporary upload branch
+        if: success()
+        env:
+          GH_TOKEN: ${{ github.token }}
+        run: |
+          gh api --method DELETE "repos/$GITHUB_REPOSITORY/git/refs/heads/$GITHUB_REF_NAME" || true
+ source-files.txt; then
+            echo "Signing material or password file found in source archive." >&2
+            exit 1
+          fi
           unzip -p "$SOURCE_ZIP" app/build.gradle.kts > source-app.gradle.kts
           SOURCE_VERSION="$(sed -nE 's/^[[:space:]]*versionName[[:space:]]*=[[:space:]]*"([^"]+)".*/\1/p' source-app.gradle.kts | head -n1)"
           SOURCE_CODE="$(sed -nE 's/^[[:space:]]*versionCode[[:space:]]*=[[:space:]]*([0-9]+).*/\1/p' source-app.gradle.kts | head -n1)"
