@@ -27,13 +27,17 @@ jobs:
           test -s "$RUNNER_TEMP/apk/DNS-Connect-2.1.0-release.apk"
           echo "c05e9cb8af2b4193ba2c77fb29bcb889e7588af4e61825af34c92af900c09755  $RUNNER_TEMP/apk/DNS-Connect-2.1.0-release.apk" | sha256sum --check
 
-      - name: Install JADX CLI
+      - name: Install JADX CLI through the GitHub Release Assets API
+        env:
+          GH_TOKEN: ${{ github.token }}
         shell: bash
         run: |
           set -euo pipefail
-          curl -fL --retry 3 \
-            "https://github.com/skylot/jadx/releases/download/v1.5.6/jadx-1.5.6.zip" \
-            -o "$RUNNER_TEMP/jadx.zip"
+          gh api \
+            --header "Accept: application/octet-stream" \
+            /repos/skylot/jadx/releases/assets/472797042 \
+            > "$RUNNER_TEMP/jadx.zip"
+          test -s "$RUNNER_TEMP/jadx.zip"
           mkdir -p "$RUNNER_TEMP/jadx"
           unzip -q "$RUNNER_TEMP/jadx.zip" -d "$RUNNER_TEMP/jadx"
           chmod +x "$RUNNER_TEMP/jadx/bin/jadx"
