@@ -79,7 +79,7 @@ jobs:
           }
           TAG="v$VERSION"
           EXPECTED_PACKAGE="ru.krenas.dnsanalytics"
-          EXPECTED_SIGNER="4dc48085b7ea161b57e6266611c5d6a28514df6f2ddfc26df14f3ac972debf90"
+          EXPECTED_SIGNER="54b847350b8f4166ea3add400330f360cbc53c4b82e53d709d2c9ff084eb21f7"
 
           BADGING="$("$ANDROID_HOME/build-tools/35.0.0/aapt" dump badging "$APK_PATH")"
           read -r APK_PACKAGE VERSION_CODE APK_VERSION < <(awk -F "'" '/^package:/ { print $2, $4, $6; exit }' <<< "$BADGING")
