@@ -16,3 +16,5 @@ A failed workflow leaves the upload ZIP in place so it can be inspected or retri
 A deployment dry-run was checked in GitHub Actions. No Release or latest.json is changed until a valid pack is committed.
 
 The dry-run also checks the retained signer using a pipefail-safe extraction command.
+
+The source validation drains complete ZIP entries to avoid short-circuiting the stream under strict shell mode.
