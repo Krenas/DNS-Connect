@@ -43,8 +43,6 @@ jobs:
           GH_TOKEN: ${{ github.token }}
           STORE_B64: ${{ secrets.ANDROID_KEYSTORE_BASE64 }}
           STORE_PASSWORD: ${{ secrets.ANDROID_KEYSTORE_PASSWORD }}
-          KEY_ALIAS: ${{ secrets.ANDROID_KEY_ALIAS }}
-          KEY_PASSWORD: ${{ secrets.ANDROID_KEY_PASSWORD }}
         shell: bash
         run: |
           set -euo pipefail
@@ -60,9 +58,9 @@ jobs:
           fi
           [[ "$SOURCE_PATH" == incoming/DNS-Connect-*-source.zip ]]
           [[ -s "$SOURCE_PATH" ]]
-          for value in STORE_B64 STORE_PASSWORD KEY_ALIAS KEY_PASSWORD; do
+          for value in STORE_B64 STORE_PASSWORD; do
             [[ -n "${!value}" ]] || {
-              echo "Missing GitHub Actions secret: $value. Configure the four ANDROID_* secrets once in repository Settings > Secrets and variables > Actions." >&2
+              echo "Missing GitHub Actions secret: $value. Configure ANDROID_KEYSTORE_BASE64 and ANDROID_KEYSTORE_PASSWORD once in repository Settings > Secrets and variables > Actions." >&2
               exit 1
             }
           done
@@ -162,8 +160,8 @@ jobs:
         env:
           DNS_RELEASE_KEYSTORE: ${{ runner.temp }}/dns-connect-release.jks
           DNS_RELEASE_KEYSTORE_PASSWORD: ${{ secrets.ANDROID_KEYSTORE_PASSWORD }}
-          DNS_RELEASE_KEY_ALIAS: ${{ secrets.ANDROID_KEY_ALIAS }}
-          DNS_RELEASE_KEY_PASSWORD: ${{ secrets.ANDROID_KEY_PASSWORD }}
+          DNS_RELEASE_KEY_ALIAS: dnsconnect
+          DNS_RELEASE_KEY_PASSWORD: ${{ secrets.ANDROID_KEYSTORE_PASSWORD }}
         run: ./gradlew --no-daemon clean :app:assembleRelease
 
       - name: Verify APK and prepare versioned release assets
