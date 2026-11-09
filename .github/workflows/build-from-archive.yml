@@ -8,9 +8,9 @@ on:
   workflow_dispatch:
     inputs:
       source_archive:
-        description: "Committed ZIP path, e.g. incoming/DNS-Connect-2.3.0-source.zip"
+        description: "Committed ZIP path, e.g. incoming/DNS-Connect-2.4.0-source.zip"
         required: true
-        default: "incoming/DNS-Connect-2.3.0-source.zip"
+        default: "incoming/DNS-Connect-2.4.0-source.zip"
         type: string
       release_notes:
         description: "Release notes; leave blank to use CHANGELOG.md"
@@ -166,7 +166,7 @@ jobs:
 
       - name: Verify APK and prepare versioned release assets
         env:
-          EXPECTED_CERT_SHA256: 4dc48085b7ea161b57e6266611c5d6a28514df6f2ddfc26df14f3ac972debf90
+          EXPECTED_CERT_SHA256: 54b847350b8f4166ea3add400330f360cbc53c4b82e53d709d2c9ff084eb21f7
         shell: bash
         run: |
           set -euo pipefail
