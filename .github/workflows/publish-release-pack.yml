@@ -51,7 +51,7 @@ jobs:
           VERSION="$(jq -r '.version' "$META")"
           TAG="$(jq -r '.tag' "$META")"
           VERSION_CODE="$(jq -r '.versionCode' "$META")"
-          PACKAGE="$(jq -r '.package' "$META")"
+          PACKAGE="$(jq -r '.package // "ru.krenas.dnsanalytics"' "$META")"
           APK_SHA="$(jq -r '.sha256' "$META")"
           APK_SIZE="$(jq -r '.size' "$META")"
           SOURCE_SHA="$(jq -r '.sourceSha256' "$META")"
