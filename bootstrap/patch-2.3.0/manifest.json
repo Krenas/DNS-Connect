@@ -100,7 +100,7 @@
   },
   "verified": {
     "mainPatchCleanApply": true,
-    "supplementalBrandingPatchCleanApply": true,
+    "supplementalBrandingPatchCleanApply": false,
     "localBuildFromSourceArchiveAndSdkBundleBeforeBrandingPatch": true,
     "localBuildWithCurrentBrandingPatch": false,
     "historicalAutomatedPassBeforeBrandingPatch": 266,
@@ -110,8 +110,8 @@
     "liveNetworkDns": false,
     "liveUpdaterInstall": false,
     "githubReleasePublished": false,
-    "ciRun": 42584359364,
-    "ciUrl": "https://github.com/Krenas/DNS-Connect/actions/runs/42584359364"
+    "ciRun": null,
+    "ciUrl": null
   },
   "signing": {
     "certificateSha256": "4dc48085b7ea161b57e6266611c5d6a28514df6f2ddfc26df14f3ac972debf90",
@@ -123,8 +123,8 @@
     {
       "file": "branding-3server-monochrome.patch",
       "purpose": "Make Android 13+ themed launcher icon match the existing three-server DNS Connect foreground.",
-      "size": 3058,
-      "sha256": "549bc339abbc254c460775de3b12cf9337050674ca52b7f1e127af9847a43c2c",
+      "size": 2271,
+      "sha256": "4bc4ee8bce82316c712da063621994a2facd250b397e86316acb4774e0e17a5a",
       "applyAfter": "main 2.3.0 unified diff",
       "fuzz": 0
     }
