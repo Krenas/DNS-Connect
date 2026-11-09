@@ -78,18 +78,30 @@ jobs:
                   selected.update(range(max(0, i-5), min(len(lines), i+9)))
               for i in sorted(selected):
                   print(f"{i+1}: {lines[i][:300]}")
-          print("=== DRAWABLE AND MIPMAP RESOURCE FILES ===")
-          for base_name in ("drawable", "drawable-nodpi", "drawable-anydpi", "mipmap-anydpi", "mipmap-anydpi-v33"):
-              base = resource_root / base_name
-              if not base.exists():
-                  continue
-              for path in sorted(base.rglob("*")):
-                  if path.is_file():
-                      print(path.relative_to(resource_root))
-                      if path.suffix == ".xml" and re.search(r"server|service|dns|launcher|icon", path.name, re.I):
-                          print("--- XML CONTENT START ---")
-                          print(path.read_text(encoding="utf-8", errors="replace")[:10000])
-                          print("--- XML CONTENT END ---")
+          print("=== ALL MIPMAP DENSITIES AND LAUNCHER RESOURCES ===")
+          for base in sorted(resource_root.glob("mipmap*")):
+              if base.is_dir():
+                  for path in sorted(base.rglob("*")):
+                      if path.is_file():
+                          print(f"{path.relative_to(resource_root)} ({path.stat().st_size} bytes)")
+                          if path.suffix == ".xml":
+                              print("--- XML CONTENT START ---")
+                              print(path.read_text(encoding="utf-8", errors="replace")[:10000])
+                              print("--- XML CONTENT END ---")
+          print("=== DRAWABLE BRAND AND FUNCTIONAL RESOURCES ===")
+          for base in sorted(resource_root.glob("drawable*")):
+              if base.is_dir():
+                  for path in sorted(base.rglob("*")):
+                      if path.is_file() and re.search(r"(server|service|dns|launcher|icon)", path.name, re.I):
+                          print(f"{path.relative_to(resource_root)} ({path.stat().st_size} bytes)")
+          print("=== MANIFEST ICON ATTRIBUTES ===")
+          for path in root.rglob("AndroidManifest.xml"):
+              data = path.read_text(encoding="utf-8", errors="replace")
+              if "android:icon" in data or "android:roundIcon" in data:
+                  print(path.relative_to(root))
+                  for line in data.splitlines():
+                      if "android:icon" in line or "android:roundIcon" in line:
+                          print(line.strip())
           print("=== NAVIGATION LABEL REFERENCES ===")
           for base in (source_root, root / "resources" / "res" / "values"):
               if base.exists():
