@@ -15,7 +15,7 @@
 - Version 2.3.0 / versionCode 24 / package `ru.krenas.dnsanalytics`.
 - APK size 1,202,232 bytes; SHA-256 `b376f8f15e6bcf815845bdb65bb6cd204703a5f9d21282b63a658f86d1407ff4`.
 - Source ZIP size 1,006,209 bytes; SHA-256 `6a2f58e6dda10a94963992c2ede9a2976a07c1d0a59e9a08b2873809b827ba0a`.
-- Release pack size 1,972,455 bytes; SHA-256 `39411fa462904d776f6212c7c2dd46c42f4ffa57d02ecdcadaaf1c352aa5a681`.
+- Release pack size 1,972,455 bytes; SHA-256 `64c616533adcddc5b5d193cdce759057cd916bc77a7ad1128acc087b93bc8ad3`.
 - Automated QA: 266 PASS / 0 FAIL (108 self-tests, 17 catalogue tests, 141 UI/resource/navigation/theme/updater checks).
 - Separate icon audit: PASS (24 glyph types).
 - apksigner v2/v3: PASS. zipalign: PASS.
