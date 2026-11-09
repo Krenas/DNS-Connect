@@ -1,62 +1,56 @@
 # DNS Connect — checkpoint 2026-11-09
 
-## Project identity
-- Public repository: https://github.com/Krenas/DNS-Connect
+## Current public state
+- Repository: https://github.com/Krenas/DNS-Connect
 - Package: `ru.krenas.dnsanalytics`
-- App name: DNS Connect
-- Public latest manifest currently: 2.1.0 / versionCode 22. It must not be advanced until a verified GitHub Release exists.
-- Persistent Project Files remain: `2.1.0.zip`, `Download Zip.zip`, `HB_AI_Xbox_DNS.exe`. Do not ask the user to upload these again.
+- Public latest: 2.1.0 / versionCode 22. Keep `latest.json` unchanged until a verified Release exists.
+- Candidate 2.4.0 is built locally and QA-checked; public Release 2.4.0 is NOT published.
 
-## Current candidate — DNS Connect 2.4.0
-- Version: 2.4.0 / versionCode 25 / target API 35 / min API 26.
-- APK: 1,198,136 bytes; SHA-256 `d8e0e07de730161015cdfa6d9d985ed83619969bb526390c72c8bf85e12b4822`.
-- Source ZIP: 995,791 bytes; SHA-256 `2ac314c55f5d553cdb62141d9e41ad109bcdca688b659710ef5ed005e361afd1`.
-- Release pack: 1,952,221 bytes; SHA-256 `a2b4e5561e35212ce3a36a8cbac252b11a2a3e216f0143358060a2237f6a430f`.
-- APK package/version/versionCode verified; signature v2/v3 PASS; zipalign PASS.
-- Preserved private JKS signer exactly matches APK signer: `4dc48085b7ea161b57e6266611c5d6a28514df6f2ddfc26df14f3ac972debf90`.
-- Independent clean build performed from the source ZIP; all 26 APK ZIP entries match the submitted candidate byte-for-byte.
-- Automated checks: **266 PASS / 0 FAIL** (108 self-tests, 17 catalogue, 141 UI/resource/navigation/theme/updater checks); separate 24-glyph audit PASS.
-- Source archive: 96 entries; valid ZIP; no unsafe paths, symlinks, duplicate entries, signing files/passwords, APK/idsig or patch debris.
-- Detailed QA: [qa/DNS-Connect-2.4.0-QA.md](qa/DNS-Connect-2.4.0-QA.md).
+## Candidate 2.4.0
+- Version: 2.4.0 / versionCode 25 / min API 26 / target API 35.
+- APK size: 1,198,136 bytes.
+- APK SHA-256: `1c16821661be3c7ccee6198fbad9823563a09cc3b018cccc5aedbe11d3c33883`.
+- Source ZIP size: 994,643 bytes; 96 entries.
+- Release pack contains APK + source ZIP + QA + SHA256SUMS.
+- Signing certificate SHA-256: `54b847350b8f4166ea3add400330f360cbc53c4b82e53d709d2c9ff084eb21f7`.
+- APK Signature Scheme v2/v3: PASS; zipalign: PASS; package/version/versionCode: PASS.
+- Regression tests: 108 PASS / 0 FAIL.
+- Catalogue tests: 17 PASS / 0 FAIL.
+- UI/navigation/theme/resources/updater checks: 142 PASS / 0 FAIL.
+- Combined: **267 PASS / 0 FAIL**. Icon audit: 24 glyph types PASS.
+- Source archive: no duplicate/unsafe paths, symlinks, credentials, APKs or patch debris.
+- QA report: [qa/DNS-Connect-2.4.0-QA.md](qa/DNS-Connect-2.4.0-QA.md).
 
-## In-app updater — one-button flow
-- 2.4.0 Settings expose a single button: **«Проверить и обновить»**.
-- One tap checks public `latest.json`, compares version, downloads APK, verifies exact release URL, redirect host, byte count, SHA-256, package ID, versionName, increasing versionCode and signer identity, then opens the Android Package Installer.
-- Android may ask once to permit installs from DNS Connect and will ask the user to confirm the update. Silent install is not attempted or promised.
-- Optional daily background auto-check remains opt-in; it only sends an update notification and does not silently install.
-- An installation made from public 2.1.0 has a different certificate. That old private key is unavailable. 2.1.0 therefore needs a one-time uninstall/reinstall; this may remove local data, so back up first.
-- 2.2.x/2.3.0 candidates and 2.4.0 share the retained 2.2.x signer. 2.3.0 → 2.4.0 is compatible. Keep the exact signer for all later builds; never generate a new key casually.
+## One-button updater
+- Settings shows one button: **«Проверить и обновить»**.
+- It checks GitHub latest.json, compares version, downloads only newer APK, verifies URL/redirect host/size/SHA-256/package/version/signer and opens Android Package Installer.
+- Android confirmation remains mandatory.
+- Optional daily auto-check is notification-only.
+- Physical end-to-end updater behavior: NOT TESTED.
 
-## Public release publication route
-- Workflow: [.github/workflows/publish-release-pack.yml](.github/workflows/publish-release-pack.yml).
-- Upload folder instructions: [incoming/drop/README.md](incoming/drop/README.md).
-- Upload page: https://github.com/Krenas/DNS-Connect/upload/main/incoming/drop
-- User action: upload exactly one file `DNS-Connect-2.4.0-release-pack.zip` and commit it to `main`.
-- Workflow verifies APK/source hashes and sizes, package/version, signature v2/v3, zipalign, safe source ZIP and updater UI. It then imports the source tree, creates/updates draft Release v2.4.0, uploads APK/source/QA/checksums, verifies GitHub asset digest+size, publishes the Release and only then advances `latest.json`. The one-time pack is removed after success.
-- It uses `GITHUB_TOKEN`; it does not need repository signing secrets and never uploads the private keystore or password.
-- actionlint/ShellCheck passed; GitHub Actions no-pack dry-run passed:
-  https://github.com/Krenas/DNS-Connect/actions/runs/42652482963
-- Current actionlint/ShellCheck run after the self-describing-pack validator change: https://github.com/Krenas/DNS-Connect/actions/runs/42652466884
-- The validator now derives version/package/versionCode/size/SHA-256/signer directly from the APK and source ZIP inside the pack; no extra JSON manifest is required. It verifies source archive safety before extraction.
-- Full candidate release-pack validator was run locally against the actual pack and passed all APK/source/hash/signature checks.
-- No public Release v2.4.0 exists yet, so `latest.json` correctly remains at 2.1.0. Do not claim in-app updates are live until pack upload and Release verification succeed.
+## Signing migration
+- A new release key was created for 2.4.0 because the previous release key could not be used from this build environment.
+- Keep this exact signer for every later version: `54b847350b8f4166ea3add400330f360cbc53c4b82e53d709d2c9ff084eb21f7`.
+- Public 2.1.0 and previous unpublished 2.3.0 candidate use different signers. One-time uninstall/reinstall may be required; back up app data first. After 2.4.0 is installed, future releases with this signer can update in place.
+- Never commit or publish JKS/password/signing bundle.
 
-## Device/runtime limitations
-- Physical Android device is not attached: `adb devices -l` empty.
-- No `/dev/kvm`, Android Emulator binary or system image in the available runtime.
-- Therefore real installation, live Wi-Fi/mobile DNS, widgets, Quick Settings tile, daily background scheduling, notifications and Package Installer handoff remain **NOT TESTED**.
-- A local fake-resolver test is not evidence of real ISP/mobile connectivity.
+## GitHub cloud build
+- Main workflow: `.github/workflows/build-from-archive.yml`.
+- Trigger: commit `incoming/DNS-Connect-*-source.zip` to main.
+- It runs regression checks, builds with Java 17 + Android SDK 35, checks the signer, package, version and zipalign, creates a Release, uploads APK/source/checksums, verifies assets, then updates `latest.json`.
+- One repository secret is required once: `DNS_CONNECT_SIGNING_BUNDLE` (Base64 ZIP containing `release.jks` and `password.txt`).
+- The corresponding private secret text file is provided as a separate artifact in the current conversation. It must only be pasted into GitHub Actions Secrets and must never be committed.
+- New-secret page: https://github.com/Krenas/DNS-Connect/settings/secrets/actions/new
+- Source upload page: https://github.com/Krenas/DNS-Connect/upload/main/incoming
+- Fallback without secret: upload pre-signed release pack to https://github.com/Krenas/DNS-Connect/upload/main/incoming/drop; `publish-release-pack.yml` validates and publishes but does not rebuild the APK.
 
-## Key files
-- Latest candidate APK: `DNS-Connect-2.4.0-release.apk`.
-- Latest source archive: `DNS-Connect-2.4.0-source.zip`.
-- One-file release pack: `DNS-Connect-2.4.0-release-pack.zip`.
-- QA: `qa/DNS-Connect-2.4.0-QA.md`.
-- State: `PROJECT_STATE.json`.
-- Upload workflow: `.github/workflows/publish-release-pack.yml`.
-- Existing patch-2.3.0 remains historical bootstrap; once 2.4.0 is published, use the imported 2.4.0 source from main/release as the next baseline.
+## Device testing
+- ADB device list empty; no emulator binary/system image or `/dev/kvm`.
+- Real installation, live Wi-Fi/mobile DNS, widgets, Quick Settings tile, notification delivery, background scheduling and PackageInstaller handoff remain **NOT TESTED**.
+- Never report physical-device tests as PASS.
 
-## Current verified workflow runs
-- Publisher no-pack dry run PASS: https://github.com/Krenas/DNS-Connect/actions/runs/42638377064
-- Patch repository lint/payload verification PASS: https://github.com/Krenas/DNS-Connect/actions/runs/42638341106
-- Earlier 2.3 patch reconstruction PASS: https://github.com/Krenas/DNS-Connect/actions/runs/42626033799
+## Required publication sequence
+1. User adds `DNS_CONNECT_SIGNING_BUNDLE` once (value from separate private TXT artifact).
+2. User uploads `DNS-Connect-2.4.0-source.zip` to `incoming/` and commits.
+3. GitHub Actions builds, signs, publishes v2.4.0 and updates latest.json.
+4. User installs APK from Release. From then on, future verified releases can be installed from the app's single update button.
