@@ -91,6 +91,16 @@ curl --fail --silent --show-error --retry 3 \
 echo "db74d35e8090a16dea74213703423d2073e2370da7dd3dbae79144c6c42e8362  $WORK/DNS-Connect-2.3.0-three-server-branding.patch" | sha256sum --check
 patch --batch --forward --fuzz=0 -p1 -d "$WORK/source" < "$WORK/DNS-Connect-2.3.0-three-server-branding.patch"
 
+# Recreate source/release ZIPs on every run; zip -r otherwise retains stale entries.
+curl --fail --silent --show-error --retry 3 \
+  "https://raw.githubusercontent.com/$REPO/main/bootstrap/patch-2.3.0/package-release-fresh-archive.patch" \
+  -o "$WORK/package-release-fresh-archive.patch"
+echo "d8ae06372ecdce22c8d2f249657ddbacfb57ce8bb31753a2815bdda1d8e29466  $WORK/package-release-fresh-archive.patch" | sha256sum --check
+patch --batch --forward --fuzz=0 -p1 -d "$WORK/source" < "$WORK/package-release-fresh-archive.patch"
+bash -n "$WORK/source/package-release.sh"
+grep -Fq 'rm -f "$SOURCE_OUT"' "$WORK/source/package-release.sh"
+grep -Fq "'*.idsig' '*.orig' '*.rej'" "$WORK/source/package-release.sh"
+
 # Guard every true app-icon placement against accidentally drifting apart.
 for launcher in \
   app/src/main/res/mipmap-anydpi/ic_launcher.xml \
