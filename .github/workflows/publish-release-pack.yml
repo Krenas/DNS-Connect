@@ -53,26 +53,26 @@ jobs:
             exit 0
           fi
           [[ "$count" == "1" ]] || { echo "Upload exactly one release pack at a time." >&2; exit 1; }
-          PACK="\${packs[0]}"
+          PACK="${packs[0]}"
           unzip -tq "$PACK" >/dev/null
           unzip -q "$PACK" -d "$RUNNER_TEMP/dns-connect"
 
           mapfile -t apk_files < <(find "$RUNNER_TEMP/dns-connect" -type f -name 'DNS-Connect-*-release.apk' -print | sort)
           mapfile -t source_files < <(find "$RUNNER_TEMP/dns-connect" -type f -name 'DNS-Connect-*-source.zip' -print | sort)
           mapfile -t qa_files < <(find "$RUNNER_TEMP/dns-connect" -type f -name 'DNS-Connect-*-QA.md' -print | sort)
-          [[ "\${#apk_files[@]}" == "1" && "\${#source_files[@]}" == "1" && "\${#qa_files[@]}" == "1" ]] || {
+          [[ "${#apk_files[@]}" == "1" && "${#source_files[@]}" == "1" && "${#qa_files[@]}" == "1" ]] || {
             echo "Release pack must contain exactly one APK, one source ZIP and one QA report." >&2
             exit 1
           }
 
-          APK_PATH="\${apk_files[0]}"
-          SOURCE_PATH="\${source_files[0]}"
-          QA_PATH="\${qa_files[0]}"
+          APK_PATH="${apk_files[0]}"
+          SOURCE_PATH="${source_files[0]}"
+          QA_PATH="${qa_files[0]}"
           APK="$(basename "$APK_PATH")"
           SOURCE="$(basename "$SOURCE_PATH")"
           QA="$(basename "$QA_PATH")"
-          VERSION="\${APK#DNS-Connect-}"
-          VERSION="\${VERSION%-release.apk}"
+          VERSION="${APK#DNS-Connect-}"
+          VERSION="${VERSION%-release.apk}"
           [[ "$VERSION" =~ ^[0-9]+\.[0-9]+\.[0-9]+$ ]] || {
             echo "APK filename does not contain a semantic version." >&2
             exit 1
