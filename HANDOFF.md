@@ -32,11 +32,13 @@ A new 2.4.0 key was generated. Preserve the exact signer SHA-256 `54b847350b8f41
 - No repository secret is needed. This publishes the already-compiled APK; it does not rebuild it.
 - The 2.4.0 public Release is not published yet; latest.json must remain at 2.1.0 until this workflow completes.
 
-## GitHub compilation workflow
-- `.github/workflows/build-from-archive.yml` compiles source ZIP on Java 17 + Android SDK 35, runs tests, signs/validates APK, publishes it, then updates latest.json.
-- Requires one protected repository secret `DNS_CONNECT_SIGNING_BUNDLE` (Base64 ZIP with JKS and password).
-- Secret is not currently configured. Do not trigger cloud-build workflow until the secret exists.
-- Settings link: https://github.com/Krenas/DNS-Connect/settings/secrets/actions.
+## GitHub automatic compilation workflow
+- `.github/workflows/build-release.yml` now triggers on versioned source/build changes pushed to `main`; it derives the version from `app/build.gradle.kts`, uses `CHANGELOG.md`, runs checks, builds/signs APK, validates Release assets, then updates `latest.json`.
+- The initial source-import commit is intentionally excluded from this trigger so the initial 2.4.0 release-pack publication cannot race a second publication of the same tag.
+- For future releases after import, no manual workflow dispatch and no per-version source ZIP upload are needed.
+- One-time signing secret required: `DNS_CONNECT_SIGNING_BUNDLE` (Base64 ZIP containing the exact 2.4.0 JKS and password). Secret is not configured; never publish the key.
+- Initial source import remains a one-time upload of the prebuilt 2.4.0 release-pack ZIP to `incoming/drop`; that workflow also imports the source tree.
+- YAML validation: PASS — https://github.com/Krenas/DNS-Connect/actions/runs/42670275674.
 
 ## Device testing
 No phone attached; `adb devices -l` empty. No emulator/system image or `/dev/kvm`. Real install, Wi-Fi/mobile DNS, widgets, Quick Settings, notifications and PackageInstaller handoff are **NOT TESTED**.
