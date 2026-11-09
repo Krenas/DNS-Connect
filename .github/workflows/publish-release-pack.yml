@@ -52,57 +52,59 @@ jobs:
             echo "skip=true" >> "$GITHUB_OUTPUT"
             exit 0
           fi
-          [[ "$count" == "1" ]] || { echo "Upload one release pack at a time." >&2; exit 1; }
-          PACK="${packs[0]}"
+          [[ "$count" == "1" ]] || { echo "Upload exactly one release pack at a time." >&2; exit 1; }
+          PACK="\${packs[0]}"
           unzip -tq "$PACK" >/dev/null
           unzip -q "$PACK" -d "$RUNNER_TEMP/dns-connect"
-          cd "$RUNNER_TEMP/dns-connect"
-          META="$(find . -maxdepth 1 -type f -name 'latest-*-candidate.json' -print -quit)"
-          test -s "$META"
 
-          VERSION="$(jq -r '.version' "$META")"
-          TAG="$(jq -r '.tag' "$META")"
-          VERSION_CODE="$(jq -r '.versionCode' "$META")"
-          PACKAGE="$(jq -r '.package // "ru.krenas.dnsanalytics"' "$META")"
-          APK_SHA="$(jq -r '.sha256' "$META")"
-          APK_SIZE="$(jq -r '.size' "$META")"
-          SOURCE_SHA="$(jq -r '.sourceSha256' "$META")"
-          SOURCE_SIZE="$(jq -r '.sourceSize' "$META")"
-          SIGNER="$(jq -r '.signerSha256' "$META")"
+          mapfile -t apk_files < <(find "$RUNNER_TEMP/dns-connect" -type f -name 'DNS-Connect-*-release.apk' -print | sort)
+          mapfile -t source_files < <(find "$RUNNER_TEMP/dns-connect" -type f -name 'DNS-Connect-*-source.zip' -print | sort)
+          mapfile -t qa_files < <(find "$RUNNER_TEMP/dns-connect" -type f -name 'DNS-Connect-*-QA.md' -print | sort)
+          [[ "\${#apk_files[@]}" == "1" && "\${#source_files[@]}" == "1" && "\${#qa_files[@]}" == "1" ]] || {
+            echo "Release pack must contain exactly one APK, one source ZIP and one QA report." >&2
+            exit 1
+          }
 
-          [[ "$VERSION" =~ ^[0-9]+\.[0-9]+\.[0-9]+$ ]]
-          [[ "$TAG" == "v$VERSION" ]]
-          [[ "$VERSION_CODE" =~ ^[0-9]+$ ]]
-          [[ "$PACKAGE" == "ru.krenas.dnsanalytics" ]]
-          [[ "$APK_SHA" =~ ^[0-9a-f]{64}$ && "$SOURCE_SHA" =~ ^[0-9a-f]{64}$ ]]
-          [[ "$SIGNER" == "4dc48085b7ea161b57e6266611c5d6a28514df6f2ddfc26df14f3ac972debf90" ]]
+          APK_PATH="\${apk_files[0]}"
+          SOURCE_PATH="\${source_files[0]}"
+          QA_PATH="\${qa_files[0]}"
+          APK="$(basename "$APK_PATH")"
+          SOURCE="$(basename "$SOURCE_PATH")"
+          QA="$(basename "$QA_PATH")"
+          VERSION="\${APK#DNS-Connect-}"
+          VERSION="\${VERSION%-release.apk}"
+          [[ "$VERSION" =~ ^[0-9]+\.[0-9]+\.[0-9]+$ ]] || {
+            echo "APK filename does not contain a semantic version." >&2
+            exit 1
+          }
+          TAG="v$VERSION"
+          EXPECTED_PACKAGE="ru.krenas.dnsanalytics"
+          EXPECTED_SIGNER="4dc48085b7ea161b57e6266611c5d6a28514df6f2ddfc26df14f3ac972debf90"
 
-          APK="DNS-Connect-$VERSION-release.apk"
-          SOURCE="DNS-Connect-$VERSION-source.zip"
-          QA="DNS-Connect-$VERSION-QA.md"
-          CHECKSUMS="SHA256SUMS.txt"
-          for file in "$APK" "$SOURCE" "$QA" "$CHECKSUMS"; do
-            test -s "$file" || { echo "Missing release-pack file: $file" >&2; exit 1; }
-          done
-          [[ "$(wc -c < "$APK" | tr -d ' ')" == "$APK_SIZE" ]]
-          [[ "$(wc -c < "$SOURCE" | tr -d ' ')" == "$SOURCE_SIZE" ]]
-          echo "$APK_SHA  $APK" | sha256sum --check
-          echo "$SOURCE_SHA  $SOURCE" | sha256sum --check
+          BADGING="$("$ANDROID_HOME/build-tools/35.0.0/aapt" dump badging "$APK_PATH")"
+          read -r APK_PACKAGE VERSION_CODE APK_VERSION < <(awk -F "'" '/^package:/ { print $2, $4, $6; exit }' <<< "$BADGING")
+          [[ "$APK_PACKAGE" == "$EXPECTED_PACKAGE" && "$APK_VERSION" == "$VERSION" ]]
+          [[ "$VERSION_CODE" =~ ^[0-9]+$ && "$VERSION_CODE" -gt 0 ]]
 
-          sdkmanager --install "platforms;android-35" "build-tools;35.0.0"
-          BADGING="$("$ANDROID_HOME/build-tools/35.0.0/aapt" dump badging "$APK")"
-          read -r APK_PACKAGE APK_CODE APK_VERSION < <(awk -F "'" '/^package:/ {print $2, $4, $6; exit}' <<< "$BADGING")
-          [[ "$APK_PACKAGE" == "$PACKAGE" && "$APK_VERSION" == "$VERSION" && "$APK_CODE" == "$VERSION_CODE" ]]
-
-          SIGNATURE="$("$ANDROID_HOME/build-tools/35.0.0/apksigner" verify --verbose --print-certs "$APK")"
-          CERT="$(awk '/^Signer #1 certificate SHA-256 digest:/ {sub(/^Signer #1 certificate SHA-256 digest:[[:space:]]*/, ""); print tolower($0); exit}' <<< "$SIGNATURE")"
-          [[ "$CERT" == "$SIGNER" ]]
+          SIGNATURE="$("$ANDROID_HOME/build-tools/35.0.0/apksigner" verify --verbose --print-certs "$APK_PATH")"
+          CERT="$(awk '/^Signer #1 certificate SHA-256 digest:/ { sub(/^Signer #1 certificate SHA-256 digest:[[:space:]]*/, ""); print tolower($0); exit }' <<< "$SIGNATURE")"
+          [[ "$CERT" == "$EXPECTED_SIGNER" ]]
           grep -Fq 'Verified using v2 scheme (APK Signature Scheme v2): true' <<< "$SIGNATURE"
           grep -Fq 'Verified using v3 scheme (APK Signature Scheme v3): true' <<< "$SIGNATURE"
-          "$ANDROID_HOME/build-tools/35.0.0/zipalign" -c -v 4 "$APK" >/dev/null
+          "$ANDROID_HOME/build-tools/35.0.0/zipalign" -c -v 4 "$APK_PATH" >/dev/null
 
-          unzip -tq "$SOURCE" >/dev/null
-          python3 - "$SOURCE" <<'PY'
+          APK_SHA="$(sha256sum "$APK_PATH" | awk '{print $1}')"
+          SOURCE_SHA="$(sha256sum "$SOURCE_PATH" | awk '{print $1}')"
+          APK_SIZE="$(wc -c < "$APK_PATH" | tr -d ' ')"
+          SOURCE_SIZE="$(wc -c < "$SOURCE_PATH" | tr -d ' ')"
+          [[ "$APK_SIZE" -gt 0 && "$APK_SIZE" -le 104857600 ]]
+          [[ "$SOURCE_SIZE" -gt 0 && "$SOURCE_SIZE" -le 52428800 ]]
+          unzip -tq "$SOURCE_PATH" >/dev/null
+
+          SOURCE_DIR="$RUNNER_TEMP/dns-connect/source"
+          mkdir -p "$SOURCE_DIR"
+          unzip -q "$SOURCE_PATH" -d "$SOURCE_DIR"
+          python3 - "$SOURCE_PATH" <<'PY'
           import sys, stat, zipfile
           with zipfile.ZipFile(sys.argv[1]) as archive:
               names = archive.namelist()
@@ -132,19 +134,25 @@ jobs:
               if not required.issubset(set(names)):
                   raise SystemExit("Source ZIP misses a required project or updater file.")
           PY
-          unzip -p "$SOURCE" app/build.gradle.kts > "$RUNNER_TEMP/source-app.gradle.kts"
-          SRC_VERSION="$(awk -F '"' '/versionName[[:space:]]*=/ {print $2; exit}' "$RUNNER_TEMP/source-app.gradle.kts")"
-          SRC_CODE="$(awk -F '=' '/versionCode[[:space:]]*=/ {gsub(/[[:space:]]/, "", $2); print $2; exit}' "$RUNNER_TEMP/source-app.gradle.kts")"
-          SRC_PACKAGE="$(awk -F '"' '/applicationId[[:space:]]*=/ {print $2; exit}' "$RUNNER_TEMP/source-app.gradle.kts")"
-          [[ "$SRC_VERSION" == "$VERSION" && "$SRC_CODE" == "$VERSION_CODE" && "$SRC_PACKAGE" == "$PACKAGE" ]]
-          unzip -p "$SOURCE" app/src/main/java/ru/krenas/dnsanalytics/MainActivity.java | grep -F 'Проверить и обновить' >/dev/null
-          unzip -p "$SOURCE" app/src/main/java/ru/krenas/dnsanalytics/MainActivity.java | grep -F 'checkAndInstallLatestUpdate' >/dev/null
+          SRC_VERSION="$(awk -F '"' '/versionName[[:space:]]*=/ {print $2; exit}' "$SOURCE_DIR/app/build.gradle.kts")"
+          SRC_CODE="$(awk -F '=' '/versionCode[[:space:]]*=/ {gsub(/[[:space:]]/, "", $2); print $2; exit}' "$SOURCE_DIR/app/build.gradle.kts")"
+          SRC_PACKAGE="$(awk -F '"' '/applicationId[[:space:]]*=/ {print $2; exit}' "$SOURCE_DIR/app/build.gradle.kts")"
+          [[ "$SRC_VERSION" == "$VERSION" && "$SRC_CODE" == "$VERSION_CODE" && "$SRC_PACKAGE" == "$EXPECTED_PACKAGE" ]]
+          grep -Fq 'Проверить и обновить' "$SOURCE_DIR/app/src/main/java/ru/krenas/dnsanalytics/MainActivity.java"
+          grep -Fq 'checkAndInstallLatestUpdate' "$SOURCE_DIR/app/src/main/java/ru/krenas/dnsanalytics/MainActivity.java"
+          test -s "$SOURCE_DIR/app/src/main/java/ru/krenas/dnsanalytics/GitHubUpdateManager.java"
 
           CURRENT="$(curl -fsSL "https://raw.githubusercontent.com/$GITHUB_REPOSITORY/main/latest.json")"
           CURRENT_VERSION="$(jq -r '.version // "0.0.0"' <<< "$CURRENT")"
           CURRENT_CODE="$(jq -r '.versionCode // 0' <<< "$CURRENT")"
           dpkg --compare-versions "$VERSION" gt "$CURRENT_VERSION"
           [[ "$VERSION_CODE" -gt "$CURRENT_CODE" ]]
+
+          CHECKSUMS="$RUNNER_TEMP/dns-connect/SHA256SUMS.txt"
+          (cd "$RUNNER_TEMP/dns-connect" && sha256sum "$APK_PATH" "$SOURCE_PATH" > "$CHECKSUMS")
+          cp "$APK_PATH" "$RUNNER_TEMP/dns-connect/$APK"
+          cp "$SOURCE_PATH" "$RUNNER_TEMP/dns-connect/$SOURCE"
+          cp "$QA_PATH" "$RUNNER_TEMP/dns-connect/$QA"
 
           {
             echo "version=$VERSION"
@@ -153,15 +161,14 @@ jobs:
             echo "apk=$APK"
             echo "source=$SOURCE"
             echo "qa=$QA"
-            echo "checksums=$CHECKSUMS"
+            echo "checksums=SHA256SUMS.txt"
             echo "apk_sha=$APK_SHA"
             echo "source_sha=$SOURCE_SHA"
             echo "apk_size=$APK_SIZE"
             echo "source_size=$SOURCE_SIZE"
-            echo "signer=$SIGNER"
+            echo "signer=$CERT"
             echo "skip=false"
           } >> "$GITHUB_OUTPUT"
-
       - name: Import validated project source
         if: steps.candidate.outputs.skip != 'true'
         env:
