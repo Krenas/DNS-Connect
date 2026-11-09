@@ -13,16 +13,19 @@ jobs:
   inspect:
     runs-on: ubuntu-latest
     steps:
-      - name: Download the published 2.1.0 APK
+      - name: Download the published 2.1.0 APK through the Release Assets API
+        env:
+          GH_TOKEN: ${{ github.token }}
         shell: bash
         run: |
           set -euo pipefail
           mkdir -p "$RUNNER_TEMP/apk"
-          curl -fL --retry 3 --retry-delay 2 \
-            "https://github.com/Krenas/DNS-Connect/releases/download/v2.1.0/DNS-Connect-2.1.0-release.apk" \
-            -o "$RUNNER_TEMP/apk/DNS-Connect-2.1.0-release.apk"
+          gh api \
+            --header "Accept: application/octet-stream" \
+            /repos/Krenas/DNS-Connect/releases/assets/721365703 \
+            > "$RUNNER_TEMP/apk/DNS-Connect-2.1.0-release.apk"
           test -s "$RUNNER_TEMP/apk/DNS-Connect-2.1.0-release.apk"
-          sha256sum "$RUNNER_TEMP/apk/DNS-Connect-2.1.0-release.apk"
+          echo "c05e9cb8af2b4193ba2c77fb29bcb889e7588af4e61825af34c92af900c09755  $RUNNER_TEMP/apk/DNS-Connect-2.1.0-release.apk" | sha256sum --check
 
       - name: Install JADX CLI
         shell: bash
