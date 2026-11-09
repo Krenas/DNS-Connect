@@ -59,40 +59,45 @@ jobs:
 
           root = Path(os.environ["DECOMPILED"])
           source_root = root / "sources"
-          resource_root = root / "resources"
-          patterns = [
-              re.compile(r"Сервисы|Сервисы|Services", re.I),
-              re.compile(r"drawIcon|drawGlyph|drawSymbol|iconFor|iconName|server", re.I),
-          ]
-          print("=== JAVA SOURCE MATCHES ===")
-          count = 0
-          for path in source_root.rglob("*.java"):
-              try:
-                  lines = path.read_text(encoding="utf-8", errors="replace").splitlines()
-              except OSError:
-                  continue
-              matched = [i for i, line in enumerate(lines) if any(p.search(line) for p in patterns)]
-              if not matched:
-                  continue
-              print(f"FILE: {path.relative_to(source_root)}")
+          resource_root = root / "resources" / "res"
+          candidates = list(source_root.rglob("MainActivity.java"))
+          print("=== MAINACTIVITY LOCATOR ===")
+          if not candidates:
+              print("MainActivity.java not found")
+          for path in candidates:
+              lines = path.read_text(encoding="utf-8", errors="replace").splitlines()
+              print(f"FILE: {path.relative_to(source_root)}; {len(lines)} lines")
+              pattern = re.compile(r"Сервис|Services|server|draw|icon|glyph|symbol|Canvas|Path|Drawable|Bitmap", re.I)
+              hits = [i for i, line in enumerate(lines) if pattern.search(line)]
               selected = set()
-              for i in matched:
-                  selected.update(range(max(0, i-4), min(len(lines), i+7)))
+              for i in hits:
+                  selected.update(range(max(0, i-5), min(len(lines), i+9)))
               for i in sorted(selected):
-                  print(f"{i+1}: {lines[i][:280]}")
-              count += 1
-              if count >= 12:
-                  break
-          if count == 0:
-              print("No matching Java source found.")
-          print("=== ICON-RELATED RESOURCE FILENAMES ===")
-          for base in (resource_root / "res",):
+                  print(f"{i+1}: {lines[i][:300]}")
+          print("=== DRAWABLE AND MIPMAP RESOURCE FILES ===")
+          for base_name in ("drawable", "drawable-nodpi", "drawable-anydpi", "mipmap-anydpi", "mipmap-anydpi-v33"):
+              base = resource_root / base_name
+              if not base.exists():
+                  continue
+              for path in sorted(base.rglob("*")):
+                  if path.is_file():
+                      print(path.relative_to(resource_root))
+                      if path.suffix == ".xml" and re.search(r"server|service|dns|launcher|icon", path.name, re.I):
+                          print("--- XML CONTENT START ---")
+                          print(path.read_text(encoding="utf-8", errors="replace")[:10000])
+                          print("--- XML CONTENT END ---")
+          print("=== NAVIGATION LABEL REFERENCES ===")
+          for base in (source_root, root / "resources" / "res" / "values"):
               if base.exists():
-                  for path in sorted(base.rglob("*")):
-                      if path.is_file() and re.search(r"(server|service|dns|app.?icon|launcher|ic_)", path.name, re.I):
-                          print(path.relative_to(root))
+                  for path in base.rglob("*"):
+                      if path.is_file() and path.suffix in (".java", ".xml"):
+                          data = path.read_text(encoding="utf-8", errors="replace")
+                          if "Сервисы" in data or "Services" in data:
+                              print(f"{path.relative_to(root)}")
+                              for n, line in enumerate(data.splitlines(), 1):
+                                  if "Сервисы" in line or "Services" in line:
+                                      print(f"{n}: {line[:260]}")
           PY
-
       - name: Save decompiled icon audit
         if: always()
         uses: actions/upload-artifact@v4
