@@ -37,15 +37,23 @@ jobs:
           awk '
             /^diff --git / {
               if (active) exit
-              active = ($0 ~ /app\/src\/main\/java\/ru\/krenas\/dnsanalytics\/MainActivity\.java$/)
+              active = ($0 ~ /MainActivity\.java/)
             }
             active { print }
           ' "$RUNNER_TEMP/dns-connect.patch" > "$RUNNER_TEMP/MainActivity.patch"
+          awk '
+            /^diff --git / {
+              if (active) exit
+              active = ($0 ~ /GitHubUpdateManager\.java/)
+            }
+            active { print }
+          ' "$RUNNER_TEMP/dns-connect.patch" > "$RUNNER_TEMP/GitHubUpdateManager.patch"
           echo >> "$GITHUB_STEP_SUMMARY"
-          echo "## MainActivity patch excerpt (updater, branding, Services references)" >> "$GITHUB_STEP_SUMMARY"
-          grep -inE -C 3 'service|server|logo|icon|drawable|app.?icon|launcher|update' "$RUNNER_TEMP/MainActivity.patch" | head -n 240 | tee "$RUNNER_TEMP/mainactivity-review.txt" >> "$GITHUB_STEP_SUMMARY" || true
+          echo "## MainActivity patch (first 400 lines)" >> "$GITHUB_STEP_SUMMARY"
+          head -n 400 "$RUNNER_TEMP/MainActivity.patch" | tee "$RUNNER_TEMP/mainactivity-review.txt" >> "$GITHUB_STEP_SUMMARY"
           echo >> "$GITHUB_STEP_SUMMARY"
-          echo "Full MainActivity patch is attached as an artifact for later review." >> "$GITHUB_STEP_SUMMARY"
+          echo "## GitHubUpdateManager patch" >> "$GITHUB_STEP_SUMMARY"
+          cat "$RUNNER_TEMP/GitHubUpdateManager.patch" | tee "$RUNNER_TEMP/updater-review.txt" >> "$GITHUB_STEP_SUMMARY"
 
       - name: Upload inspection report
         uses: actions/upload-artifact@v4
