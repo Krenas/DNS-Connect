@@ -1,0 +1,101 @@
+name: Inspect the original Services icon from the 2.1.0 APK
+
+on:
+  push:
+    branches: ["inspect/legacy-service-icon"]
+    paths:
+      - ".github/workflows/inspect-legacy-service-icon.yml"
+
+permissions:
+  contents: read
+
+jobs:
+  inspect:
+    runs-on: ubuntu-latest
+    steps:
+      - name: Download the published 2.1.0 APK
+        shell: bash
+        run: |
+          set -euo pipefail
+          mkdir -p "$RUNNER_TEMP/apk"
+          curl -fL --retry 3 --retry-delay 2 \
+            "https://github.com/Krenas/DNS-Connect/releases/download/v2.1.0/DNS-Connect-2.1.0-release.apk" \
+            -o "$RUNNER_TEMP/apk/DNS-Connect-2.1.0-release.apk"
+          test -s "$RUNNER_TEMP/apk/DNS-Connect-2.1.0-release.apk"
+          sha256sum "$RUNNER_TEMP/apk/DNS-Connect-2.1.0-release.apk"
+
+      - name: Install JADX CLI
+        shell: bash
+        run: |
+          set -euo pipefail
+          curl -fL --retry 3 \
+            "https://github.com/skylot/jadx/releases/download/v1.5.6/jadx-1.5.6.zip" \
+            -o "$RUNNER_TEMP/jadx.zip"
+          mkdir -p "$RUNNER_TEMP/jadx"
+          unzip -q "$RUNNER_TEMP/jadx.zip" -d "$RUNNER_TEMP/jadx"
+          chmod +x "$RUNNER_TEMP/jadx/bin/jadx"
+          "$RUNNER_TEMP/jadx/bin/jadx" --version
+
+      - name: Decompile application sources and resources
+        shell: bash
+        run: |
+          set -euo pipefail
+          "$RUNNER_TEMP/jadx/bin/jadx" \
+            --show-bad-code \
+            -d "$RUNNER_TEMP/decompiled" \
+            "$RUNNER_TEMP/apk/DNS-Connect-2.1.0-release.apk"
+
+      - name: Locate Services navigation icon and launcher artwork
+        shell: bash
+        run: |
+          set -euo pipefail
+          python3 - <<'PY'
+          from pathlib import Path
+          import re
+
+          root = Path("$RUNNER_TEMP/decompiled")
+          source_root = root / "sources"
+          resource_root = root / "resources"
+          patterns = [
+              re.compile(r"Сервисы|Сервисы|Services", re.I),
+              re.compile(r"drawIcon|drawGlyph|drawSymbol|iconFor|iconName|server", re.I),
+          ]
+          print("=== JAVA SOURCE MATCHES ===")
+          count = 0
+          for path in source_root.rglob("*.java"):
+              try:
+                  lines = path.read_text(encoding="utf-8", errors="replace").splitlines()
+              except OSError:
+                  continue
+              matched = [i for i, line in enumerate(lines) if any(p.search(line) for p in patterns)]
+              if not matched:
+                  continue
+              print(f"FILE: {path.relative_to(source_root)}")
+              selected = set()
+              for i in matched:
+                  selected.update(range(max(0, i-4), min(len(lines), i+7)))
+              for i in sorted(selected):
+                  print(f"{i+1}: {lines[i][:280]}")
+              count += 1
+              if count >= 12:
+                  break
+          if count == 0:
+              print("No matching Java source found.")
+          print("=== ICON-RELATED RESOURCE FILENAMES ===")
+          for base in (resource_root / "res",):
+              if base.exists():
+                  for path in sorted(base.rglob("*")):
+                      if path.is_file() and re.search(r"(server|service|dns|app.?icon|launcher|ic_)", path.name, re.I):
+                          print(path.relative_to(root))
+          PY
+
+      - name: Save decompiled icon audit
+        if: always()
+        uses: actions/upload-artifact@v4
+        with:
+          name: dns-connect-2.1.0-services-icon-audit
+          path: |
+            ${{ runner.temp }}/decompiled/resources/res/drawable*
+            ${{ runner.temp }}/decompiled/sources/ru/krenas/dnsanalytics
+          if-no-files-found: warn
+          retention-days: 7
