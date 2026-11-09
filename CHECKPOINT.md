@@ -21,7 +21,7 @@
 - APK: package/version/versionCode verified; apksigner v2/v3 PASS; zipalign PASS; retained signer SHA-256 `4dc48085b7ea161b57e6266611c5d6a28514df6f2ddfc26df14f3ac972debf90`.
 - Source ZIP: 96 entries; ZIP integrity PASS; no unsafe paths, symlinks, signing material, APK/idsig, `.orig/.rej` or duplicate entries.
 - Packaging defect found and fixed: `zip -r` preserves stale entries in an existing archive. `package-release.sh` now deletes old source/release ZIPs before creating new ones and excludes temporary patch/build files.
-- Clean rebuild from original 2.1.0 source with the main patch and supplemental patches; main diff and branding diff applied with `--fuzz=0`. The packaging-fix supplemental patch is persisted in the public bootstrap.
+- Clean rebuild from original 2.1.0 source with the main patch and supplemental patches; main diff, branding patch and packaging-fix patch are integrated into the rebuild path; all patch hunks apply with `--fuzz=0`.
 - This is a locally built release candidate, not a published GitHub Release.
 ## 2.3.0 patch bootstrap
 - Main diff stored in `bootstrap/patch-2.3.0/`, 13 Base64 chunks.
@@ -68,4 +68,4 @@
 - Build/publish: https://github.com/Krenas/DNS-Connect/actions/workflows/build-from-archive.yml
 - Signing secret check: https://github.com/Krenas/DNS-Connect/actions/workflows/check-release-secrets.yml
 - Settings for the two secrets: https://github.com/Krenas/DNS-Connect/settings/secrets/actions
-- Latest patch verification run: https://github.com/Krenas/DNS-Connect/actions/runs/42588221283
+- Latest patch verification run: https://github.com/Krenas/DNS-Connect/actions/runs/42626033799
