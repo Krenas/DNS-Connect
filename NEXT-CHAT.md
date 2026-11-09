@@ -56,8 +56,8 @@ https://github.com/Krenas/DNS-Connect/upload/main/incoming/drop
 
 Secrets для этого pre-signed upload path не требуются; приватный ключ не покидает закрытое хранилище.
 
-- Publisher no-pack dry-run PASS: https://github.com/Krenas/DNS-Connect/actions/runs/42650867597
-- actionlint/ShellCheck проверки workflow PASS: https://github.com/Krenas/DNS-Connect/actions/runs/42650678457
+- Publisher no-pack dry-run PASS: https://github.com/Krenas/DNS-Connect/actions/runs/42652482963
+- actionlint/ShellCheck проверки workflow PASS: https://github.com/Krenas/DNS-Connect/actions/runs/42652466884
 - Поскольку pack ещё не закоммичен в incoming/drop, реальные шаги создания Release и latest.json пока не выполнялись. Не заявлять, что публичное автообновление уже активировано.
 
 ## Правила продолжения
