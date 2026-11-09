@@ -25,14 +25,14 @@ jobs:
           base64 --decode "$RUNNER_TEMP/patch.b64" > "$RUNNER_TEMP/patch.gz"
           gzip -t "$RUNNER_TEMP/patch.gz"
           gzip -dc "$RUNNER_TEMP/patch.gz" > "$RUNNER_TEMP/dns-connect.patch"
-          echo "## Patch file map" >> "$GITHUB_STEP_SUMMARY"
-          git apply --numstat "$RUNNER_TEMP/dns-connect.patch" | tee "$RUNNER_TEMP/patch-files.txt" >> "$GITHUB_STEP_SUMMARY"
-          echo >> "$GITHUB_STEP_SUMMARY"
-          echo "## Resource/icon changes" >> "$GITHUB_STEP_SUMMARY"
+          echo "## Patch file map"
+          git apply --numstat "$RUNNER_TEMP/dns-connect.patch" | tee "$RUNNER_TEMP/patch-files.txt"
+          echo
+          echo "## Resource/icon changes"
           if grep -Ei '(^|/)(res|assets)/|icon|drawable|mipmap|launcher' "$RUNNER_TEMP/patch-files.txt"; then
-            grep -Ei '(^|/)(res|assets)/|icon|drawable|mipmap|launcher' "$RUNNER_TEMP/patch-files.txt" >> "$GITHUB_STEP_SUMMARY"
+            :
           else
-            echo "No icon, drawable, mipmap, or asset files are changed by the patch." | tee -a "$GITHUB_STEP_SUMMARY"
+            echo "No icon, drawable, mipmap, or asset files are changed by the patch."
           fi
           awk '
             /^diff --git / {
@@ -48,12 +48,12 @@ jobs:
             }
             active { print }
           ' "$RUNNER_TEMP/dns-connect.patch" > "$RUNNER_TEMP/GitHubUpdateManager.patch"
-          echo >> "$GITHUB_STEP_SUMMARY"
-          echo "## MainActivity patch (first 400 lines)" >> "$GITHUB_STEP_SUMMARY"
-          head -n 400 "$RUNNER_TEMP/MainActivity.patch" | tee "$RUNNER_TEMP/mainactivity-review.txt" >> "$GITHUB_STEP_SUMMARY"
-          echo >> "$GITHUB_STEP_SUMMARY"
-          echo "## GitHubUpdateManager patch" >> "$GITHUB_STEP_SUMMARY"
-          cat "$RUNNER_TEMP/GitHubUpdateManager.patch" | tee "$RUNNER_TEMP/updater-review.txt" >> "$GITHUB_STEP_SUMMARY"
+          echo
+          echo "## MainActivity patch (first 400 lines)"
+          head -n 400 "$RUNNER_TEMP/MainActivity.patch" | tee "$RUNNER_TEMP/mainactivity-review.txt"
+          echo
+          echo "## GitHubUpdateManager patch"
+          cat "$RUNNER_TEMP/GitHubUpdateManager.patch" | tee "$RUNNER_TEMP/updater-review.txt"
 
       - name: Upload inspection report
         uses: actions/upload-artifact@v4
@@ -62,6 +62,8 @@ jobs:
           path: |
             ${{ runner.temp }}/patch-files.txt
             ${{ runner.temp }}/MainActivity.patch
+            ${{ runner.temp }}/GitHubUpdateManager.patch
             ${{ runner.temp }}/mainactivity-review.txt
+            ${{ runner.temp }}/updater-review.txt
           if-no-files-found: error
           retention-days: 7
