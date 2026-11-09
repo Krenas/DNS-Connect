@@ -11,7 +11,6 @@ on:
       - "gradle.properties"
       - "gradlew"
       - "settings.gradle.kts"
-      - "CHANGELOG.md"
   workflow_dispatch:
     inputs:
       version_tag:
@@ -54,6 +53,7 @@ jobs:
         shell: bash
         run: |
           set -euo pipefail
+          [[ -f app/build.gradle.kts ]] || { echo "Android source is missing: app/build.gradle.kts. Import the complete source project before running a release build." >&2; exit 1; }
           SOURCE_VERSION="$(sed -nE 's/^[[:space:]]*versionName[[:space:]]*=[[:space:]]*"([^"]+)".*/\1/p' app/build.gradle.kts | head -n1)"
           VERSION_CODE="$(sed -nE 's/^[[:space:]]*versionCode[[:space:]]*=[[:space:]]*([0-9]+).*/\1/p' app/build.gradle.kts | head -n1)"
           [[ "$SOURCE_VERSION" =~ ^[0-9]+\.[0-9]+\.[0-9]+$ ]] || {
@@ -75,9 +75,7 @@ jobs:
             TAG="v$VERSION"
           fi
 
-          for value in SIGNING_BUNDLE; do
-            [ -n "${!value}" ] || { echo "Missing repository secret: $value. Configure it once in Settings > Secrets and variables > Actions." >&2; exit 1; }
-          done
+          [[ -n "$SIGNING_BUNDLE" ]] || { echo "Missing repository secret DNS_CONNECT_SIGNING_BUNDLE. Add it once in Settings > Secrets and variables > Actions." >&2; exit 1; }
           if gh release view "$TAG" --repo "$GITHUB_REPOSITORY" >/dev/null 2>&1; then
             echo "Release $TAG already exists; refusing to overwrite it." >&2
             exit 1
