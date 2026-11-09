@@ -18,3 +18,5 @@ A deployment dry-run was checked in GitHub Actions. No Release or latest.json is
 The dry-run also checks the retained signer using a pipefail-safe extraction command.
 
 The source validation drains complete ZIP entries to avoid short-circuiting the stream under strict shell mode.
+
+The validator derives package version, versionCode, APK size, checksum and signer from the contents of the release pack itself; no sidecar JSON manifest is required.
