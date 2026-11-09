@@ -41,14 +41,15 @@
 - Publisher no-pack dry-run PASS: https://github.com/Krenas/DNS-Connect/actions/runs/42652482963.
 - All workflow YAML lint PASS: https://github.com/Krenas/DNS-Connect/actions/runs/42664140795.
 
-## GitHub cloud build for later releases
-- Workflow: `.github/workflows/build-from-archive.yml`.
-- Trigger: commit `incoming/DNS-Connect-*-source.zip` to main.
-- Runs regression checks, compiles on Java 17 + Android SDK 35, checks package/version/signature/zipalign, creates Release, uploads APK/source/checksums and only then updates latest.json.
-- Requires one GitHub Actions secret: `DNS_CONNECT_SIGNING_BUNDLE` (Base64 ZIP containing release.jks and password.txt).
-- This secret is NOT currently configured. Do not trigger this workflow until the secret is added under https://github.com/Krenas/DNS-Connect/settings/secrets/actions.
-- No signing material is committed to the public repository.
-
+## GitHub cloud build and automatic releases
+- `.github/workflows/build-release.yml` is configured to build and publish automatically when app source/build files change on `main`.
+- It derives version/tag/versionCode from `app/build.gradle.kts`, reads release notes from `CHANGELOG.md`, runs regression tests, builds the APK, verifies package/version/certificate/zipalign, publishes Release assets and then updates `latest.json`.
+- The initial source import commit from the release-pack publisher is excluded from this auto-trigger to prevent racing the first 2.4.0 release.
+- After the initial source import, future versioned source commits do not require uploading a ZIP or manually dispatching a workflow.
+- One protected repository secret remains required: `DNS_CONNECT_SIGNING_BUNDLE` (Base64 ZIP containing release.jks and password.txt). It is not configured. Do not place signing material in the public repo.
+- Initial source import still requires the release-pack ZIP to be added once to `incoming/drop`; the publisher validates the pre-signed APK, publishes the release, imports the source tree and updates `latest.json`.
+- YAML lint after automation change: PASS — https://github.com/Krenas/DNS-Connect/actions/runs/42670275674.
+ 
 ## Device testing
 - No ADB device, Android Emulator binary/system image or `/dev/kvm` in build environment.
 - Real install, live Wi-Fi/mobile DNS, widgets, Quick Settings tile, notification delivery, background scheduling and PackageInstaller handoff remain **NOT TESTED**.
