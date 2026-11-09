@@ -1,0 +1,29 @@
+name: Temporary GitHub Actions write permission check
+
+on:
+  push:
+    branches: [main]
+    paths:
+      - "incoming/drop/actions-write-probe.txt"
+
+permissions:
+  contents: write
+
+jobs:
+  verify:
+    if: contains(github.event.head_commit.added, 'incoming/drop/actions-write-probe.txt')
+    runs-on: ubuntu-latest
+    steps:
+      - name: Verify contents write permission
+        env:
+          GH_TOKEN: ${{ github.token }}
+        shell: bash
+        run: |
+          set -euo pipefail
+          payload="$(printf '%s' 'DNS Connect Actions write permission verified.' | base64 -w0)"
+          gh api --method PUT "/repos/${GITHUB_REPOSITORY}/contents/.github/actions-write-probe-result.txt" \
+            -f message="chore: verify GitHub Actions contents write permission" \
+            -f content="$payload" \
+            -f branch="$GITHUB_REF_NAME"
+          gh api "/repos/${GITHUB_REPOSITORY}/contents/.github/actions-write-probe-result.txt?ref=$GITHUB_REF_NAME" \
+            --jq '.path' | grep -Fx '.github/actions-write-probe-result.txt'
