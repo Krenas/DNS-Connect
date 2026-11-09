@@ -1,28 +1,27 @@
-# Incoming source ZIP drop zone
+# Incoming source ZIP drop zone — GitHub cloud build
 
-Place a clean source archive here using the name:
+Upload a clean Gradle source archive named `DNS-Connect-MAJOR.MINOR.PATCH-source.zip` to this folder and commit it to `main`. This triggers `.github/workflows/build-from-archive.yml`.
 
-`DNS-Connect-MAJOR.MINOR.PATCH-source.zip`
+## One-time setup
 
-Committing a ZIP matching `incoming/DNS-Connect-*-source.zip` to `main` automatically triggers `.github/workflows/build-from-archive.yml`.
+Before the first build, create exactly one protected repository secret:
 
-The workflow then:
-1. Validates ZIP paths and refuses embedded signing keys/password files.
-2. Extracts the Gradle project and checks its app ID, version and versionCode.
-3. Runs regression checks, builds the signed APK with Java 17 / Android SDK 35, and checks package/version/signing certificate/zipalign.
-4. Creates a draft GitHub Release, uploads the APK/source ZIP/checksums, verifies GitHub asset SHA-256 and sizes, then publishes the Release.
-5. Updates `latest.json`, so DNS Connect can discover the update in-app.
-6. Removes the temporary source archive from this folder after success.
+- Name: `DNS_CONNECT_SIGNING_BUNDLE`
+- Value: the full Base64 text from the private file `DNS-Connect-2.4.0-GitHub-Signing-Secret.txt` supplied separately to the repository owner.
 
-## One-time repository setup
+The value encodes a ZIP containing `release.jks` and `password.txt`. GitHub Actions decodes it only into the ephemeral runner, verifies the alias and password, masks the password in logs, and removes the files after the job. Never commit the secret file, JKS, password, or Base64 string to the public repository, ZIP, issue, or logs.
 
-For the cloud build workflows (`build-from-archive.yml` and `build-release.yml`), configure exactly these two protected repository secrets in Settings → Secrets and variables → Actions:
+Secret page: https://github.com/Krenas/DNS-Connect/settings/secrets/actions/new
 
-- `ANDROID_KEYSTORE_BASE64`: Base64-encoded release JKS.
-- `ANDROID_KEYSTORE_PASSWORD`: keystore password. The workflow uses the fixed alias `dnsconnect` and the same password for the key.
+## What the workflow does
 
-`ANDROID_KEY_ALIAS` and `ANDROID_KEY_PASSWORD` are not required secrets in the current workflow. The separate `publish-uploaded-release.yml` path verifies and publishes an already-built APK/source pair and does not sign or rebuild them.
+1. Validates ZIP integrity, safe paths, no duplicate entries/symlinks, no signing material, password files or prebuilt APKs.
+2. Extracts the Gradle source and checks package, version and increasing versionCode.
+3. Runs UI, catalogue and icon checks.
+4. Builds a signed release APK with Java 17 / Android SDK 35.
+5. Verifies package, version, certificate fingerprint, APK v2/v3 signatures and zipalign.
+6. Creates the GitHub Release, uploads APK/source/checksums and verifies asset size and digest.
+7. Updates `latest.json` only after asset verification.
+8. Removes the temporary source ZIP after success.
 
-The build stops safely if a secret is missing or the APK signer does not match the retained certificate. Never place the JKS or password in this folder, the public repository, or the source ZIP.
-
-The assistant should create this ZIP from the persistent Project source inputs and commit it here. The user does not need to upload the archive manually or run Gradle locally.
+For each later release, keep the same `DNS_CONNECT_SIGNING_BUNDLE` secret and upload the next versioned source ZIP. The user does not need a local terminal or Android SDK.
