@@ -113,7 +113,6 @@ jobs:
           {
             for _ in $(seq 1 245); do echo; done
             cat <<'TEST'
-          grep -q 'tiny ? "Тест"' "$ROOT/app/src/main/java/ru/krenas/dnsanalytics/QuickActionsWidgetProvider.java" \
             && grep -q 'android:maxLines="1" android:ellipsize="end"' "$ROOT/app/src/main/res/layout/widget_dns_quick_actions.xml" \
             && pass 'quick-actions widget uses compact labels and ellipsizes long text instead of overflowing' \
             || fail 'quick-actions widget compact labels may be clipped'
@@ -122,6 +121,8 @@ jobs:
             && pass 'adaptive monochrome icon uses the same globe, server and verification motif as the launcher icon' \
             || fail 'adaptive monochrome icon is inconsistent with the new app identity'
           grep -q 'setMinHeight(dp(52))' "$MAIN" \
+            && ! grep -q 'new LayoutParams(0, dp(50)' "$MAIN" \
+            && ! grep -q 'marginParams(LayoutParams.MATCH_PARENT, dp(50)' "$MAIN" \
           TEST
           } > "$RUNNER_TEMP/branding-fixture/tests/verify-ui.sh"
           patch --batch --forward --fuzz=0 -p1 -d "$RUNNER_TEMP/branding-fixture" --dry-run < "$PATCH"
