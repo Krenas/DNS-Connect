@@ -26,7 +26,12 @@ jobs:
           fetch-depth: 0
 
       - name: Install Android verification tools
-        uses: android-actions/setup-android@v3
+        shell: bash
+        run: |
+          set -euo pipefail
+          SDKMANAGER="$(command -v sdkmanager)"
+          yes | "$SDKMANAGER" --licenses >/dev/null
+          "$SDKMANAGER" --install "platforms;android-35" "build-tools;35.0.0"
 
       - name: Validate release pack
         id: candidate
@@ -135,19 +140,21 @@ jobs:
           dpkg --compare-versions "$VERSION" gt "$CURRENT_VERSION"
           [[ "$VERSION_CODE" -gt "$CURRENT_CODE" ]]
 
-          echo "version=$VERSION" >> "$GITHUB_OUTPUT"
-          echo "tag=$TAG" >> "$GITHUB_OUTPUT"
-          echo "version_code=$VERSION_CODE" >> "$GITHUB_OUTPUT"
-          echo "apk=$APK" >> "$GITHUB_OUTPUT"
-          echo "source=$SOURCE" >> "$GITHUB_OUTPUT"
-          echo "qa=$QA" >> "$GITHUB_OUTPUT"
-          echo "checksums=$CHECKSUMS" >> "$GITHUB_OUTPUT"
-          echo "apk_sha=$APK_SHA" >> "$GITHUB_OUTPUT"
-          echo "source_sha=$SOURCE_SHA" >> "$GITHUB_OUTPUT"
-          echo "apk_size=$APK_SIZE" >> "$GITHUB_OUTPUT"
-          echo "source_size=$SOURCE_SIZE" >> "$GITHUB_OUTPUT"
-          echo "signer=$SIGNER" >> "$GITHUB_OUTPUT"
-          echo "skip=false" >> "$GITHUB_OUTPUT"
+          {
+            echo "version=$VERSION"
+            echo "tag=$TAG"
+            echo "version_code=$VERSION_CODE"
+            echo "apk=$APK"
+            echo "source=$SOURCE"
+            echo "qa=$QA"
+            echo "checksums=$CHECKSUMS"
+            echo "apk_sha=$APK_SHA"
+            echo "source_sha=$SOURCE_SHA"
+            echo "apk_size=$APK_SIZE"
+            echo "source_size=$SOURCE_SIZE"
+            echo "signer=$SIGNER"
+            echo "skip=false"
+          } >> "$GITHUB_OUTPUT"
 
       - name: Import validated project source
         if: steps.candidate.outputs.skip != 'true'
