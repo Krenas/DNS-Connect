@@ -1,5 +1,7 @@
 # DNS Connect
 
+> **Продолжение проекта:** новый чат внутри Project «DNS» должен начинать с [NEXT-CHAT.md](NEXT-CHAT.md), затем сверять [HANDOFF.md](HANDOFF.md) и [CHECKPOINT.md](CHECKPOINT.md). Повторная загрузка уже существующих Project Files не требуется.
+
 Android-приложение для диагностики DNS-резолверов, интернет-подключения и выбранных сервисов.
 
 - Package: `ru.krenas.dnsanalytics`
