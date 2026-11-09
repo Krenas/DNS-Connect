@@ -16,13 +16,54 @@
   "publicRelease230": false,
   "latestJsonVersion": "2.1.0",
   "cloudSigningReady": false,
-  "requiredActionsSecrets": ["ANDROID_KEYSTORE_BASE64", "ANDROID_KEYSTORE_PASSWORD"],
+  "requiredActionsSecrets": [
+    "ANDROID_KEYSTORE_BASE64",
+    "ANDROID_KEYSTORE_PASSWORD"
+  ],
   "physicalDeviceTesting": false,
   "updaterRuntimeTested": false,
   "lastAutomatedQa": {
     "pass": 266,
     "fail": 0,
-    "notes": "108 self-tests + 17 catalogue + 141 UI/resource/navigation/theme/updater checks; apksigner v2/v3 and zipalign previously passed"
+    "breakdown": {
+      "selfTests": 108,
+      "catalogue": 17,
+      "uiResourceNavigationThemeUpdater": 141,
+      "iconGlyphTypes": 24
+    },
+    "apkSignatureV2": true,
+    "apkSignatureV3": true,
+    "zipalign": true,
+    "sourceZipSafety": true,
+    "notes": "Fresh local Android SDK 35 build verified. Android physical-device/network/widget/Quick Settings/updater-install tests remain NOT TESTED."
   },
-  "continuationRule": "Use Project Files and the persistent GitHub patch; do not ask the user to re-upload existing files. Re-check GitHub state before claiming release/build/update completion."
+  "continuationRule": "Use Project Files and the persistent GitHub patch; do not ask the user to re-upload existing files. Re-check GitHub state before claiming release/build/update completion.",
+  "latestBuildDate": "2026-11-09",
+  "currentCandidate": {
+    "version": "2.3.0",
+    "versionCode": 24,
+    "package": "ru.krenas.dnsanalytics",
+    "apk": {
+      "file": "DNS-Connect-2.3.0-release.apk",
+      "size": 1202232,
+      "sha256": "6bc23aeaf3dd45f0541c1f49b74425415d204bb433272a3348a1fced37d83eb9"
+    },
+    "sourceZip": {
+      "file": "DNS-Connect-2.3.0-source.zip",
+      "size": 994948,
+      "sha256": "0476dbeb7d4e322007ad47c4d489ac52e730bfdb709be95f0564f336066b04ea"
+    },
+    "releasePack": {
+      "file": "DNS-Connect-2.3.0-release-pack.zip",
+      "size": 1961178,
+      "sha256": "52b6fb2a28676fffbd28c6c74f0e2f05107d5cb275d72a64f09ee7c2a62e6ad9"
+    },
+    "signingCertificateSha256": "4dc48085b7ea161b57e6266611c5d6a28514df6f2ddfc26df14f3ac972debf90",
+    "status": "LOCALLY_BUILT_AND_VERIFIED_NOT_PUBLISHED"
+  },
+  "packageReleaseFreshArchiveFix": {
+    "path": "bootstrap/patch-2.3.0/package-release-fresh-archive.patch",
+    "sha256": "d8ae06372ecdce22c8d2f249657ddbacfb57ce8bb31753a2815bdda1d8e29466",
+    "size": 1452
+  }
 }
