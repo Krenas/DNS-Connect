@@ -11,21 +11,22 @@
     "version": "2.3.0",
     "package": "ru.krenas.dnsanalytics",
     "versionCode": 24,
-    "apkSha256": "b376f8f15e6bcf815845bdb65bb6cd204703a5f9d21282b63a658f86d1407ff4",
+    "apkSha256": "6bc23aeaf3dd45f0541c1f49b74425415d204bb433272a3348a1fced37d83eb9",
     "apkSize": 1202232,
-    "sourceZipSha256": "6a2f58e6dda10a94963992c2ede9a2976a07c1d0a59e9a08b2873809b827ba0a",
-    "sourceZipSize": 1006209,
+    "sourceZipSha256": "0476dbeb7d4e322007ad47c4d489ac52e730bfdb709be95f0564f336066b04ea",
+    "sourceZipSize": 994948,
     "signingCertificateSha256": "4dc48085b7ea161b57e6266611c5d6a28514df6f2ddfc26df14f3ac972debf90",
     "artifactStatus": "LOCALLY_BUILT_AND_VERIFIED_PENDING_PUBLIC_RELEASE",
-    "releasePackSha256": "64c616533adcddc5b5d193cdce759057cd916bc77a7ad1128acc087b93bc8ad3",
-    "releasePackSize": 1972724,
+    "releasePackSha256": "52b6fb2a28676fffbd28c6c74f0e2f05107d5cb275d72a64f09ee7c2a62e6ad9",
+    "releasePackSize": 1961178,
     "previousPreBrandingCandidate": {
       "apkSha256": "9cc3bb050e4efd9fa74d161e4f2e2ec6e034b8f9ec2095f79233c178aaa1bc56",
       "apkSize": 1202232,
       "sourceZipSha256": "cb3f80e694d81fe8b615e374260b9b2e5ffdb759660ad8e4d160bdb2c982edc2",
       "sourceZipSize": 1006206,
       "note": "Superseded. Do not publish or distribute."
-    }
+    },
+    "lastBuiltAt": "2026-11-09"
   },
   "patch": {
     "encoding": "base64(gzip(unified-diff))",
@@ -124,7 +125,8 @@
     "liveNetworkDns": false,
     "liveWidgetsAndQuickSettings": false,
     "liveUpdaterInstall": false,
-    "githubReleasePublished": false
+    "githubReleasePublished": false,
+    "packageFreshArchiveFix": true
   },
   "signing": {
     "continuityCertificateSha256": "4dc48085b7ea161b57e6266611c5d6a28514df6f2ddfc26df14f3ac972debf90",
@@ -140,6 +142,14 @@
       "size": 3710,
       "sha256": "db74d35e8090a16dea74213703423d2073e2370da7dd3dbae79144c6c42e8362",
       "applyAfter": "main 2.3.0 unified diff",
+      "fuzz": 0
+    },
+    {
+      "file": "package-release-fresh-archive.patch",
+      "purpose": "Recreate source/release ZIPs from scratch and exclude stale patch rejects/backup files and Android idsig artifacts.",
+      "size": 1452,
+      "sha256": "d8ae06372ecdce22c8d2f249657ddbacfb57ce8bb31753a2815bdda1d8e29466",
+      "applyAfter": "branding-3server-monochrome.patch",
       "fuzz": 0
     }
   ]
