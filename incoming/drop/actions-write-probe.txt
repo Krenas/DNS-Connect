@@ -1,1 +1,1 @@
-Temporary check: GitHub Actions must be able to write repository contents.
+Temporary check trigger updated for GitHub Actions permission test.
