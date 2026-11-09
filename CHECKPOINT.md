@@ -26,7 +26,8 @@
 
 ## Branding/icon
 - Найдена существующая app-brand эмблема с тремя серверными блоками: `app/src/main/res/drawable-nodpi/ic_dns_connect_foreground.png`.
-- Four adaptive launcher variants (regular/round, normal/API33+) and app toolbar already reference this foreground image.
+- Manifest `android:icon` / `android:roundIcon` reference regular/round adaptive launchers; all four adaptive launcher XML variants (regular/round, normal/API33+) and app toolbar reference this foreground image. Full mipmap-density audit found no separate legacy PNG launcher icons.
+- Manifest's `@drawable/ic_dns_tile` is the System DNS Quick Settings tile icon, not an app icon; keep it purpose-specific.
 - Android 13+ monochrome launcher was a mismatch; fixed by `bootstrap/patch-2.3.0/branding-3server-monochrome.patch` (3,058 bytes, SHA-256 `549bc339abbc254c460775de3b12cf9337050674ca52b7f1e127af9847a43c2c`).
 - Rebuild entry point now applies the extra patch and checks all launcher XML refs + toolbar and three-server geometry. CI run 42584359364 SUCCESS, including zero-fuzz patch application and bash syntax.
 - In APK 2.1.0, bottom-tab «Сервисы» is glyph `apps` (four squares), generic `server` glyph is two rack bars. Both are functional glyphs, not the app brand logo. Keep Quick Settings and widget icons purpose-specific.
