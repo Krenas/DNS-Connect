@@ -88,7 +88,7 @@ patch --batch --forward --fuzz=0 -p1 -d "$WORK/source" < "$WORK/DNS-Connect-2.3.
 curl --fail --silent --show-error --retry 3 \
   "https://raw.githubusercontent.com/$REPO/main/bootstrap/patch-2.3.0/branding-3server-monochrome.patch" \
   -o "$WORK/DNS-Connect-2.3.0-three-server-branding.patch"
-echo "4bc4ee8bce82316c712da063621994a2facd250b397e86316acb4774e0e17a5a  $WORK/DNS-Connect-2.3.0-three-server-branding.patch" | sha256sum --check
+echo "db74d35e8090a16dea74213703423d2073e2370da7dd3dbae79144c6c42e8362  $WORK/DNS-Connect-2.3.0-three-server-branding.patch" | sha256sum --check
 patch --batch --forward --fuzz=0 -p1 -d "$WORK/source" < "$WORK/DNS-Connect-2.3.0-three-server-branding.patch"
 
 # Guard every true app-icon placement against accidentally drifting apart.
