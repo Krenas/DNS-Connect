@@ -116,3 +116,14 @@ Tests above are automated offline checks. They do not certify real-world DNS beh
 - GitHub Actions workflow has been reviewed and actionlint passed, but it has never been run with a real incoming source ZIP. It requires the four protected secrets and a validated source archive.
 - Current GitHub integration tools do not expose create/update Actions repository secrets. GitHub's REST endpoint requires Secrets: write authorization and an encrypted value. This remains a one-time owner-side setup unless an appropriate GitHub credential/permission becomes available.
 - Next: apply permanent 2.3.0 patch to Project source base; create clean ZIP; commit into incoming/; configure protected signing secrets; run actual build, verify release APK/source digests and latest.json; then verify in-app update and device installer behavior.
+
+
+## Последняя проверенная контрольная точка — 2026-11-09
+- На main workflows build-from-archive.yml и build-release.yml используют только два secrets: ANDROID_KEYSTORE_BASE64 + ANDROID_KEYSTORE_PASSWORD. Alias dnsconnect и same key password are hardcoded/reused in workflow. README подновлён. Старые инструкции о четырёх secrets считать историческими.
+- Run 42567340994 SUCCESS: actionlint all workflows, 13/13 patch chunks, Base64/gzip/unified diff SHA checks. Run 42567301113 тоже SUCCESS.
+- Run 42567301201 SUCCESS, но оба secrets отсутствуют: ANDROID_KEYSTORE_BASE64, ANDROID_KEYSTORE_PASSWORD. Пользователь/owner должен один раз добавить их здесь: https://github.com/Krenas/DNS-Connect/settings/secrets/actions. Не просить присылать пароли в чат.
+- Публичный main всё ещё без app/ Gradle project; `app/build.gradle.kts` и AndroidManifest отсутствуют. latest.json=2.1.0, versionCode 22; Release 2.3.0 не опубликован. Updater пока не обнаружит 2.3.0.
+- Patch 2.3.0 audited by workflow 42567150343: changes MainActivity.java, GitHubUpdateManager.java and build/test files; no resources/drawables/mipmap/launcher icon assets touched. User's exact request to reuse existing three-server icon from «Сервисы» as app icon and all app-icon placements is NOT DONE.
+- Candidate updater code in patch has URL/version/package/SHA-256/certificate checks before delegating to Android installer, but live download/install and physical-device verification remain NOT TESTED. Android installation flow is user-confirmed; no silent install claim.
+- Historical candidate automated report 266 PASS/0 FAIL, APK v2/v3 + zipalign PASS; those tests were run in a previous runtime and physical device was not tested.
+- Next: configure the 2 secrets, recover source 2.1.0 from Project Files + patch to create source 2.3.0 ZIP, restore and verify exact three-server service icon, run release build, verify assets/latest.json, then actual Android install/update checks.
