@@ -37,7 +37,7 @@ The repository includes `bootstrap/rebuild-dns-connect-from-project-files.sh`. I
 - extracts the 2.1.0 source ZIP from the outer Project archive;
 - downloads or accepts cached patch chunks;
 - validates all chunk hashes, the complete Base64 payload, gzip payload and unified diff;
-- applies the main patch and the supplemental three-server monochrome branding patch with zero fuzz;
+- applies the main patch, the three-server monochrome branding patch, and the fresh-archive packaging fix with zero fuzz;
 - verifies version/package identity;
 - creates a clean 2.3.0 source ZIP;
 - extracts the SDK platform/build tools from `Download Zip.zip`;
@@ -59,7 +59,7 @@ The optional fifth argument is a directory containing already fetched `000.b64` 
 
 ## Release status
 
-The first 2.3.0 candidate built before the supplemental icon/test patch is superseded; its hashes remain in `manifest.json` for audit only. The current locally built candidate is: APK SHA-256 `b376f8f15e6bcf815845bdb65bb6cd204703a5f9d21282b63a658f86d1407ff4` (1,202,232 bytes), source ZIP SHA-256 `6a2f58e6dda10a94963992c2ede9a2976a07c1d0a59e9a08b2873809b827ba0a` (1,006,209 bytes), release pack SHA-256 `39411fa462904d776f6212c7c2dd46c42f4ffa57d02ecdcadaaf1c352aa5a681` (1,972,455 bytes). Automated tests: 266 PASS / 0 FAIL; apksigner v2/v3 and zipalign PASS. Source ZIP passed safety validation. Public GitHub Release `v2.3.0` has not yet been published. The public `latest.json` still points to 2.1.0. Do not report the in-app updater live until release assets and manifest have been published and re-verified.
+The pre-branding candidate is superseded; its hashes remain in `manifest.json` for audit only. The current clean local 2.3.0 candidate is: APK SHA-256 `6bc23aeaf3dd45f0541c1f49b74425415d204bb433272a3348a1fced37d83eb9` (1,202,232 bytes), source ZIP SHA-256 `0476dbeb7d4e322007ad47c4d489ac52e730bfdb709be95f0564f336066b04ea` (994,948 bytes), release pack SHA-256 `52b6fb2a28676fffbd28c6c74f0e2f05107d5cb275d72a64f09ee7c2a62e6ad9` (1,961,178 bytes). Automated tests: 266 PASS / 0 FAIL (108 self-tests, 17 catalogue checks, 141 UI/resource/navigation/theme/updater checks); icon audit covers 24 glyph types. apksigner v2/v3, zipalign, package/version, source ZIP integrity and safety PASS. The source ZIP contains 96 files and excludes signing material, APK/idsig output, `.orig/.rej` patch debris and unsafe paths. The packaging script was fixed to recreate ZIPs instead of retaining stale entries. Public GitHub Release `v2.3.0` has not yet been published. The public `latest.json` still points to 2.1.0. Do not report the in-app updater live until release assets and manifest have been published and re-verified.
 
 The updater validates URL, version, package, signer, size and SHA-256 before handing off to Android's package installer. Android still requires the user to confirm installation.
 
