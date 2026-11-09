@@ -76,6 +76,64 @@ jobs:
           git apply --numstat "$RUNNER_TEMP/DNS-Connect-2.3.0.patch" > "$RUNNER_TEMP/patch-numstat.txt"
           cat "$RUNNER_TEMP/patch-numstat.txt"
 
+      - name: Verify the supplemental three-server monochrome branding patch
+        shell: bash
+        run: |
+          set -euo pipefail
+          MANIFEST=bootstrap/patch-2.3.0/manifest.json
+          PATCH=bootstrap/patch-2.3.0/branding-3server-monochrome.patch
+          EXPECTED_SIZE="$(jq -r '.supplementalPatches[0].size' "$MANIFEST")"
+          EXPECTED_SHA="$(jq -r '.supplementalPatches[0].sha256' "$MANIFEST")"
+          [[ "$(wc -c < "$PATCH" | tr -d ' ')" = "$EXPECTED_SIZE" ]]
+          echo "$EXPECTED_SHA  $PATCH" | sha256sum --check
+          git apply --numstat "$PATCH"
+
+          # Recreate the original monochrome launcher resource extracted from 2.1.0
+          # to prove that the supplemental hunk applies cleanly with zero fuzz.
+          mkdir -p "$RUNNER_TEMP/branding-fixture/app/src/main/res/drawable"
+          cat > "$RUNNER_TEMP/branding-fixture/app/src/main/res/drawable/ic_launcher_monochrome.xml" <<'XML'
+          <?xml version="1.0" encoding="utf-8"?>
+          <vector xmlns:android="http://schemas.android.com/apk/res/android"
+              android:height="108dp"
+              android:width="108dp"
+              android:viewportWidth="108"
+              android:viewportHeight="108">
+              <path
+                  android:fillColor="#00000000"
+                  android:pathData="M54,12 C77,12 95,30 95,53 C95,76 77,94 54,94 C31,94 13,76 13,53 C13,30 31,12 54,12 Z"
+                  android:strokeColor="#ffffffff"
+                  android:strokeWidth="4.5"
+                  android:strokeLineCap="round"
+                  android:strokeLineJoin="round"/>
+              <path
+                  android:fillColor="#00000000"
+                  android:pathData="M54,13 C42,24 36,38 36,53 C36,68 42,82 54,93 M54,13 C66,24 72,38 72,53 C72,68 66,82 54,93 M16,43 C28,49 40,52 54,52 C68,52 80,49 92,43 M18,66 C30,61 42,59 54,59 C66,59 78,61 90,66"
+                  android:strokeColor="#ffffffff"
+                  android:strokeWidth="3.5"
+                  android:strokeLineCap="round"/>
+              <path
+                  android:fillColor="#00000000"
+                  android:pathData="M54,27 C75,34 87,44 91,57 C86,74 72,86 54,93 C36,86 22,74 17,57 C21,44 33,34 54,27 Z"
+                  android:strokeColor="#ffffffff"
+                  android:strokeWidth="4.5"
+                  android:strokeLineCap="round"
+                  android:strokeLineJoin="round"/>
+              <path
+                  android:fillColor="#ffffffff"
+                  android:pathData="M34,48 H74 V54 H34 Z M34,59 H74 V65 H34 Z"/>
+              <path
+                  android:fillColor="#ffffffff"
+                  android:pathData="M41,75 L49,83 L68,64 L73,69 L49,93 L36,80 Z"/>
+          </vector>
+          XML
+          patch --batch --forward --fuzz=0 -p1 -d "$RUNNER_TEMP/branding-fixture" --dry-run < "$PATCH"
+          patch --batch --forward --fuzz=0 -p1 -d "$RUNNER_TEMP/branding-fixture" < "$PATCH"
+          grep -Fq 'M29,17 H79' "$RUNNER_TEMP/branding-fixture/app/src/main/res/drawable/ic_launcher_monochrome.xml"
+          grep -Fq 'M35,25 m-2.5,0' "$RUNNER_TEMP/branding-fixture/app/src/main/res/drawable/ic_launcher_monochrome.xml"
+          grep -Fq 'M44,25 H72 M44,51 H72 M44,77 H72' "$RUNNER_TEMP/branding-fixture/app/src/main/res/drawable/ic_launcher_monochrome.xml"
+
+          bash -n bootstrap/rebuild-dns-connect-from-project-files.sh
+
       - name: Publish verified patch reconstruction as a workflow artifact
         uses: actions/upload-artifact@v4
         with:
