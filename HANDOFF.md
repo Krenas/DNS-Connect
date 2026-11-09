@@ -65,41 +65,57 @@ Alias зафиксирован как `dnsconnect`; пароль ключа ис
 
 ## Сборка и QA
 
-Зафиксированный кандидат предыдущей локальной сборки 2.3.0 (артефакты не закреплены в Project Files текущего чата):
-- APK: 1,202,232 bytes; SHA-256 `9cc3bb050e4efd9fa74d161e4f2e2ec6e034b8f9ec2095f79233c178aaa1bc56`.
-- Source ZIP: 1,006,206 bytes; SHA-256 `cb3f80e694d81fe8b615e374260b9b2e5ffdb759660ad8e4d160bdb2c982edc2`.
-- Release pack SHA-256 `43c6ddaf71e79fd631222d19b85e101810debf8b3158b3cfe8ff45f27b29c13b`.
-- Ранее записанный автоматический результат: self-tests 108 PASS, каталог 17 PASS, UI/resource/navigation/theme/updater audit 141 PASS — всего 266 PASS / 0 FAIL. APK signature v2/v3 и zipalign — PASS.
-- В текущем продолжении также были повторно заявлены PASS для patch apply, UI audit, catalogue (17/17) и glyph/resource tests.
-- Физический Android, реальная Wi-Fi/mobile сеть, live DNS, Quick Settings, виджеты, фактическое скачивание и установка обновления через приложение — NOT TESTED.
+<badge>2.3.0 локальный кандидат собран</badge>
 
-Не обещать «ошибок больше нет»: автоматические проверки не заменяют тест на устройстве и проверку реальной сети.
+Последняя локальная сборка выполнена из Project source 2.1.0 + основного патча + supplemental branding/UI patch, с SDK platform/build-tools 35 и сохранённым signing key 2.2.x.
 
-## Иконка — брендинг найден, патч добавлен; полный APK ещё требует пересборки
+- APK: `DNS-Connect-2.3.0-release.apk`, 1,202,232 bytes.
+- APK SHA-256: `b376f8f15e6bcf815845bdb65bb6cd204703a5f9d21282b63a658f86d1407ff4`.
+- Source ZIP: `DNS-Connect-2.3.0-source.zip`, 1,006,209 bytes.
+- Source ZIP SHA-256: `6a2f58e6dda10a94963992c2ede9a2976a07c1d0a59e9a08b2873809b827ba0a`.
+- Release pack: `DNS-Connect-2.3.0-release-pack.zip`, 1,972,455 bytes.
+- Release pack SHA-256: `39411fa462904d776f6212c7c2dd46c42f4ffa57d02ecdcadaaf1c352aa5a681`.
+- Проверки: 108 self-tests PASS, 17 catalogue PASS, 141 UI/resource/navigation/theme/updater audit PASS; итого **266 PASS / 0 FAIL**.
+- `tests/verify-icons.py`: PASS (24 glyph types).
+- APK: apksigner v2/v3 PASS, zipalign PASS, package `ru.krenas.dnsanalytics`, version 2.3.0 / code 24.
+- Source ZIP: unzip test PASS; safety audit PASS, signing material/passwords/unsafe paths not found.
+- Clean reconstruct: оригинальный source ZIP 2.1.0 + main diff + supplemental diff применились с `--fuzz=0`.
 
-Пользователь просил использовать существующую DNS Connect эмблему с тремя серверами во всех местах, где должна отображаться иконка приложения.
+**НЕ ПРОВЕРЕНО на физическом Android:** установка APK, доступ к реальным DNS/сервисам, виджеты, Quick Settings tile, скачивание APK обновления из приложения и системная установка. 266 автоматических PASS не означают, что физические проверки уже выполнены.
 
-- Исходная эмблема с тремя серверными блоками найдена в `app/src/main/res/drawable-nodpi/ic_dns_connect_foreground.png` (трёхсерверная иллюстрация с глобусом и щитом DNS).
-- Декомпиляция опубликованного APK 2.1.0 подтвердила: manifest `android:icon` = `@mipmap/ic_launcher`, `android:roundIcon` = `@mipmap/ic_launcher_round`; оба ресурса и их API 33+ варианты используют `@drawable/ic_dns_connect_foreground`. Верхняя панель приложения также использует `R.drawable.ic_dns_connect_foreground`.
-- Полный mipmap audit не обнаружил отдельных legacy PNG launcher icons в density-папках. `android:icon="@drawable/ic_dns_tile"` относится к системной DNS-плитке, а не к launcher app icon; его оставляем функциональным.
-- Исключение: Android 13+ themed/monochrome launcher resource `app/src/main/res/drawable/ic_launcher_monochrome.xml` до этого показывал отдельный глобус/щит с двумя полосами. Он заменён на компактный монохромный символ из трёх серверных стоек.
-- Новый supplementary patch: `bootstrap/patch-2.3.0/branding-3server-monochrome.patch`; size 3,058; SHA-256 `549bc339abbc254c460775de3b12cf9337050674ca52b7f1e127af9847a43c2c`.
-- `bootstrap/rebuild-dns-connect-from-project-files.sh` теперь применяет этот патч после основной 2.3.0 diff, проверяет SHA и подтверждает, что все четыре launcher XML варианта и toolbar ссылаются на общий foreground. DNS Quick Settings tile и widget icons остаются функциональными значками, не заменяются брендингом.
-- CI run `42584359364` — SUCCESS: actionlint, 13 main patch fragments, base64/gzip/diff hashes, supplementary patch hash и apply с `--fuzz=0`, три серверных уровня в themed icon, `bash -n` rebuild script.
-- В опубликованной версии 2.1.0 пункт нижней навигации «Сервисы» сам по себе использует глиф `apps` (четыре квадрата), а generic `server` glyph — две горизонтальные стойки. Это отдельные функциональные навигационные глифы; найденная трёхсерверная эмблема — app brand foreground. Не заменять профильные навигационные/виджетные иконки логотипом.
-- Из-за нового resource patch предыдущий APK/source candidate 2.3.0 устарел. Его старые hashes оставлены в `manifest.json` только для аудита и помечены как superseded. Текущий source+APK с branding patch ещё НЕ пересобран; hash нового кандидата не установлен.
-- Не использовать генерацию коллажей и не рисовать новую эмблему вместо имеющейся.
+### Совместимость подписи — важное ограничение
+
+- Публичный APK 2.1.0 подписан сертификатом SHA-256 `7767de2ba22670531c53ca6c76ea74e82c4d140f0907727644b2cd0864840c2b`.
+- Новый APK 2.3.0 подписан сохранённым сертификатом 2.2.x SHA-256 `4dc48085b7ea161b57e6266611c5d6a28514df6f2ddfc26df14f3ac972debf90`.
+- Эти сертификаты разные. APK 2.3.0 нельзя установить поверх оставшегося 2.1.0 как обычное обновление Android. Для устройств на 2.2.x с сохранённым сертификатом обновление совместимо. Для 2.1.0 потребуется отдельная миграция/переустановка; пользовательские данные могут быть удалены. Не обещать seamless update с 2.1.0.
+
+### Публикация
+
+Это проверенный локальный кандидат, но **GitHub Release v2.3.0 ещё НЕ опубликован**. Public `latest.json` по-прежнему остаётся 2.1.0; не обновлять его, пока APK/source/checksums не будут загружены в Release и SHA/размеры не будут сверены.
+
+
+## Иконка — итоговое состояние
+
+- Существующая эмблема с тремя серверами находится в `app/src/main/res/drawable-nodpi/ic_dns_connect_foreground.png`: три серверных блока, глобус и щит DNS.
+- Manifest `android:icon` и `android:roundIcon` направлены на regular/round adaptive launcher; все 4 adaptive XML (normal/API33+, regular/round) и верхний бренд-блок приложения используют этот же foreground.
+- Android 13+ themed/monochrome icon раньше отличался старым рисунком с двумя рядами. Теперь он заменён на три серверных блока.
+- Дополнительный патч `bootstrap/patch-2.3.0/branding-3server-monochrome.patch` включает также исправление теста UI, который проверял старый рисунок. Размер 3,710 bytes; SHA-256 `db74d35e8090a16dea74213703423d2073e2370da7dd3dbae79144c6c42e8362`.
+- Rebuild script применяет его после основной diff и проверяет SHA, launcher links, toolbar brand icon и monochrome three-server geometry.
+- Bottom-tab «Сервисы» в публичном APK 2.1.0 использует функциональный glyph `apps` (четыре квадрата); generic `server` glyph отображает два горизонтальных блока. Это не app logo. DNS Quick Settings tile и виджеты сохраняют функциональные glyphs, не подменяются логотипом.
+- Последняя проверка patch CI: run `42587450681` SUCCESS; запуск на обновлённом manifest после записи новых candidate hashes ещё выполняется/должен быть перепроверен.
+
 
 ## Фактический статус GitHub на 2026-11-09
 
-- Public main содержит документацию, workflow и patch bootstrap, но Android Gradle project пока не импортирован в корень репозитория.
-- Опубликованы только два дубликата release 2.1.0 (теги `v2.1.0` и `2.1.0`).
-- `latest.json` всё ещё указывает на 2.1.0 / code 22 / SHA-256 `c05e9cb8af2b4193ba2c77fb29bcb889e7588af4e61825af34c92af900c09755`.
-- Release 2.3.0 НЕ опубликован. Установленный updater пока не должен обнаруживать 2.3.0.
-- Последняя проверка main workflow/lint/patch integrity: run 42567494192 — SUCCESS.
-- Последний signing-secret check: run 42567494139 — workflow SUCCESS, но оба secrets отсутствуют.
-- `.github/workflows/build-from-archive.yml` собирает ZIP из `incoming/DNS-Connect-*-source.zip`, проверяет package/version/signature/zipalign, готовит release assets и только после успешной проверки обновляет `latest.json`.
-- Не менять `latest.json` до реальной публикации APK + source + checksums и проверки SHA/размера GitHub release assets.
+- Public main всё ещё содержит workflows, docs и patch bootstrap; Android Gradle source ещё не импортирован в корень.
+- Public releases пока только дублируют версию 2.1.0. v2.3.0 не опубликован.
+- Public `latest.json` остаётся 2.1.0 / code 22 / SHA-256 `c05e9cb8af2b4193ba2c77fb29bcb889e7588af4e61825af34c92af900c09755`.
+- Build-from-archive workflow подготовлен, но cloud signing secrets отсутствуют.
+- Required secrets: ровно `ANDROID_KEYSTORE_BASE64` и `ANDROID_KEYSTORE_PASSWORD`. Connector не предоставляет безопасного API для их создания. Не публиковать signing files в public repo.
+- Запущен release candidate locally; APK/source/release-pack hashes приведены выше и в `bootstrap/patch-2.3.0/manifest.json`.
+- После проверки workflow новых метаданных обновить manifest/handoff; затем ещё требуется загрузка assets и публикация release (через поддерживаемый GitHub upload path).
+
+
 
 ## Критические правила продолжения
 
