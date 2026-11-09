@@ -108,7 +108,6 @@ jobs:
               <path android:fillColor="#FFFFFFFF" android:pathData="M41,75 L49,83 L68,64 L73,69 L49,93 L36,80 Z" />
           </vector>
           XML
-          patch --batch --forward --fuzz=0 -p1 -d "$RUNNER_TEMP/branding-fixture" --dry-run < "$PATCH"
           mkdir -p "$RUNNER_TEMP/branding-fixture/tests"
           {
             for _ in $(seq 1 245); do echo; done
