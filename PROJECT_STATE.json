@@ -65,5 +65,11 @@
     "path": "bootstrap/patch-2.3.0/package-release-fresh-archive.patch",
     "sha256": "d8ae06372ecdce22c8d2f249657ddbacfb57ce8bb31753a2815bdda1d8e29466",
     "size": 1452
+  },
+  "latestPatchVerificationRun": {
+    "runNumber": 54,
+    "id": 42626033799,
+    "conclusion": "success",
+    "url": "https://github.com/Krenas/DNS-Connect/actions/runs/42626033799"
   }
 }
