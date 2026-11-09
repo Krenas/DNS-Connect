@@ -122,9 +122,9 @@
   "supplementalPatches": [
     {
       "file": "branding-3server-monochrome.patch",
-      "purpose": "Make Android 13+ themed launcher icon match the existing three-server DNS Connect foreground.",
-      "size": 2271,
-      "sha256": "4bc4ee8bce82316c712da063621994a2facd250b397e86316acb4774e0e17a5a",
+      "purpose": "Align Android 13+ monochrome launcher icon with the three-server app mark and update the UI regression assertion for the new icon.",
+      "size": 3710,
+      "sha256": "db74d35e8090a16dea74213703423d2073e2370da7dd3dbae79144c6c42e8362",
       "applyAfter": "main 2.3.0 unified diff",
       "fuzz": 0
     }
