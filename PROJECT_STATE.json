@@ -35,7 +35,9 @@
     "apkSignatureV3": true,
     "zipalign": true,
     "sourceZipSafety": true,
-    "notes": "Fresh local Android SDK 35 build verified. Android physical-device/network/widget/Quick Settings/updater-install tests remain NOT TESTED."
+    "independentFullBuild": true,
+    "independentApkEntryContentMatch": true,
+    "notes": "Full build-local.sh rerun with preserved private JKS. Physical Android install/runtime, live network, widgets, Quick Settings and Installer handoff remain NOT TESTED."
   },
   "continuationRule": "Use Project Files and the persistent GitHub patch; do not ask the user to re-upload existing files. Re-check GitHub state before claiming release/build/update completion.",
   "latestBuildDate": "2026-11-09",
@@ -55,8 +57,8 @@
     },
     "releasePack": {
       "file": "DNS-Connect-2.3.0-release-pack.zip",
-      "size": 1961178,
-      "sha256": "52b6fb2a28676fffbd28c6c74f0e2f05107d5cb275d72a64f09ee7c2a62e6ad9"
+      "size": 1961751,
+      "sha256": "e5354978a4c06b91505f0cea60991a135eb7f0c5e0ffb8fa0c825047c1eaaa60"
     },
     "signingCertificateSha256": "4dc48085b7ea161b57e6266611c5d6a28514df6f2ddfc26df14f3ac972debf90",
     "status": "LOCALLY_BUILT_AND_VERIFIED_NOT_PUBLISHED"
@@ -71,5 +73,23 @@
     "id": 42626033799,
     "conclusion": "success",
     "url": "https://github.com/Krenas/DNS-Connect/actions/runs/42626033799"
-  }
+  },
+  "signingDecision": "KEEP_EXISTING_2.2_X_KEY",
+  "persistentSignerVerifiedAgainstCandidate": true,
+  "public21UpgradeRequiresUninstall": true,
+  "signingCertificateSha256": "4dc48085b7ea161b57e6266611c5d6a28514df6f2ddfc26df14f3ac972debf90",
+  "public21CertificateSha256": "7767de2ba22670531c53ca6c76ea74e82c4d140f0907727644b2cd0864840c2b",
+  "lastLocalDeviceEnvironmentCheck": {
+    "date": "2026-11-09",
+    "adbDevices": 0,
+    "emulatorBinaryAvailable": false,
+    "androidSystemImageAvailable": false,
+    "kvmAvailable": false,
+    "physicalDeviceRuntime": "NOT_TESTED",
+    "reason": "No attached Android device, no KVM, no emulator package/system image, and no build-container network access.",
+    "buildAndStaticChecks": "PASS",
+    "independentBuildFromSourceZip": "PASS",
+    "all26ApkZipEntryContentsMatchCandidate": true
+  },
+  "qaReport": "qa/DNS-Connect-2.3.0-QA.md"
 }
