@@ -15,7 +15,7 @@
 - Version 2.3.0 / versionCode 24 / package `ru.krenas.dnsanalytics`.
 - APK: 1,202,232 bytes; SHA-256 `6bc23aeaf3dd45f0541c1f49b74425415d204bb433272a3348a1fced37d83eb9`.
 - Clean source ZIP: 994,948 bytes; SHA-256 `0476dbeb7d4e322007ad47c4d489ac52e730bfdb709be95f0564f336066b04ea`.
-- Release pack: 1,961,178 bytes; SHA-256 `52b6fb2a28676fffbd28c6c74f0e2f05107d5cb275d72a64f09ee7c2a62e6ad9`.
+- Release pack: 1,961,751 bytes; SHA-256 `e5354978a4c06b91505f0cea60991a135eb7f0c5e0ffb8fa0c825047c1eaaa60`.
 - Automated QA: **266 PASS / 0 FAIL** = 108 self-tests + 17 catalogue tests + 141 UI/resource/navigation/theme/updater checks.
 - Separate icon audit: PASS (24 glyph types).
 - APK: package/version/versionCode verified; apksigner v2/v3 PASS; zipalign PASS; retained signer SHA-256 `4dc48085b7ea161b57e6266611c5d6a28514df6f2ddfc26df14f3ac972debf90`.
@@ -69,3 +69,25 @@
 - Signing secret check: https://github.com/Krenas/DNS-Connect/actions/workflows/check-release-secrets.yml
 - Settings for the two secrets: https://github.com/Krenas/DNS-Connect/settings/secrets/actions
 - Latest patch verification run: https://github.com/Krenas/DNS-Connect/actions/runs/42626033799
+
+
+## Independent rebuild and real-device availability check — 2026-11-09 14:00 UTC
+- Re-extracted the supplied 2.3.0 source ZIP and ran its complete `build-local.sh` with the preserved private JKS. Build completed successfully.
+- Independently compiled every Java source against Android API 35, compiled/linked resources with aapt2, generated DEX with D8 and checked the signed APK with apksigner/zipalign.
+- Supplied APK and independent rebuild have identical contents for all 26 ZIP entries, including `classes.dex`, resources and manifest. Whole-file digest differs because the signing/container layer was regenerated; both APKs verify against the same certificate.
+- Re-ran tests: **108 self-tests PASS / 0 FAIL; 17 catalogue PASS / 0 FAIL; 141 UI/resource/navigation/theme/updater PASS / 0 FAIL; 24 icon glyph types PASS**.
+- Independently audited source ZIP: 96 entries, valid ZIP, no unsafe paths, symlinks, duplicate names, signing materials, APK/idsig or patch debris.
+- Manifest inspected: launcher, 6 widget providers, updater job, private update provider, speed service and Quick Settings tile; export and permission attributes inspected.
+- Device availability: `adb devices -l` empty; `/dev/kvm` absent; no emulator binary/system image in the available SDK bundle; build-container network unavailable. Physical-device, Android UI runtime, launcher widget runtime, Quick Settings runtime, live network and Package Installer tests remain **NOT TESTED**. See [QA report](qa/DNS-Connect-2.3.0-QA.md).
+- Release pack refreshed: 1,961,751 bytes; SHA-256 `e5354978a4c06b91505f0cea60991a135eb7f0c5e0ffb8fa0c825047c1eaaa60`.
+
+## Final signing decision
+- The 2.2.x private JKS exists in the private repository and its certificate SHA-256 was checked against the 2.3.0 APK: exact match `4dc48085b7ea161b57e6266611c5d6a28514df6f2ddfc26df14f3ac972debf90`.
+- Keep this signer for 2.3.0 and all future versions. Do not generate a new key: it would unnecessarily break future in-place updates from this candidate.
+- Public 2.1.0 certificate `7767de2ba22670531c53ca6c76ea74e82c4d140f0907727644b2cd0864840c2b` differs. The private signing history starts with the 2.2.x identity; the old 2.1.0 private key was not found. A verified Android signing-rotation lineage cannot be created without that old key.
+- Consequently, 2.1.0 must be uninstalled before installing 2.3.0; uninstall may remove app-local data. Upgrades from 2.2.x using the retained signer remain compatible.
+
+## Updated QA references
+- Detailed report in the public source repository: `qa/DNS-Connect-2.3.0-QA.md`.
+- Candidate APK and source SHA-256 values above remain unchanged.
+- Public Release 2.3.0 still not published; `latest.json` stays on 2.1.0 pending verified GitHub Release assets.
