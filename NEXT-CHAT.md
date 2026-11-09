@@ -16,7 +16,7 @@
 - Package ID: `ru.krenas.dnsanalytics`.
 - Существующая эмблема с тремя серверами уже используется в regular/round launcher и app toolbar. Android 13+ themed/monochrome mismatch исправлен дополнительным патчем.
 - Основной patch bootstrap и supplemental branding/UI test patch лежат в `bootstrap/patch-2.3.0/`. Используй текущий `manifest.json` и rebuild script — не старые хеши из истории.
-- Локально собран candidate 2.3.0: см. свежие APK/source/release-pack hashes в `CHECKPOINT.md`. Перепроверь их при получении артефактов; не предполагай, что старые пути `/mnt/data` ещё существуют.
+- Локально собран candidate 2.3.0 с сохранённой подписью. APK SHA-256: `6bc23aeaf3dd45f0541c1f49b74425415d204bb433272a3348a1fced37d83eb9`; source ZIP: `0476dbeb7d4e322007ad47c4d489ac52e730bfdb709be95f0564f336066b04ea`; release pack: `52b6fb2a28676fffbd28c6c74f0e2f05107d5cb275d72a64f09ee7c2a62e6ad9`. Размеры и полный QA — в `CHECKPOINT.md`. Новый supplemental patch исправляет упаковщик; не предполагать, что старые пути `/mnt/data` существуют.
 
 ## Достигнутый QA
 - 2.3.0 / versionCode 24.
@@ -32,7 +32,7 @@
 - Release v2.3.0 ещё не создан и не загружен.
 - Public `latest.json` ещё указывает на 2.1.0.
 - Cloud build workflow требует два Actions secrets: `ANDROID_KEYSTORE_BASE64`, `ANDROID_KEYSTORE_PASSWORD`; последний secret-check показал, что оба отсутствуют.
-- Набор GitHub-инструментов в текущей среде не позволяет безопасно создать repository secrets либо загружать release binaries directly. Найти доступный безопасный механизм; не обходить это публикацией ключа.
+- В текущем подключении GitHub нет действия для загрузки release binary assets/создания repository secrets. Сборка уже выполнена локально с ключом из приватного репозитория; не публиковать ключ. Продолжить поиск безопасного способа загрузить проверенные APK/source assets или использовать Actions workflow.
 - Не менять `latest.json` до загрузки APK/source/checksums и проверки SHA/size у GitHub Release assets.
 
 ## Продолжать циклическую проверку
