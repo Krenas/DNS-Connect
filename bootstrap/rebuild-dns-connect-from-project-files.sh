@@ -83,6 +83,35 @@ echo "0d2e4baaa30f1d336f32a6f92f293536f3b12498681f641d4870ff9c16a756d1  $WORK/DN
 unzip -q "$WORK/DNS-Connect-2.1.0-source.zip" -d "$WORK/source"
 patch --batch --forward --fuzz=0 -p1 -d "$WORK/source" < "$WORK/DNS-Connect-2.3.0.patch"
 
+# Apply the supplemental branding patch: Android 13+ themed icons must use
+# the same three-server mark as the adaptive launcher foreground and toolbar.
+curl --fail --silent --show-error --retry 3 \
+  "https://raw.githubusercontent.com/$REPO/main/bootstrap/patch-2.3.0/branding-3server-monochrome.patch" \
+  -o "$WORK/DNS-Connect-2.3.0-three-server-branding.patch"
+echo "549bc339abbc254c460775de3b12cf9337050674ca52b7f1e127af9847a43c2c  $WORK/DNS-Connect-2.3.0-three-server-branding.patch" | sha256sum --check
+patch --batch --forward --fuzz=0 -p1 -d "$WORK/source" < "$WORK/DNS-Connect-2.3.0-three-server-branding.patch"
+
+# Guard every true app-icon placement against accidentally drifting apart.
+for launcher in \
+  app/src/main/res/mipmap-anydpi/ic_launcher.xml \
+  app/src/main/res/mipmap-anydpi/ic_launcher_round.xml \
+  app/src/main/res/mipmap-anydpi-v33/ic_launcher.xml \
+  app/src/main/res/mipmap-anydpi-v33/ic_launcher_round.xml; do
+  grep -Fq '@drawable/ic_dns_connect_foreground' "$WORK/source/$launcher" || {
+    echo "Launcher variant does not use the three-server foreground: $launcher" >&2
+    exit 6
+  }
+done
+grep -Fq 'imageView.setImageResource(R.drawable.ic_dns_connect_foreground)' \
+  "$WORK/source/app/src/main/java/ru/krenas/dnsanalytics/MainActivity.java" || {
+  echo "The in-app brand mark does not use the launcher foreground." >&2
+  exit 6
+}
+grep -Fq 'M29,17 H79' "$WORK/source/app/src/main/res/drawable/ic_launcher_monochrome.xml" || {
+  echo "Android themed launcher icon is missing the three-server rack mark." >&2
+  exit 6
+}
+
 VERSION="$(sed -nE 's/^[[:space:]]*versionName[[:space:]]*=[[:space:]]*"([^"]+)".*/\1/p' "$WORK/source/app/build.gradle.kts" | head -n1)"
 VERSION_CODE="$(sed -nE 's/^[[:space:]]*versionCode[[:space:]]*=[[:space:]]*([0-9]+).*/\1/p' "$WORK/source/app/build.gradle.kts" | head -n1)"
 PACKAGE="$(sed -nE 's/^[[:space:]]*applicationId[[:space:]]*=[[:space:]]*"([^"]+)".*/\1/p' "$WORK/source/app/build.gradle.kts" | head -n1)"
