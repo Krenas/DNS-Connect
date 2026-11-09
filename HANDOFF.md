@@ -74,7 +74,7 @@ Alias зафиксирован как `dnsconnect`; пароль ключа ис
 - Source ZIP: `DNS-Connect-2.3.0-source.zip`, 1,006,209 bytes.
 - Source ZIP SHA-256: `6a2f58e6dda10a94963992c2ede9a2976a07c1d0a59e9a08b2873809b827ba0a`.
 - Release pack: `DNS-Connect-2.3.0-release-pack.zip`, 1,972,455 bytes.
-- Release pack SHA-256: `39411fa462904d776f6212c7c2dd46c42f4ffa57d02ecdcadaaf1c352aa5a681`.
+- Release pack SHA-256: `64c616533adcddc5b5d193cdce759057cd916bc77a7ad1128acc087b93bc8ad3`.
 - Проверки: 108 self-tests PASS, 17 catalogue PASS, 141 UI/resource/navigation/theme/updater audit PASS; итого **266 PASS / 0 FAIL**.
 - `tests/verify-icons.py`: PASS (24 glyph types).
 - APK: apksigner v2/v3 PASS, zipalign PASS, package `ru.krenas.dnsanalytics`, version 2.3.0 / code 24.
