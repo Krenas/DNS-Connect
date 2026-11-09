@@ -7,145 +7,89 @@
   "publicVersionCode": 22,
   "targetVersion": "2.4.0",
   "targetVersionCode": 25,
-  "nextChatFile": "NEXT-CHAT.md",
-  "handoffFile": "HANDOFF.md",
-  "checkpointFile": "CHECKPOINT.md",
-  "sourceBaseline": "Project File 2.1.0.zip",
-  "patchDirectory": "bootstrap/patch-2.3.0/",
-  "brandingPatch": "bootstrap/patch-2.3.0/branding-3server-monochrome.patch",
-  "publicRelease230": false,
   "latestJsonVersion": "2.1.0",
-  "cloudSigningReady": false,
-  "requiredActionsSecrets": [],
-  "physicalDeviceTesting": false,
-  "updaterRuntimeTested": false,
-  "lastAutomatedQa": {
-    "pass": 266,
-    "fail": 0,
-    "breakdown": {
-      "selfTests": 108,
-      "catalogue": 17,
-      "uiResourceNavigationThemeUpdater": 141,
-      "iconGlyphTypes": 24
-    },
-    "apkSignatureV2": true,
-    "apkSignatureV3": true,
-    "zipalign": true,
-    "sourceZipSafety": true,
-    "independentFullBuild": true,
-    "independentApkEntryContentMatch": true,
-    "notes": "2.4.0 local candidate and updater regression checks; physical install/live network/widgets/Quick Settings/Package Installer remains NOT TESTED."
-  },
-  "continuationRule": "Use Project Files and the persistent GitHub patch; do not ask the user to re-upload existing files. Re-check GitHub state before claiming release/build/update completion.",
-  "latestBuildDate": "2026-11-09",
+  "publicRelease240": false,
   "currentCandidate": {
     "version": "2.4.0",
     "versionCode": 25,
     "package": "ru.krenas.dnsanalytics",
+    "minSdk": 26,
+    "targetSdk": 35,
     "apk": {
       "file": "DNS-Connect-2.4.0-release.apk",
       "size": 1198136,
-      "sha256": "d8e0e07de730161015cdfa6d9d985ed83619969bb526390c72c8bf85e12b4822"
+      "sha256": "1c16821661be3c7ccee6198fbad9823563a09cc3b018cccc5aedbe11d3c33883"
     },
     "sourceZip": {
       "file": "DNS-Connect-2.4.0-source.zip",
-      "size": 995791,
-      "sha256": "2ac314c55f5d553cdb62141d9e41ad109bcdca688b659710ef5ed005e361afd1"
+      "size": 994643,
+      "entries": 96
     },
     "releasePack": {
-      "file": "DNS-Connect-2.4.0-release-pack.zip",
-      "size": 1952221,
-      "sha256": "a2b4e5561e35212ce3a36a8cbac252b11a2a3e216f0143358060a2237f6a430f"
+      "file": "DNS-Connect-2.4.0-release-pack.zip"
     },
-    "signingCertificateSha256": "4dc48085b7ea161b57e6266611c5d6a28514df6f2ddfc26df14f3ac972debf90",
-    "status": "LOCALLY_BUILT_AND_QA_VERIFIED_NOT_PUBLISHED"
+    "signingCertificateSha256": "54b847350b8f4166ea3add400330f360cbc53c4b82e53d709d2c9ff084eb21f7",
+    "status": "LOCALLY_BUILT_QA_VERIFIED_NOT_PUBLISHED"
   },
-  "packageReleaseFreshArchiveFix": {
-    "path": "bootstrap/patch-2.3.0/package-release-fresh-archive.patch",
-    "sha256": "d8ae06372ecdce22c8d2f249657ddbacfb57ce8bb31753a2815bdda1d8e29466",
-    "size": 1452
+  "lastAutomatedQa": {
+    "pass": 267,
+    "fail": 0,
+    "breakdown": {
+      "selfTests": 108,
+      "catalogue": 17,
+      "uiResourceNavigationThemeUpdater": 142
+    },
+    "iconGlyphTypes": 24,
+    "apkSignatureV2": true,
+    "apkSignatureV3": true,
+    "zipalign": true,
+    "sourceZipSafety": true,
+    "physicalDevice": "NOT_TESTED"
   },
-  "latestPatchVerificationRun": {
-    "runNumber": 54,
-    "id": 42626033799,
-    "conclusion": "success",
-    "url": "https://github.com/Krenas/DNS-Connect/actions/runs/42626033799"
+  "signing": {
+    "decision": "CREATE_NEW_2_4_0_KEY_AND_PRESERVE_FOR_ALL_FUTURE_RELEASES",
+    "certificateSha256": "54b847350b8f4166ea3add400330f360cbc53c4b82e53d709d2c9ff084eb21f7",
+    "actionsSecret": "DNS_CONNECT_SIGNING_BUNDLE",
+    "secretConfigured": false,
+    "neverCommitSigningMaterial": true,
+    "oldPublic21UpgradeRequiresUninstall": true,
+    "previousUnpublished23CandidateUpgradeMayRequireUninstall": true
   },
-  "signingDecision": "KEEP_EXISTING_2.2_X_KEY",
-  "persistentSignerVerifiedAgainstCandidate": true,
-  "public21UpgradeRequiresUninstall": true,
-  "signingCertificateSha256": "4dc48085b7ea161b57e6266611c5d6a28514df6f2ddfc26df14f3ac972debf90",
-  "public21CertificateSha256": "7767de2ba22670531c53ca6c76ea74e82c4d140f0907727644b2cd0864840c2b",
-  "lastLocalDeviceEnvironmentCheck": {
-    "date": "2026-11-09",
-    "adbDevices": 0,
-    "emulatorBinaryAvailable": false,
-    "androidSystemImageAvailable": false,
-    "kvmAvailable": false,
-    "physicalDeviceRuntime": "NOT_TESTED",
-    "reason": "No attached Android device; no emulator/KVM in this environment.",
-    "buildAndStaticChecks": "PASS",
-    "independentBuildFromSourceZip": "PASS",
-    "all26ApkZipEntryContentsMatchCandidate": true
-  },
-  "qaReport": "qa/DNS-Connect-2.4.0-QA.md",
-  "publicRelease240": false,
   "oneButtonUpdater": {
     "implementedIn": "2.4.0",
     "action": "Проверить и обновить",
     "sequence": [
       "fetch latest.json",
-      "compare version and versionCode",
-      "download APK",
-      "verify URL/host/size/SHA-256/package/versionCode/signer",
+      "compare version/versionCode",
+      "download newer APK",
+      "verify URL/host/size/SHA-256/package/version/signer",
       "open Android Package Installer"
     ],
     "androidConfirmationRequired": true,
-    "optionalDailyAutoCheck": "notification-only",
-    "physicalEndToEndTested": false,
-    "publicReleaseRequired": true,
-    "latestManifestNotAdvancedUntilReleaseAssetsVerified": true
+    "dailyAutoCheck": "optional notification-only",
+    "physicalEndToEndTested": false
   },
-  "releasePublication": {
+  "githubBuild": {
+    "workflow": ".github/workflows/build-from-archive.yml",
+    "trigger": "commit incoming/DNS-Connect-*-source.zip to main",
+    "repositorySecret": "DNS_CONNECT_SIGNING_BUNDLE",
+    "secretConfigured": false,
+    "output": "GitHub Release with APK, source ZIP, checksums; latest.json advances only after asset validation",
+    "uploadPage": "https://github.com/Krenas/DNS-Connect/upload/main/incoming"
+  },
+  "fallbackPublication": {
     "workflow": ".github/workflows/publish-release-pack.yml",
-    "uploadDirectory": "incoming/drop/",
     "uploadPage": "https://github.com/Krenas/DNS-Connect/upload/main/incoming/drop",
-    "requiredUserAction": "One-time upload DNS-Connect-2.4.0-release-pack.zip and commit to main",
-    "secretsRequired": false,
-    "flow": [
-      "validate pack zip",
-      "derive package/version/versionCode/hash/size/signer from embedded APK and source",
-      "validate APK signature v2/v3 and zipalign",
-      "validate source archive safety and updater sources",
-      "import source into main",
-      "create draft GitHub Release and upload APK/source/QA/checksums",
-      "verify GitHub asset SHA-256/size",
-      "publish Release",
-      "advance latest.json",
-      "remove temporary pack"
-    ],
-    "lastNoPackDryRun": {
-      "runId": 42652482963,
-      "conclusion": "success",
-      "url": "https://github.com/Krenas/DNS-Connect/actions/runs/42652482963"
-    },
-    "lastActionlintRun": {
-      "runId": 42652466884,
-      "conclusion": "success",
-      "url": "https://github.com/Krenas/DNS-Connect/actions/runs/42652466884"
-    },
-    "status": "READY_FOR_ONE_TIME_RELEASE_PACK_UPLOAD_NOT_YET_PUBLISHED",
-    "endToEndTested": false,
-    "binaryUploadRequiredOnce": true,
-    "futureUpdatesInApp": true,
-    "publicReleaseCurrent": "2.1.0",
-    "publisherWorkflowLint": "PASS",
-    "dryRun": "PASS_NO_PACK"
+    "needsSigningSecret": false,
+    "behavior": "validate and publish pre-signed APK; does not rebuild"
   },
-  "releasePackPath": "incoming/drop/DNS-Connect-2.4.0-release-pack.zip",
-  "lastGitHubMainSha": "568fb87ed133422426844305f8a4c5cffee4c188",
-  "optionalCloudBuildSecrets": [
-    "ANDROID_KEYSTORE_BASE64",
-    "ANDROID_KEYSTORE_PASSWORD"
-  ]
+  "lastLocalDeviceEnvironmentCheck": {
+    "adbDevices": 0,
+    "emulatorBinaryAvailable": false,
+    "androidSystemImageAvailable": false,
+    "kvmAvailable": false,
+    "physicalDeviceRuntime": "NOT_TESTED"
+  },
+  "qaReport": "qa/DNS-Connect-2.4.0-QA.md",
+  "continuationRule": "Re-check GitHub release/latest.json/Actions before claims; preserve signer; never ask user for local terminal work; physical device test remains NOT TESTED."
 }
