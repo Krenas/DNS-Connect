@@ -5,8 +5,8 @@
   "package": "ru.krenas.dnsanalytics",
   "publicVersion": "2.1.0",
   "publicVersionCode": 22,
-  "targetVersion": "2.3.0",
-  "targetVersionCode": 24,
+  "targetVersion": "2.4.0",
+  "targetVersionCode": 25,
   "nextChatFile": "NEXT-CHAT.md",
   "handoffFile": "HANDOFF.md",
   "checkpointFile": "CHECKPOINT.md",
@@ -37,31 +37,31 @@
     "sourceZipSafety": true,
     "independentFullBuild": true,
     "independentApkEntryContentMatch": true,
-    "notes": "Full build-local.sh rerun with preserved private JKS. Physical Android install/runtime, live network, widgets, Quick Settings and Installer handoff remain NOT TESTED."
+    "notes": "2.4.0 local candidate and updater regression checks; physical install/live network/widgets/Quick Settings/Package Installer remains NOT TESTED."
   },
   "continuationRule": "Use Project Files and the persistent GitHub patch; do not ask the user to re-upload existing files. Re-check GitHub state before claiming release/build/update completion.",
   "latestBuildDate": "2026-11-09",
   "currentCandidate": {
-    "version": "2.3.0",
-    "versionCode": 24,
+    "version": "2.4.0",
+    "versionCode": 25,
     "package": "ru.krenas.dnsanalytics",
     "apk": {
-      "file": "DNS-Connect-2.3.0-release.apk",
-      "size": 1202232,
-      "sha256": "6bc23aeaf3dd45f0541c1f49b74425415d204bb433272a3348a1fced37d83eb9"
+      "file": "DNS-Connect-2.4.0-release.apk",
+      "size": 1198136,
+      "sha256": "d8e0e07de730161015cdfa6d9d985ed83619969bb526390c72c8bf85e12b4822"
     },
     "sourceZip": {
-      "file": "DNS-Connect-2.3.0-source.zip",
-      "size": 994948,
-      "sha256": "0476dbeb7d4e322007ad47c4d489ac52e730bfdb709be95f0564f336066b04ea"
+      "file": "DNS-Connect-2.4.0-source.zip",
+      "size": 995791,
+      "sha256": "2ac314c55f5d553cdb62141d9e41ad109bcdca688b659710ef5ed005e361afd1"
     },
     "releasePack": {
-      "file": "DNS-Connect-2.3.0-release-pack.zip",
-      "size": 1961751,
-      "sha256": "e5354978a4c06b91505f0cea60991a135eb7f0c5e0ffb8fa0c825047c1eaaa60"
+      "file": "DNS-Connect-2.4.0-release-pack.zip",
+      "size": 1952221,
+      "sha256": "a2b4e5561e35212ce3a36a8cbac252b11a2a3e216f0143358060a2237f6a430f"
     },
     "signingCertificateSha256": "4dc48085b7ea161b57e6266611c5d6a28514df6f2ddfc26df14f3ac972debf90",
-    "status": "LOCALLY_BUILT_AND_VERIFIED_NOT_PUBLISHED"
+    "status": "LOCALLY_BUILT_AND_QA_VERIFIED_NOT_PUBLISHED"
   },
   "packageReleaseFreshArchiveFix": {
     "path": "bootstrap/patch-2.3.0/package-release-fresh-archive.patch",
@@ -86,10 +86,59 @@
     "androidSystemImageAvailable": false,
     "kvmAvailable": false,
     "physicalDeviceRuntime": "NOT_TESTED",
-    "reason": "No attached Android device, no KVM, no emulator package/system image, and no build-container network access.",
+    "reason": "No attached Android device; no emulator/KVM in this environment.",
     "buildAndStaticChecks": "PASS",
     "independentBuildFromSourceZip": "PASS",
     "all26ApkZipEntryContentsMatchCandidate": true
   },
-  "qaReport": "qa/DNS-Connect-2.3.0-QA.md"
+  "qaReport": "qa/DNS-Connect-2.4.0-QA.md",
+  "publicRelease240": false,
+  "oneButtonUpdater": {
+    "implementedIn": "2.4.0",
+    "action": "Проверить и обновить",
+    "sequence": [
+      "fetch latest.json",
+      "compare version and versionCode",
+      "download APK",
+      "verify URL/host/size/SHA-256/package/versionCode/signer",
+      "open Android Package Installer"
+    ],
+    "androidConfirmationRequired": true,
+    "optionalDailyAutoCheck": "notification-only",
+    "physicalEndToEndTested": false,
+    "publicReleaseRequired": true,
+    "latestManifestNotAdvancedUntilReleaseAssetsVerified": true
+  },
+  "releasePublication": {
+    "workflow": ".github/workflows/publish-release-pack.yml",
+    "uploadDirectory": "incoming/drop/",
+    "uploadPage": "https://github.com/Krenas/DNS-Connect/upload/main/incoming/drop",
+    "requiredUserAction": "One-time upload DNS-Connect-2.4.0-release-pack.zip and commit to main",
+    "secretsRequired": false,
+    "flow": [
+      "validate pack zip",
+      "derive package/version/versionCode/hash/size/signer from embedded APK and source",
+      "validate APK signature v2/v3 and zipalign",
+      "validate source archive safety and updater sources",
+      "import source into main",
+      "create draft GitHub Release and upload APK/source/QA/checksums",
+      "verify GitHub asset SHA-256/size",
+      "publish Release",
+      "advance latest.json",
+      "remove temporary pack"
+    ],
+    "lastNoPackDryRun": {
+      "runId": 42650867597,
+      "conclusion": "success",
+      "url": "https://github.com/Krenas/DNS-Connect/actions/runs/42650867597"
+    },
+    "lastActionlintRun": {
+      "runId": 42650678457,
+      "conclusion": "success",
+      "url": "https://github.com/Krenas/DNS-Connect/actions/runs/42650678457"
+    },
+    "status": "READY_FOR_ONE_TIME_RELEASE_PACK_UPLOAD_NOT_YET_PUBLISHED"
+  },
+  "releasePackPath": "incoming/drop/DNS-Connect-2.4.0-release-pack.zip",
+  "lastGitHubMainSha": "1e33e8789e861270d26736791d872203a7c6f754"
 }
