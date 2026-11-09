@@ -135,6 +135,12 @@ jobs:
           grep -Fq 'M44,25 H72 M44,51 H72 M44,77 H72' "$RUNNER_TEMP/branding-fixture/app/src/main/res/drawable/ic_launcher_monochrome.xml"
 
           bash -n bootstrap/rebuild-dns-connect-from-project-files.sh
+          PACKAGE_PATCH=bootstrap/patch-2.3.0/package-release-fresh-archive.patch
+          PACKAGE_SIZE="$(jq -r '.supplementalPatches[1].size' "$MANIFEST")"
+          PACKAGE_SHA="$(jq -r '.supplementalPatches[1].sha256' "$MANIFEST")"
+          [[ "$(wc -c < "$PACKAGE_PATCH" | tr -d ' ')" = "$PACKAGE_SIZE" ]]
+          echo "$PACKAGE_SHA  $PACKAGE_PATCH" | sha256sum --check
+          git apply --numstat "$PACKAGE_PATCH"
 
       - name: Publish verified patch reconstruction as a workflow artifact
         uses: actions/upload-artifact@v4
