@@ -20,3 +20,5 @@ The dry-run also checks the retained signer using a pipefail-safe extraction com
 The source validation drains complete ZIP entries to avoid short-circuiting the stream under strict shell mode.
 
 The validator derives package version, versionCode, APK size, checksum and signer from the contents of the release pack itself; no sidecar JSON manifest is required.
+
+Source ZIP validation checks the core Gradle app, manifest and updater manager; it does not assume an optional test-script filename.
