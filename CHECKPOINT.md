@@ -1,136 +1,58 @@
-# DNS Connect — контрольная точка на 2026-11-08
+# DNS Connect — checkpoint 2026-11-09
 
-## Непрерывность между чатами
-- Новый чат создаётся внутри того же ChatGPT Project DNS.
-- Не просить пользователя повторно прикреплять Project Files.
-- Сначала читать HANDOFF.md и этот CHECKPOINT.md, затем сверять Project Files, Library и GitHub.
-- Project Files: 2.1.0.zip, Download Zip.zip, HB_AI_Xbox_DNS.exe. У Project file IDs и пути в HANDOFF.
-- APK/source 2.3.0 не сохранены в Project Files/Library; Library storage limit prevented saving another copy. Не заявлять, что локальные пути предыдущего runtime будут доступны в новом чате.
-- 2.3.0 теперь восстанавливается из базы Project 2.1.0.zip + постоянного GitHub patch в bootstrap/patch-2.3.0/.
+## С чего продолжать
+Единая инструкция для нового чата: [NEXT-CHAT.md](NEXT-CHAT.md). Сначала прочитать его, затем [HANDOFF.md](HANDOFF.md).
 
-## Проверенная сборка 2.3.0 (текущий runtime)
-- Version 2.3.0, versionCode 24; package ru.krenas.dnsanalytics; minSdk 26; targetSdk 35.
-- APK size 1,202,232; SHA-256 9cc3bb050e4efd9fa74d161e4f2e2ec6e034b8f9ec2095f79233c178aaa1bc56.
-- Source ZIP size 1,006,206; SHA-256 cb3f80e694d81fe8b615e374260b9b2e5ffdb759660ad8e4d160bdb2c982edc2.
-- Release pack SHA-256 43c6ddaf71e79fd631222d19b85e101810debf8b3158b3cfe8ff45f27b29c13b.
-- Signing certificate SHA-256 4dc48085b7ea161b57e6266611c5d6a28514df6f2ddfc26df14f3ac972debf90.
-- Automated tests: self tests 108 PASS/0 FAIL; resolver catalogue 17 PASS/0 FAIL; UI/resource/navigation/theme/updater audit 141 PASS/0 FAIL; total 266 PASS/0 FAIL.
-- APK Signature Scheme v2/v3 PASS; zipalign PASS; identity and version PASS.
-- Physical Android, live Wi-Fi/mobile DNS, widgets/Quick Settings runtime, in-app APK installation: NOT TESTED.
+## Установленный baseline
+- Public repo: `Krenas/DNS-Connect`, default branch `main`.
+- Package: `ru.krenas.dnsanalytics`.
+- Public latest: 2.1.0 / versionCode 22.
+- Source base: Project File `2.1.0.zip`; содержит `DNS-Connect-2.1.0-source.zip` и APK.
+- SDK archive: Project File `Download Zip.zip`; Windows reference: `HB_AI_Xbox_DNS.exe`.
+- Не просить повторную загрузку Project Files.
 
-## Постоянный patch и rebuild
-- Public path bootstrap/patch-2.3.0/: 13 Base64 fragments + manifest.json + README.md.
-- Every chunk was fetched again and matched expected byte length and SHA-256: 13/13 PASS.
-- Base64 SHA-256 9a77468bebbe2b5b5e5f412a125f9dec160c5f9e85e2dbd4971388c7a93233ba; gzip SHA-256 c08066e4be234e3405baa0dc0a563b3e5dce07036a81194846169807033c4f47; unified diff SHA-256 0d2e4baaa30f1d336f32a6f92f293536f3b12498681f641d4870ff9c16a756d1.
-- Clean apply to original 2.1.0 source ZIP passed; resulting source identity is 2.3.0 / code 24.
-- One-command rebuild driver: bootstrap/rebuild-dns-connect-from-project-files.sh. It extracts source from Project 2.1.0.zip, verifies/assembles patch, applies zero fuzz, creates source ZIP, extracts SDK from Download Zip.zip, compiles, tests, signs with saved keystore and packages release.
-- Script needs preserved JKS from private repo and DNS_RELEASE_KEYSTORE_PASSWORD in protected environment; never log the password.
+## 2.3.0 patch / source
+- Public permanent patch: `bootstrap/patch-2.3.0/`, 13 chunks + manifest.
+- Base64 SHA-256: `9a77468bebbe2b5b5e5f412a125f9dec160c5f9e85e2dbd4971388c7a93233ba`.
+- Gzip SHA-256: `c08066e4be234e3405baa0dc0a563b3e5dce07036a81194846169807033c4f47`.
+- Unified diff SHA-256: `0d2e4baaa30f1d336f32a6f92f293536f3b12498681f641d4870ff9c16a756d1`.
+- В текущем продолжении восстановлена исходная база; patch dry-run и apply с `--fuzz=0` прошли; итог source identity 2.3.0 / code 24.
+- Зафиксированный прошлым runtime кандидат APK: 1,202,232 bytes, SHA `9cc3bb050e4efd9fa74d161e4f2e2ec6e034b8f9ec2095f79233c178aaa1bc56`. Сам бинарник не сохранён в Project Files; не выдавать его за текущий доступный артефакт.
 
-## Публичный GitHub status — последняя сверка
-- Public Release v2.3.0: NOT PUBLISHED.
-- latest.json: still version 2.1.0, versionCode 22, SHA-256 c05e9cb8af2b4193ba2c77fb29bcb889e7588af4e61825af34c92af900c09755.
-- public main: documentation/workflows/patch only; Android app/ Gradle project not yet imported.
-- public releases only the two duplicate 2.1.0 tags (v2.1.0 and 2.1.0).
-- in-app updater code is present and verifies manifest/downloaded APK; it cannot discover 2.3 until public Release + latest.json are published.
-- publish-uploaded-release.yml only publishes prebuilt APK/source binary blobs; it does not compile.
-- build-release.yml can compile source in public main but needs app sources imported and four Actions secrets (keystore base64/password/alias/key password), currently not configured.
-- Current GitHub connector exposes no direct Release asset upload and no Actions secret create/update tool. Do not claim publication or automatic cloud build is operational.
+## QA status
+- Предыдущий полный automated report: 266 PASS / 0 FAIL (108 self-tests, 17 catalogue, 141 UI/resource/navigation/theme/updater checks; signature v2/v3, zipalign PASS).
+- Текущее продолжение: patch apply, UI audit, catalogue 17/17, glyph/resource checks заявлены PASS.
+- Device install, live DNS/network, widgets/Quick Settings runtime и live in-app updater installation: NOT TESTED.
 
+## Branding/icon
+- Требование: использовать ровно существующий трёхсерверный знак из «Сервисы» для launcher и всех app-icon placements.
+- Launcher foreground находится в `app/src/main/res/drawable-nodpi/ic_dns_connect_foreground.png`.
+- Icon-audit run 42567150343 доказал, что patch 2.3.0 не изменяет icon/resource assets.
+- Фактический сервисный знак ещё не извлечён и не внедрён. Следующий шаг — найти точное изображение/вектор/рисование в исходниках; не подменять его условным `server`/ `apps` глифом.
 
+## Signing / cloud build
+- Сохранённый signer fingerprint: `4dc48085b7ea161b57e6266611c5d6a28514df6f2ddfc26df14f3ac972debf90`.
+- В актуальной публичной сборке требуется ДВА secrets: `ANDROID_KEYSTORE_BASE64`, `ANDROID_KEYSTORE_PASSWORD`. Старые инструкции о четырёх secrets устарели.
+- Последний check run 42567494139: оба secrets отсутствуют.
+- В текущем GitHub connector нет операции создания/обновления Actions secrets. Нельзя выставить их автоматически этим набором инструментов.
+- Никогда не коммитить JKS/password или Base64 signer в public repo.
 
+## Real GitHub state
+- Main does not yet contain Android Gradle app project.
+- Release 2.3.0 not published; existing releases are duplicate 2.1.0 entries.
+- latest.json remains 2.1.0 / code 22 / SHA `c05e9cb8af2b4193ba2c77fb29bcb889e7588af4e61825af34c92af900c09755`.
+- Main CI lint/patch integrity run 42567494192: SUCCESS.
+- Build-from-archive workflow is prepared but no real source ZIP 2.3.0 was committed to `incoming/`; no 2.3.0 release asset verification has occurred.
 
-## Автоматическая публикация из ZIP — создана
-- `.github/workflows/build-from-archive.yml`: commit ZIP в `incoming/DNS-Connect-*-source.zip` в main → автозапуск Actions → Java17/Android SDK35 → tests → signed APK → verify package/version/certificate/zipalign → source ZIP + checksums → Release → verify GitHub asset SHA/size → publish Release → update latest.json → delete temporary input ZIP.
-- Manual workflow_dispatch также принимает путь к уже committed source ZIP.
-- `incoming/README.md` и публичный README объясняют порядок работы.
-- До первого запуска владелец должен один раз добавить 4 protected Actions repository secrets: ANDROID_KEYSTORE_BASE64, ANDROID_KEYSTORE_PASSWORD, ANDROID_KEY_ALIAS=dnsconnect, ANDROID_KEY_PASSWORD. Link: https://github.com/Krenas/DNS-Connect/settings/secrets/actions. Не добавлять ключ/пароль в public files.
-- Lint workflow в main проверяет все Actions YAML через actionlint и затем патч. Последний успешный run: https://github.com/Krenas/DNS-Connect/actions/runs/42500505393 — actionlint and patch verification success.
-- ZIP 2.3.0 ещё не committed в incoming и реальная сборка из папки пока не запускалась (shell/Python runtime в текущем запуске вернул ClientError).
+## Next actions in priority order
+1. Inspect exact Services three-server icon in Project source archive and implement same symbol for launcher/adaptive icon/app-icon placements.
+2. Rebuild complete 2.3.0 source + APK from Project base + permanent patch + SDK archive, preserving signing certificate.
+3. Verify APK identity, signature, zipalign, source ZIP safety and hashes.
+4. Resolve missing two repository secrets without exposing key material; if connector cannot write secrets, report the one exact manual action.
+5. Import validated Gradle source into public main or use build-from-archive workflow; publish release assets, verify digest/size, then update latest.json.
+6. Test updater and UI on a physical Android device; do not mark these checks PASS before real device evidence.
 
-
-
-## GitHub history/artifact search
-- Branches: main + temporary patch-verify branches; no source-upload branch with 2.3.0 ZIP.
-- Old APK publication runs ended in failure and uploaded no workflow artifacts. Latest good artifact is patch-verification output, not APK/source.
-- Next technical operation: materialize Project source base, apply permanent patch, create ZIP and commit it under incoming/. Current shell/Python runtime ClientError prevented that file operation; no user re-upload needed.
-
-## Library and continuity re-check
-- Project Library was searched again. No DNS Connect 2.3.0 APK or source ZIP are stored there; only older checksums/signing metadata. Do not assume 2.3.0 artifacts can be reused from Library.
-- For every chat that might be the last: checkpoint BEFORE each long/risky step and update HANDOFF + CHECKPOINT after every substantial result. Do not wait until the final message.
-- Never update latest.json until APK and source assets are published and SHA/size verified.
-
-## Дополнительные источники для сборки
-- `DNS-Connect-2.1.0-source.zip` доступен как Project-generated file `file_000000000d148210a4c2ab19680a94fc` (981,497 bytes).
-- Отдельные Project-generated SDK components: `platform-35.zip` (64,273,788 bytes) и `build-tools-35.zip` (61,958,799 bytes).
-- Полный Download Zip.zip 425,160,739 bytes больше лимита raw materialization 100 MiB текущего Files API; если его нельзя прочитать целиком, собирать SDK из этих двух components только после проверки структуры и отдельного build/test.
-- Private DNS-Analytics repo contains 1.8.0 source but no current 2.1.0 tree; retain 2.1.0 Project base as canonical.
-
-## Проверка patch payload на GitHub Actions
-- Строгий run https://github.com/Krenas/DNS-Connect/actions/runs/42499262769 — SUCCESS.
-- 13/13 chunk hashes and sizes pass; combined Base64 SHA/size, gzip SHA/size, unified diff SHA/size all match manifest; git apply --numstat passes; workflow artifact uploaded.
-- Strict workflow is now in main commit 5a6a4754b9bc623f5378ca62acadcf8b546485fa.
-- This verifies the persistent source patch. It does not build or publish APK and does not prove the in-app updater is live.
-
-## Successful prior publication method 2.1.0
-https://github.com/Krenas/DNS-Connect/actions/runs/42395405220
-Workflow downloads APK from a pre-existing staging Release with tag 2.1.0, validates SHA/size, attaches the same APK to canonical Release v2.1.0, verifies asset digest, then updates latest.json. It does not build APK from source.
-
-## Signing and migration
-- Permanent signer alias dnsconnect; certificate SHA-256 4dc48085b7ea161b57e6266611c5d6a28514df6f2ddfc26df14f3ac972debf90; key is in private Krenas/DNS-Analytics/signing.
-- 2.1.0 uses another certificate. First transition: backup → uninstall old 2.1.0 → install 2.3.0 → restore. Later builds use same key and can be installed through Android Installer after explicit user confirmation.
-
-## Следующие шаги
-1. In any new chat, rebuild 2.3.0 from Project inputs and permanent patch if artifacts are unavailable.
-2. Resolve final publication route: binary upload to the prebuilt publisher, or import source into main and configure the four protected GitHub Actions secrets so build-release.yml can sign/build/publish.
-3. Publish Release v2.3.0, verify APK/source asset sizes and SHA-256, then update latest.json and re-fetch public manifest.
-4. Verify in-app updater sees 2.3.0 and downloads/verifies it. Physical PackageInstaller handoff requires a handset test.
-5. Continue updating this file after each significant action.
-
-## Limits
-Tests above are automated offline checks. They do not certify real-world DNS behavior on the user's network, physical UI appearance, widget runtime, or real Android installer success.
-
-## Signing secrets check
-- Safe check workflow run https://github.com/Krenas/DNS-Connect/actions/runs/42501222010 succeeded; it reports that all four repository secrets are missing: ANDROID_KEYSTORE_BASE64, ANDROID_KEYSTORE_PASSWORD, ANDROID_KEY_ALIAS, ANDROID_KEY_PASSWORD.
-- One-time setup link: https://github.com/Krenas/DNS-Connect/settings/secrets/actions.
-- Latest complete regression run https://github.com/Krenas/DNS-Connect/actions/runs/42501298298 passed: actionlint across all workflows + patch chunks/payload integrity.
-- No secret values were printed or saved in public files.
-
-
-## Новая контрольная точка — 2026-11-08, продолжение
-- Сверены Releases/latest.json: публичен только 2.1.0; latest.json не переведён на 2.3.0.
-- Build-from-archive workflow, incoming drop-zone и постоянный patch 2.3.0 находятся в main; lint + проверка patch hashes завершились SUCCESS: https://github.com/Krenas/DNS-Connect/actions/runs/42501298298.
-- Материализация Project Files успешна: source ZIP 2.1.0 (981,497 bytes), platform-35.zip (64,273,788 bytes), build-tools-35.zip (61,958,799 bytes) доступны в /mnt/data/dnsconnect-project-inputs/.
-- Локальная обработка файлов не выполнена: container/Python runtime недоступны; Python/data analysis сообщил временный лимит с оценкой восстановления около 20 ч 26 мин (не гарантия). Не обходить это ограничение другим исполнителем.
-- ZIP 2.3.0 не создан/не загружен в incoming; build workflow на реальном архиве не запускался; APK 2.3.0 не опубликован; latest.json и живое обновление приложения не проверены.
-- В GitHub всё ещё отсутствуют 4 Actions secrets: ANDROID_KEYSTORE_BASE64, ANDROID_KEYSTORE_PASSWORD, ANDROID_KEY_ALIAS, ANDROID_KEY_PASSWORD. Настройка владельцем: https://github.com/Krenas/DNS-Connect/settings/secrets/actions; alias dnsconnect. Никогда не публиковать JKS/пароли.
-- Следующий шаг после восстановления разрешённой обработки файлов: применить verified 2.3.0 patch к исходному 2.1.0, собрать source ZIP, добавить в incoming/, затем Actions build/release → проверить assets/digests/latest.json → live updater. Телефонная установка остаётся NOT TESTED.
-
-
-## Текущая точка после повторной проверки — 2026-11-08
-- Public main still has no app Gradle project (app/build.gradle.kts and AndroidManifest return 404). latest.json and both public Releases still point to 2.1.0 / code 22; no 2.3.0 Release or source asset exists.
-- Latest patch/workflow lint run 42501298298 SUCCESS. It validates workflow syntax and stored patch fragments only; no Android APK build was run.
-- Signing check run 42501222010 SUCCESS but reports four missing protected repo secrets: ANDROID_KEYSTORE_BASE64, ANDROID_KEYSTORE_PASSWORD, ANDROID_KEY_ALIAS, ANDROID_KEY_PASSWORD. Settings URL: https://github.com/Krenas/DNS-Connect/settings/secrets/actions.
-- Private continuity signer confirmed in Krenas/DNS-Analytics/signing: JKS + Base64 password-file path, alias dnsconnect, cert fingerprint 4dc48085b7ea161b57e6266611c5d6a28514df6f2ddfc26df14f3ac972debf90. Password content was not read or disclosed; never copy signing files to public repo.
-- Project inputs were rematerialized this run: base source ZIP file_id file_000000000d148210a4c2ab19680a94fc; outer 2.1.0.zip file_id file_00000000b52c8210b3f9387cf7fd5984; platform-35.zip file_id file_0000000032f082108d7228e22e470a95; build-tools-35.zip file_id file_000000005330821085260905fcfacb97. No user re-upload needed.
-- Source ZIP 2.3.0 was NOT created or committed to incoming: local archive processing was blocked by execution/runtime availability. Do not claim patch applied, app built, published or updater working.
-- GitHub Actions workflow has been reviewed and actionlint passed, but it has never been run with a real incoming source ZIP. It requires the four protected secrets and a validated source archive.
-- Current GitHub integration tools do not expose create/update Actions repository secrets. GitHub's REST endpoint requires Secrets: write authorization and an encrypted value. This remains a one-time owner-side setup unless an appropriate GitHub credential/permission becomes available.
-- Next: apply permanent 2.3.0 patch to Project source base; create clean ZIP; commit into incoming/; configure protected signing secrets; run actual build, verify release APK/source digests and latest.json; then verify in-app update and device installer behavior.
-
-
-## Последняя проверенная контрольная точка — 2026-11-09
-- На main workflows build-from-archive.yml и build-release.yml используют только два secrets: ANDROID_KEYSTORE_BASE64 + ANDROID_KEYSTORE_PASSWORD. Alias dnsconnect и same key password are hardcoded/reused in workflow. README подновлён. Старые инструкции о четырёх secrets считать историческими.
-- Run 42567340994 SUCCESS: actionlint all workflows, 13/13 patch chunks, Base64/gzip/unified diff SHA checks. Run 42567301113 тоже SUCCESS.
-- Run 42567301201 SUCCESS, но оба secrets отсутствуют: ANDROID_KEYSTORE_BASE64, ANDROID_KEYSTORE_PASSWORD. Пользователь/owner должен один раз добавить их здесь: https://github.com/Krenas/DNS-Connect/settings/secrets/actions. Не просить присылать пароли в чат.
-- Публичный main всё ещё без app/ Gradle project; `app/build.gradle.kts` и AndroidManifest отсутствуют. latest.json=2.1.0, versionCode 22; Release 2.3.0 не опубликован. Updater пока не обнаружит 2.3.0.
-- Patch 2.3.0 audited by workflow 42567150343: changes MainActivity.java, GitHubUpdateManager.java and build/test files; no resources/drawables/mipmap/launcher icon assets touched. User's exact request to reuse existing three-server icon from «Сервисы» as app icon and all app-icon placements is NOT DONE.
-- Candidate updater code in patch has URL/version/package/SHA-256/certificate checks before delegating to Android installer, but live download/install and physical-device verification remain NOT TESTED. Android installation flow is user-confirmed; no silent install claim.
-- Historical candidate automated report 266 PASS/0 FAIL, APK v2/v3 + zipalign PASS; those tests were run in a previous runtime and physical device was not tested.
-- Next: configure the 2 secrets, recover source 2.1.0 from Project Files + patch to create source 2.3.0 ZIP, restore and verify exact three-server service icon, run release build, verify assets/latest.json, then actual Android install/update checks.
-
-
-## Latest CI verification — 2026-11-09
-- Added workflow_dispatch to check-release-secrets.yml; owner can manually re-run secret verification after setup.
-- Signing check run 42567494139: SUCCESS, both required secrets still missing (ANDROID_KEYSTORE_BASE64 and ANDROID_KEYSTORE_PASSWORD).
-- Latest actionlint + patch integrity run 42567494192: SUCCESS. All workflow YAML linted; 13/13 chunks, aggregate Base64/gzip/diff checks, and artifact upload passed.
-- Manual check workflow: https://github.com/Krenas/DNS-Connect/actions/workflows/check-release-secrets.yml. Secrets settings: https://github.com/Krenas/DNS-Connect/settings/secrets/actions.
+## Verified workflow links
+- Build/publish: https://github.com/Krenas/DNS-Connect/actions/workflows/build-from-archive.yml
+- Signing secret check: https://github.com/Krenas/DNS-Connect/actions/workflows/check-release-secrets.yml
+- Add missing secrets: https://github.com/Krenas/DNS-Connect/settings/secrets/actions
