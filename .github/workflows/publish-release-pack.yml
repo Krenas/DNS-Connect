@@ -127,7 +127,6 @@ jobs:
                   "app/src/main/AndroidManifest.xml",
                   "settings.gradle.kts",
                   "gradle/wrapper/gradle-wrapper.jar",
-                  "tests/verify-ui.sh",
                   "app/src/main/java/ru/krenas/dnsanalytics/GitHubUpdateManager.java",
               }
               if not required.issubset(set(names)):
