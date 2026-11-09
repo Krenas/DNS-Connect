@@ -127,3 +127,10 @@ Tests above are automated offline checks. They do not certify real-world DNS beh
 - Candidate updater code in patch has URL/version/package/SHA-256/certificate checks before delegating to Android installer, but live download/install and physical-device verification remain NOT TESTED. Android installation flow is user-confirmed; no silent install claim.
 - Historical candidate automated report 266 PASS/0 FAIL, APK v2/v3 + zipalign PASS; those tests were run in a previous runtime and physical device was not tested.
 - Next: configure the 2 secrets, recover source 2.1.0 from Project Files + patch to create source 2.3.0 ZIP, restore and verify exact three-server service icon, run release build, verify assets/latest.json, then actual Android install/update checks.
+
+
+## Latest CI verification — 2026-11-09
+- Added workflow_dispatch to check-release-secrets.yml; owner can manually re-run secret verification after setup.
+- Signing check run 42567494139: SUCCESS, both required secrets still missing (ANDROID_KEYSTORE_BASE64 and ANDROID_KEYSTORE_PASSWORD).
+- Latest actionlint + patch integrity run 42567494192: SUCCESS. All workflow YAML linted; 13/13 chunks, aggregate Base64/gzip/diff checks, and artifact upload passed.
+- Manual check workflow: https://github.com/Krenas/DNS-Connect/actions/workflows/check-release-secrets.yml. Secrets settings: https://github.com/Krenas/DNS-Connect/settings/secrets/actions.
