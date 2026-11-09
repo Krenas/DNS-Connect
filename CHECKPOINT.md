@@ -67,4 +67,4 @@
 - Build/publish: https://github.com/Krenas/DNS-Connect/actions/workflows/build-from-archive.yml
 - Signing secret check: https://github.com/Krenas/DNS-Connect/actions/workflows/check-release-secrets.yml
 - Settings for the two secrets: https://github.com/Krenas/DNS-Connect/settings/secrets/actions
-- Latest patch verification run: https://github.com/Krenas/DNS-Connect/actions/runs/42587923209
+- Latest patch verification run: https://github.com/Krenas/DNS-Connect/actions/runs/42588221283
