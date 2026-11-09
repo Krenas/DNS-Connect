@@ -137,8 +137,8 @@ jobs:
           SRC_CODE="$(awk -F '=' '/versionCode[[:space:]]*=/ {gsub(/[[:space:]]/, "", $2); print $2; exit}' "$RUNNER_TEMP/source-app.gradle.kts")"
           SRC_PACKAGE="$(awk -F '"' '/applicationId[[:space:]]*=/ {print $2; exit}' "$RUNNER_TEMP/source-app.gradle.kts")"
           [[ "$SRC_VERSION" == "$VERSION" && "$SRC_CODE" == "$VERSION_CODE" && "$SRC_PACKAGE" == "$PACKAGE" ]]
-          unzip -p "$SOURCE" app/src/main/java/ru/krenas/dnsanalytics/MainActivity.java | grep -Fq 'Проверить и обновить'
-          unzip -p "$SOURCE" app/src/main/java/ru/krenas/dnsanalytics/MainActivity.java | grep -Fq 'checkAndInstallLatestUpdate'
+          unzip -p "$SOURCE" app/src/main/java/ru/krenas/dnsanalytics/MainActivity.java | grep -F 'Проверить и обновить' >/dev/null
+          unzip -p "$SOURCE" app/src/main/java/ru/krenas/dnsanalytics/MainActivity.java | grep -F 'checkAndInstallLatestUpdate' >/dev/null
 
           CURRENT="$(curl -fsSL "https://raw.githubusercontent.com/$GITHUB_REPOSITORY/main/latest.json")"
           CURRENT_VERSION="$(jq -r '.version // "0.0.0"' <<< "$CURRENT")"
