@@ -25,10 +25,12 @@
 - Device install, live DNS/network, widgets/Quick Settings runtime и live in-app updater installation: NOT TESTED.
 
 ## Branding/icon
-- Требование: использовать ровно существующий трёхсерверный знак из «Сервисы» для launcher и всех app-icon placements.
-- Launcher foreground находится в `app/src/main/res/drawable-nodpi/ic_dns_connect_foreground.png`.
-- Icon-audit run 42567150343 доказал, что patch 2.3.0 не изменяет icon/resource assets.
-- Фактический сервисный знак ещё не извлечён и не внедрён. Следующий шаг — найти точное изображение/вектор/рисование в исходниках; не подменять его условным `server`/ `apps` глифом.
+- Найдена существующая app-brand эмблема с тремя серверными блоками: `app/src/main/res/drawable-nodpi/ic_dns_connect_foreground.png`.
+- Four adaptive launcher variants (regular/round, normal/API33+) and app toolbar already reference this foreground image.
+- Android 13+ monochrome launcher was a mismatch; fixed by `bootstrap/patch-2.3.0/branding-3server-monochrome.patch` (3,058 bytes, SHA-256 `549bc339abbc254c460775de3b12cf9337050674ca52b7f1e127af9847a43c2c`).
+- Rebuild entry point now applies the extra patch and checks all launcher XML refs + toolbar and three-server geometry. CI run 42584359364 SUCCESS, including zero-fuzz patch application and bash syntax.
+- In APK 2.1.0, bottom-tab «Сервисы» is glyph `apps` (four squares), generic `server` glyph is two rack bars. Both are functional glyphs, not the app brand logo. Keep Quick Settings and widget icons purpose-specific.
+- Previous pre-branding candidate APK/source hashes are superseded and must not be published. Current branded 2.3.0 APK/source still requires rebuild and fresh hash/signature/zipalign tests.
 
 ## Signing / cloud build
 - Сохранённый signer fingerprint: `4dc48085b7ea161b57e6266611c5d6a28514df6f2ddfc26df14f3ac972debf90`.
