@@ -41,8 +41,7 @@ jobs:
           SOURCE_INPUT: ${{ inputs.source_archive }}
           RELEASE_NOTES_INPUT: ${{ inputs.release_notes }}
           GH_TOKEN: ${{ github.token }}
-          STORE_B64: ${{ secrets.ANDROID_KEYSTORE_BASE64 }}
-          STORE_PASSWORD: ${{ secrets.ANDROID_KEYSTORE_PASSWORD }}
+          SIGNING_BUNDLE: ${{ secrets.DNS_CONNECT_SIGNING_BUNDLE }}
         shell: bash
         run: |
           set -euo pipefail
@@ -58,9 +57,9 @@ jobs:
           fi
           [[ "$SOURCE_PATH" == incoming/DNS-Connect-*-source.zip ]]
           [[ -s "$SOURCE_PATH" ]]
-          for value in STORE_B64 STORE_PASSWORD; do
+          for value in SIGNING_BUNDLE; do
             [[ -n "${!value}" ]] || {
-              echo "Missing GitHub Actions secret: $value. Configure ANDROID_KEYSTORE_BASE64 and ANDROID_KEYSTORE_PASSWORD once in repository Settings > Secrets and variables > Actions." >&2
+              echo "Missing GitHub Actions secret: $value. Add DNS_CONNECT_SIGNING_BUNDLE once in repository Settings > Secrets and variables > Actions." >&2
               exit 1
             }
           done
@@ -135,14 +134,33 @@ jobs:
       - name: Install Android platform and build tools
         run: sdkmanager --install "platforms;android-35" "build-tools;35.0.0"
 
-      - name: Restore the private signing key
+      - name: Restore signing key from the one-time encrypted bundle secret
         env:
-          STORE_B64: ${{ secrets.ANDROID_KEYSTORE_BASE64 }}
+          SIGNING_BUNDLE: ${{ secrets.DNS_CONNECT_SIGNING_BUNDLE }}
+        shell: bash
         run: |
           set -euo pipefail
-          printf '%s' "$STORE_B64" | base64 --decode > "$RUNNER_TEMP/dns-connect-release.jks"
-          test -s "$RUNNER_TEMP/dns-connect-release.jks"
-          chmod 600 "$RUNNER_TEMP/dns-connect-release.jks"
+          BUNDLE="$RUNNER_TEMP/dns-connect-signing-bundle.zip"
+          SIGNING_DIR="$RUNNER_TEMP/dns-connect-signing"
+          printf '%s' "$SIGNING_BUNDLE" | base64 --decode > "$BUNDLE"
+          unzip -tq "$BUNDLE" >/dev/null
+          mkdir -p "$SIGNING_DIR"
+          unzip -q "$BUNDLE" -d "$SIGNING_DIR"
+          KEYSTORE="$SIGNING_DIR/release.jks"
+          test -s "$KEYSTORE"
+          test -s "$SIGNING_DIR/password.txt"
+          chmod 600 "$KEYSTORE" "$SIGNING_DIR/password.txt"
+          PASSWORD="$(cat "$SIGNING_DIR/password.txt")"
+          test -n "$PASSWORD"
+          keytool -list -keystore "$KEYSTORE" -storepass "$PASSWORD" -alias dnsconnect >/dev/null
+          echo "::add-mask::$PASSWORD"
+          {
+            echo "DNS_RELEASE_KEYSTORE=$KEYSTORE"
+            echo "DNS_RELEASE_KEYSTORE_PASSWORD=$PASSWORD"
+            echo "DNS_RELEASE_KEY_ALIAS=dnsconnect"
+            echo "DNS_RELEASE_KEY_PASSWORD=$PASSWORD"
+          } >> "$GITHUB_ENV"
+          unset PASSWORD SIGNING_BUNDLE
 
       - name: Run regression checks from the source archive
         working-directory: ${{ runner.temp }}/dns-source
@@ -157,11 +175,6 @@ jobs:
 
       - name: Build signed release APK
         working-directory: ${{ runner.temp }}/dns-source
-        env:
-          DNS_RELEASE_KEYSTORE: ${{ runner.temp }}/dns-connect-release.jks
-          DNS_RELEASE_KEYSTORE_PASSWORD: ${{ secrets.ANDROID_KEYSTORE_PASSWORD }}
-          DNS_RELEASE_KEY_ALIAS: dnsconnect
-          DNS_RELEASE_KEY_PASSWORD: ${{ secrets.ANDROID_KEYSTORE_PASSWORD }}
         run: ./gradlew --no-daemon clean :app:assembleRelease
 
       - name: Verify APK and prepare versioned release assets
@@ -296,4 +309,4 @@ jobs:
 
       - name: Remove signing key
         if: always()
-        run: rm -f "$RUNNER_TEMP/dns-connect-release.jks"
+        run: rm -rf "$RUNNER_TEMP/dns-connect-release.jks" "$RUNNER_TEMP/dns-connect-signing-bundle.zip" "$RUNNER_TEMP/dns-connect-signing"
