@@ -11,15 +11,21 @@
     "version": "2.3.0",
     "package": "ru.krenas.dnsanalytics",
     "versionCode": 24,
-    "artifactStatus": "REBUILD_REQUIRED_AFTER_THREE_SERVER_MONOCHROME_PATCH",
+    "apkSha256": "b376f8f15e6bcf815845bdb65bb6cd204703a5f9d21282b63a658f86d1407ff4",
+    "apkSize": 1202232,
+    "sourceZipSha256": "6a2f58e6dda10a94963992c2ede9a2976a07c1d0a59e9a08b2873809b827ba0a",
+    "sourceZipSize": 1006209,
+    "signingCertificateSha256": "4dc48085b7ea161b57e6266611c5d6a28514df6f2ddfc26df14f3ac972debf90",
+    "artifactStatus": "LOCALLY_BUILT_AND_VERIFIED_PENDING_PUBLIC_RELEASE",
+    "releasePackSha256": "39411fa462904d776f6212c7c2dd46c42f4ffa57d02ecdcadaaf1c352aa5a681",
+    "releasePackSize": 1972455,
     "previousPreBrandingCandidate": {
       "apkSha256": "9cc3bb050e4efd9fa74d161e4f2e2ec6e034b8f9ec2095f79233c178aaa1bc56",
       "apkSize": 1202232,
       "sourceZipSha256": "cb3f80e694d81fe8b615e374260b9b2e5ffdb759660ad8e4d160bdb2c982edc2",
       "sourceZipSize": 1006206,
-      "note": "Superseded by the supplemental three-server monochrome launcher-icon patch. Do not publish or distribute this earlier candidate."
-    },
-    "signingCertificateSha256": "4dc48085b7ea161b57e6266611c5d6a28514df6f2ddfc26df14f3ac972debf90"
+      "note": "Superseded. Do not publish or distribute."
+    }
   },
   "patch": {
     "encoding": "base64(gzip(unified-diff))",
@@ -100,29 +106,37 @@
   },
   "verified": {
     "mainPatchCleanApply": true,
-    "supplementalBrandingPatchCleanApply": false,
-    "localBuildFromSourceArchiveAndSdkBundleBeforeBrandingPatch": true,
-    "localBuildWithCurrentBrandingPatch": false,
-    "historicalAutomatedPassBeforeBrandingPatch": 266,
-    "historicalAutomatedFailBeforeBrandingPatch": 0,
-    "rerunRequired": true,
+    "supplementalBrandingPatchCleanApply": true,
+    "cleanRebuildFromOriginal2_1_0Source": true,
+    "localBuildFromProjectSdkBundle": true,
+    "apkSignatureV2": true,
+    "apkSignatureV3": true,
+    "zipalign": true,
+    "automatedPass": 266,
+    "automatedFail": 0,
+    "selfTests": 108,
+    "catalogueTests": 17,
+    "uiResourceNavigationThemeUpdaterAudit": 141,
+    "sourceArchiveSafety": true,
+    "patchCiRun": 42587450681,
+    "patchCiUrl": "https://github.com/Krenas/DNS-Connect/actions/runs/42587450681",
     "physicalDeviceInstall": false,
     "liveNetworkDns": false,
+    "liveWidgetsAndQuickSettings": false,
     "liveUpdaterInstall": false,
-    "githubReleasePublished": false,
-    "ciRun": null,
-    "ciUrl": null
+    "githubReleasePublished": false
   },
   "signing": {
-    "certificateSha256": "4dc48085b7ea161b57e6266611c5d6a28514df6f2ddfc26df14f3ac972debf90",
+    "continuityCertificateSha256": "4dc48085b7ea161b57e6266611c5d6a28514df6f2ddfc26df14f3ac972debf90",
     "alias": "dnsconnect",
     "privateKeyPath": "Krenas/DNS-Analytics/signing",
-    "note": "Never add keystore or password to this public repository or source archive."
+    "originalPublic2_1_0CertificateSha256": "7767de2ba22670531c53ca6c76ea74e82c4d140f0907727644b2cd0864840c2b",
+    "compatibilityWarning": "The 2.3.0 APK is signed with the preserved 2.2.x certificate. It updates installations signed with that certificate, but cannot update the public 2.1.0 APK in place because its signer differs. Never publish signing material."
   },
   "supplementalPatches": [
     {
       "file": "branding-3server-monochrome.patch",
-      "purpose": "Align Android 13+ monochrome launcher icon with the three-server app mark and update the UI regression assertion for the new icon.",
+      "purpose": "Align Android 13+ monochrome launcher icon with the three-server app mark and update the UI regression assertion.",
       "size": 3710,
       "sha256": "db74d35e8090a16dea74213703423d2073e2370da7dd3dbae79144c6c42e8362",
       "applyAfter": "main 2.3.0 unified diff",
