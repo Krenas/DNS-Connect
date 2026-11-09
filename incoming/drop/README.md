@@ -1,6 +1,6 @@
 # One-file release publishing
 
-This folder is the only manual step for publishing a prepared DNS Connect release. The release-pack publisher workflow is active and validates both the asset and the source archive before publishing.
+This folder is the only manual step for publishing a prepared DNS Connect release. The release-pack publisher workflow is active and validates both the asset and the source archive before publishing. Its Android SDK checks use the runner's installed SDK tools.
 
 1. Open https://github.com/Krenas/DNS-Connect/upload/main/incoming/drop
 2. Upload exactly one file named `DNS-Connect-VERSION-release-pack.zip`.
