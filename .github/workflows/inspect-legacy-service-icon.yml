@@ -49,11 +49,12 @@ jobs:
         shell: bash
         run: |
           set -euo pipefail
-          python3 - <<'PY'
+          DECOMPILED="$RUNNER_TEMP/decompiled" python3 - <<'PY'
           from pathlib import Path
+          import os
           import re
 
-          root = Path("$RUNNER_TEMP/decompiled")
+          root = Path(os.environ["DECOMPILED"])
           source_root = root / "sources"
           resource_root = root / "resources"
           patterns = [
