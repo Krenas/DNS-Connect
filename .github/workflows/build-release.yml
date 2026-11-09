@@ -54,15 +54,15 @@ jobs:
         shell: bash
         run: |
           set -euo pipefail
-          SOURCE_VERSION="$(sed -nE 's/^[[:space:]]*versionName[[:space:]]*=[[:space:]]*"([^"]+)".*/\\1/p' app/build.gradle.kts | head -n1)"
-          VERSION_CODE="$(sed -nE 's/^[[:space:]]*versionCode[[:space:]]*=[[:space:]]*([0-9]+).*/\\1/p' app/build.gradle.kts | head -n1)"
-          [[ "$SOURCE_VERSION" =~ ^[0-9]+\\.[0-9]+\\.[0-9]+$ ]] || {
+          SOURCE_VERSION="$(sed -nE 's/^[[:space:]]*versionName[[:space:]]*=[[:space:]]*"([^"]+)".*/\1/p' app/build.gradle.kts | head -n1)"
+          VERSION_CODE="$(sed -nE 's/^[[:space:]]*versionCode[[:space:]]*=[[:space:]]*([0-9]+).*/\1/p' app/build.gradle.kts | head -n1)"
+          [[ "$SOURCE_VERSION" =~ ^[0-9]+\.[0-9]+\.[0-9]+$ ]] || {
             echo "Invalid versionName in app/build.gradle.kts." >&2; exit 1;
           }
           [[ "$VERSION_CODE" =~ ^[0-9]+$ ]] || { echo "Invalid versionCode." >&2; exit 1; }
 
           if [[ -n "$RELEASE_TAG_INPUT" ]]; then
-            [[ "$RELEASE_TAG_INPUT" =~ ^v([0-9]+)\\.([0-9]+)\\.([0-9]+)$ ]] || {
+            [[ "$RELEASE_TAG_INPUT" =~ ^v([0-9]+)\.([0-9]+)\.([0-9]+)$ ]] || {
               echo "Tag must be vMAJOR.MINOR.PATCH." >&2; exit 1;
             }
             VERSION="${BASH_REMATCH[1]}.${BASH_REMATCH[2]}.${BASH_REMATCH[3]}"
@@ -99,7 +99,7 @@ jobs:
             echo "TAG=$TAG"
             echo "VERSION_CODE=$VERSION_CODE"
             echo "RELEASE_NOTES<<DNS_CONNECT_NOTES_EOF"
-            printf '%s\\n' "$NOTES"
+            printf '%s\n' "$NOTES"
             echo "DNS_CONNECT_NOTES_EOF"
           } >> "$GITHUB_ENV"
 
