@@ -16,12 +16,12 @@ The workflow then:
 
 ## One-time repository setup
 
-Configure these protected GitHub Actions repository secrets in Settings → Secrets and variables → Actions:
+For the cloud build workflows (`build-from-archive.yml` and `build-release.yml`), configure exactly these two protected repository secrets in Settings → Secrets and variables → Actions:
 
 - `ANDROID_KEYSTORE_BASE64`: Base64-encoded release JKS.
-- `ANDROID_KEYSTORE_PASSWORD`: keystore password.
-- `ANDROID_KEY_ALIAS`: `dnsconnect`.
-- `ANDROID_KEY_PASSWORD`: key password.
+- `ANDROID_KEYSTORE_PASSWORD`: keystore password. The workflow uses the fixed alias `dnsconnect` and the same password for the key.
+
+`ANDROID_KEY_ALIAS` and `ANDROID_KEY_PASSWORD` are not required secrets in the current workflow. The separate `publish-uploaded-release.yml` path verifies and publishes an already-built APK/source pair and does not sign or rebuild them.
 
 The build stops safely if a secret is missing or the APK signer does not match the retained certificate. Never place the JKS or password in this folder, the public repository, or the source ZIP.
 
