@@ -97,7 +97,7 @@ jobs:
 
           SIGNATURE="$("$ANDROID_HOME/build-tools/35.0.0/apksigner" verify --print-certs "$APK")"
           CERT="$(sed -n 's/^Signer #1 certificate SHA-256 digest: *//p' <<< "$SIGNATURE" | head -n1 | tr '[:upper:]' '[:lower:]')"
-          [ "$CERT" = "4dc48085b7ea161b57e6266611c5d6a28514df6f2ddfc26df14f3ac972debf90" ]
+          [ "$CERT" = "54b847350b8f4166ea3add400330f360cbc53c4b82e53d709d2c9ff084eb21f7" ]
 
           CURRENT="$(curl -fsSL "https://raw.githubusercontent.com/$GITHUB_REPOSITORY/main/latest.json")"
           CURRENT_VERSION="$(jq -r '.version // "0.0.0"' <<< "$CURRENT")"
