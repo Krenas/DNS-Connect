@@ -67,19 +67,17 @@ Alias зафиксирован как `dnsconnect`; пароль ключа ис
 
 **Локальный кандидат 2.3.0 собран и проверен.**
 
-Последняя локальная сборка выполнена из Project source 2.1.0 + основного патча + supplemental branding/UI patch, с SDK platform/build-tools 35 и сохранённым signing key 2.2.x.
+Последняя локальная сборка выполнена из Project source 2.1.0 + основного патча 2.3.0 + supplemental branding patch + packaging-fix patch, с Android SDK platform/build-tools 35 и сохранённым signing key 2.2.x.
 
-- APK: `DNS-Connect-2.3.0-release.apk`, 1,202,232 bytes.
-- APK SHA-256: `b376f8f15e6bcf815845bdb65bb6cd204703a5f9d21282b63a658f86d1407ff4`.
-- Source ZIP: `DNS-Connect-2.3.0-source.zip`, 1,006,209 bytes.
-- Source ZIP SHA-256: `6a2f58e6dda10a94963992c2ede9a2976a07c1d0a59e9a08b2873809b827ba0a`.
-- Release pack: `DNS-Connect-2.3.0-release-pack.zip`, 1,972,455 bytes.
-- Release pack SHA-256: `64c616533adcddc5b5d193cdce759057cd916bc77a7ad1128acc087b93bc8ad3`.
-- Проверки: 108 self-tests PASS, 17 catalogue PASS, 141 UI/resource/navigation/theme/updater audit PASS; итого **266 PASS / 0 FAIL**.
+- APK: `DNS-Connect-2.3.0-release.apk`, 1,202,232 bytes; SHA-256 `6bc23aeaf3dd45f0541c1f49b74425415d204bb433272a3348a1fced37d83eb9`.
+- Source ZIP: `DNS-Connect-2.3.0-source.zip`, 994,948 bytes; SHA-256 `0476dbeb7d4e322007ad47c4d489ac52e730bfdb709be95f0564f336066b04ea`.
+- Release pack: `DNS-Connect-2.3.0-release-pack.zip`, 1,961,178 bytes; SHA-256 `52b6fb2a28676fffbd28c6c74f0e2f05107d5cb275d72a64f09ee7c2a62e6ad9`.
+- QA: 108 self-tests PASS, 17 catalogue PASS, 141 UI/resource/navigation/theme/updater audit PASS; итого **266 PASS / 0 FAIL**.
 - `tests/verify-icons.py`: PASS (24 glyph types).
-- APK: apksigner v2/v3 PASS, zipalign PASS, package `ru.krenas.dnsanalytics`, version 2.3.0 / code 24.
-- Source ZIP: unzip test PASS; safety audit PASS, signing material/passwords/unsafe paths not found.
-- Clean reconstruct: оригинальный source ZIP 2.1.0 + main diff + supplemental diff применились с `--fuzz=0`.
+- APK: package `ru.krenas.dnsanalytics`, version 2.3.0 / code 24; apksigner v2/v3 PASS, zipalign PASS; preserved signer SHA-256 `4dc48085b7ea161b57e6266611c5d6a28514df6f2ddfc26df14f3ac972debf90`.
+- Source ZIP: 96 entries; unzip/integrity PASS; no signing material, unsafe paths, symlinks, APK/idsig, duplicate entries or patch debris.
+- Found and fixed release packaging defect: `zip -r` updates but does not remove old entries. Packaging now recreates source/release ZIPs and excludes `.idsig/.orig/.rej`; fix is saved as supplemental patch in public bootstrap.
+- The current release pack includes APK, source ZIP, SHA-256 list, QA report, latest.json, release.json and build log.
 
 **НЕ ПРОВЕРЕНО на физическом Android:** установка APK, доступ к реальным DNS/сервисам, виджеты, Quick Settings tile, скачивание APK обновления из приложения и системная установка. 266 автоматических PASS не означают, что физические проверки уже выполнены.
 
