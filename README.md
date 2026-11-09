@@ -28,14 +28,12 @@ Android-приложение для диагностики DNS-резолвер�
 
 ### Однократная настройка подписи
 
-Перед первым build workflow владелец репозитория должен добавить в [Settings → Secrets and variables → Actions](https://github.com/Krenas/DNS-Connect/settings/secrets/actions) четыре защищённых repository secrets:
+Перед первым build workflow владелец репозитория должен добавить в [Settings → Secrets and variables → Actions](https://github.com/Krenas/DNS-Connect/settings/secrets/actions) два защищённых repository secrets:
 
-- `ANDROID_KEYSTORE_BASE64` — Base64 постоянного JKS.
-- `ANDROID_KEYSTORE_PASSWORD` — пароль хранилища ключей.
-- `ANDROID_KEY_ALIAS` — `dnsconnect`.
-- `ANDROID_KEY_PASSWORD` — пароль ключа.
+- `ANDROID_KEYSTORE_BASE64` — Base64 сохранённого JKS из приватного репозитория.
+- `ANDROID_KEYSTORE_PASSWORD` — пароль JKS.
 
-Эти значения нельзя помещать в публичный репозиторий, исходный ZIP, коммиты или логи. Workflow остановится, если secrets отсутствуют или сертификат не совпадает с сохранённым signer.
+Alias `dnsconnect` зафиксирован в workflow; для ключа используется тот же пароль, что и для хранилища. Значения нельзя помещать в публичный репозиторий, исходный ZIP, коммиты или логи. Workflow остановится, если один из двух secrets отсутствует или сертификат не совпадает с сохранённым signer.
 
 **Пользователю не нужно собирать APK или вручную загружать архив в GitHub.** Эту операцию выполняет помощник, коммитя ZIP в указанную папку проекта. После этого APK собирается и публикуется на GitHub.
 
