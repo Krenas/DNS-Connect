@@ -1,15 +1,26 @@
 name: Build and publish DNS Connect from repository source
 
 on:
+  push:
+    branches: [main]
+    paths:
+      - "app/**"
+      - "gradle/**"
+      - "tests/**"
+      - "build.gradle.kts"
+      - "gradle.properties"
+      - "gradlew"
+      - "settings.gradle.kts"
+      - "CHANGELOG.md"
   workflow_dispatch:
     inputs:
       version_tag:
-        description: "Stable release tag, for example v2.4.0"
-        required: true
+        description: "Optional release tag; blank uses app/build.gradle.kts"
+        required: false
         type: string
       release_notes:
-        description: "Release notes"
-        required: true
+        description: "Optional release notes; blank uses CHANGELOG.md"
+        required: false
         type: string
 
 permissions:
@@ -21,7 +32,11 @@ concurrency:
 
 jobs:
   build-test-publish:
-    if: github.ref == 'refs/heads/main'
+    if: >-
+      github.ref == 'refs/heads/main' &&
+      (github.event_name != 'push' ||
+      (!contains(github.event.head_commit.message, 'Import DNS Connect ') &&
+       !contains(github.event.head_commit.message, 'Import verified DNS Connect ')))
     runs-on: ubuntu-latest
     steps:
       - name: Check out project source
@@ -33,36 +48,59 @@ jobs:
         id: version
         env:
           GH_TOKEN: ${{ github.token }}
-          RELEASE_TAG: ${{ inputs.version_tag }}
+          RELEASE_TAG_INPUT: ${{ inputs.version_tag }}
+          RELEASE_NOTES_INPUT: ${{ inputs.release_notes }}
           SIGNING_BUNDLE: ${{ secrets.DNS_CONNECT_SIGNING_BUNDLE }}
         shell: bash
         run: |
           set -euo pipefail
-          [[ "$RELEASE_TAG" =~ ^v([0-9]+)\.([0-9]+)\.([0-9]+)$ ]] || {
-            echo "Tag must be vMAJOR.MINOR.PATCH." >&2; exit 1;
-          }
-          VERSION="${BASH_REMATCH[1]}.${BASH_REMATCH[2]}.${BASH_REMATCH[3]}"
-          SOURCE_VERSION="$(sed -nE 's/^[[:space:]]*versionName[[:space:]]*=[[:space:]]*"([^"]+)".*/\1/p' app/build.gradle.kts | head -n1)"
-          VERSION_CODE="$(sed -nE 's/^[[:space:]]*versionCode[[:space:]]*=[[:space:]]*([0-9]+).*/\1/p' app/build.gradle.kts | head -n1)"
-          [ "$SOURCE_VERSION" = "$VERSION" ] || {
-            echo "app/build.gradle.kts versionName ($SOURCE_VERSION) does not match $VERSION." >&2; exit 1;
+          SOURCE_VERSION="$(sed -nE 's/^[[:space:]]*versionName[[:space:]]*=[[:space:]]*"([^"]+)".*/\\1/p' app/build.gradle.kts | head -n1)"
+          VERSION_CODE="$(sed -nE 's/^[[:space:]]*versionCode[[:space:]]*=[[:space:]]*([0-9]+).*/\\1/p' app/build.gradle.kts | head -n1)"
+          [[ "$SOURCE_VERSION" =~ ^[0-9]+\\.[0-9]+\\.[0-9]+$ ]] || {
+            echo "Invalid versionName in app/build.gradle.kts." >&2; exit 1;
           }
           [[ "$VERSION_CODE" =~ ^[0-9]+$ ]] || { echo "Invalid versionCode." >&2; exit 1; }
+
+          if [[ -n "$RELEASE_TAG_INPUT" ]]; then
+            [[ "$RELEASE_TAG_INPUT" =~ ^v([0-9]+)\\.([0-9]+)\\.([0-9]+)$ ]] || {
+              echo "Tag must be vMAJOR.MINOR.PATCH." >&2; exit 1;
+            }
+            VERSION="${BASH_REMATCH[1]}.${BASH_REMATCH[2]}.${BASH_REMATCH[3]}"
+            [[ "$VERSION" == "$SOURCE_VERSION" ]] || {
+              echo "Requested tag version ($VERSION) does not match source version ($SOURCE_VERSION)." >&2; exit 1;
+            }
+            TAG="$RELEASE_TAG_INPUT"
+          else
+            VERSION="$SOURCE_VERSION"
+            TAG="v$VERSION"
+          fi
+
           for value in SIGNING_BUNDLE; do
-            [ -n "${!value}" ] || { echo "Missing repository secret: $value." >&2; exit 1; }
+            [ -n "${!value}" ] || { echo "Missing repository secret: $value. Configure it once in Settings > Secrets and variables > Actions." >&2; exit 1; }
           done
-          if gh release view "$RELEASE_TAG" --repo "$GITHUB_REPOSITORY" >/dev/null 2>&1; then
-            echo "A release with this tag already exists; refusing to overwrite it." >&2
+          if gh release view "$TAG" --repo "$GITHUB_REPOSITORY" >/dev/null 2>&1; then
+            echo "Release $TAG already exists; refusing to overwrite it." >&2
             exit 1
           fi
-          CURRENT_CODE="$(curl -fsSL "https://raw.githubusercontent.com/$GITHUB_REPOSITORY/main/latest.json" | jq -r '.versionCode // 0')"
+          CURRENT_JSON="$(curl -fsSL "https://raw.githubusercontent.com/$GITHUB_REPOSITORY/main/latest.json")"
+          CURRENT_CODE="$(jq -r '.versionCode // 0' <<< "$CURRENT_JSON")"
           [ "$VERSION_CODE" -gt "$CURRENT_CODE" ] || {
             echo "versionCode must increase (current=$CURRENT_CODE, candidate=$VERSION_CODE)." >&2; exit 1;
           }
+
+          NOTES="$RELEASE_NOTES_INPUT"
+          if [[ -z "$NOTES" && -f CHANGELOG.md ]]; then
+            NOTES="$(awk -v v="$VERSION" '$0 ~ "^## "v"([[:space:]]|$)" {found=1; next} found && /^## / {exit} found {print}' CHANGELOG.md)"
+          fi
+          [[ -n "$NOTES" ]] || NOTES="DNS Connect $VERSION"
+
           {
             echo "VERSION=$VERSION"
-            echo "TAG=$RELEASE_TAG"
+            echo "TAG=$TAG"
             echo "VERSION_CODE=$VERSION_CODE"
+            echo "RELEASE_NOTES<<DNS_CONNECT_NOTES_EOF"
+            printf '%s\\n' "$NOTES"
+            echo "DNS_CONNECT_NOTES_EOF"
           } >> "$GITHUB_ENV"
 
       - name: Set up Java 17
@@ -153,7 +191,6 @@ jobs:
       - name: Create draft release and upload versioned files
         env:
           GH_TOKEN: ${{ github.token }}
-          RELEASE_NOTES: ${{ inputs.release_notes }}
         run: |
           set -euo pipefail
           gh release create "$TAG" --repo "$GITHUB_REPOSITORY" --target main --draft \
@@ -186,7 +223,6 @@ jobs:
       - name: Publish verified latest.json
         env:
           GH_TOKEN: ${{ github.token }}
-          RELEASE_NOTES: ${{ inputs.release_notes }}
         shell: bash
         run: |
           set -euo pipefail
