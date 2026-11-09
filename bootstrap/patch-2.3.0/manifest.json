@@ -17,8 +17,8 @@
     "sourceZipSize": 1006209,
     "signingCertificateSha256": "4dc48085b7ea161b57e6266611c5d6a28514df6f2ddfc26df14f3ac972debf90",
     "artifactStatus": "LOCALLY_BUILT_AND_VERIFIED_PENDING_PUBLIC_RELEASE",
-    "releasePackSha256": "39411fa462904d776f6212c7c2dd46c42f4ffa57d02ecdcadaaf1c352aa5a681",
-    "releasePackSize": 1972455,
+    "releasePackSha256": "64c616533adcddc5b5d193cdce759057cd916bc77a7ad1128acc087b93bc8ad3",
+    "releasePackSize": 1972724,
     "previousPreBrandingCandidate": {
       "apkSha256": "9cc3bb050e4efd9fa74d161e4f2e2ec6e034b8f9ec2095f79233c178aaa1bc56",
       "apkSize": 1202232,
