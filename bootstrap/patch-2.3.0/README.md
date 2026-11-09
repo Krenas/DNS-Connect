@@ -11,7 +11,11 @@ This folder reconstructs the 2.3.0 source tree from the original 2.1.0 source ZI
 - Gzip payload: 28,598 bytes, SHA-256 `c08066e4be234e3405baa0dc0a563b3e5dce07036a81194846169807033c4f47`.
 - Uncompressed unified diff: 119,074 bytes, SHA-256 `0d2e4baaa30f1d336f32a6f92f293536f3b12498681f641d4870ff9c16a756d1`.
 - Every chunk length and SHA-256 is listed in `manifest.json`; each of the 13 public chunk files was independently re-fetched and matched its recorded hash.
-- A clean patch-apply test against the original 2.1.0 source ZIP passed.
+- A clean patch-apply test against the original 2.1.0 source ZIP passed for the main diff.
+
+## Three-server app icon consistency
+
+The existing `drawable-nodpi/ic_dns_connect_foreground.png` is the DNS Connect brand artwork with three stacked server units, a globe and a DNS shield. The adaptive launcher, round launcher and in-app top-bar brand image already use this same foreground. The Android 13+ themed/monochrome launcher icon previously used an older, unrelated globe/shield illustration with only two server strips. The additional `branding-3server-monochrome.patch` changes that themed icon to a matching three-server rack mark. Its size is 3,058 bytes and SHA-256 is `549bc339abbc254c460775de3b12cf9337050674ca52b7f1e127af9847a43c2c`. The rebuild entry point applies this supplemental patch after the main 2.3.0 patch and checks all launcher variants and the in-app brand reference. This latest branding delta has not yet been rebuilt or re-run through full regression tests.
 
 ## How a new chat continues without a user re-upload
 
@@ -33,7 +37,7 @@ The repository includes `bootstrap/rebuild-dns-connect-from-project-files.sh`. I
 - extracts the 2.1.0 source ZIP from the outer Project archive;
 - downloads or accepts cached patch chunks;
 - validates all chunk hashes, the complete Base64 payload, gzip payload and unified diff;
-- applies the patch with zero fuzz;
+- applies the main patch and the supplemental three-server monochrome branding patch with zero fuzz;
 - verifies version/package identity;
 - creates a clean 2.3.0 source ZIP;
 - extracts the SDK platform/build tools from `Download Zip.zip`;
@@ -55,7 +59,7 @@ The optional fifth argument is a directory containing already fetched `000.b64` 
 
 ## Release status
 
-The locally built 2.3.0 APK and source ZIP have been verified, but public GitHub Release `v2.3.0` has not yet been published. The public `latest.json` still points to 2.1.0. Do not report the in-app updater live until the public release assets and manifest have been published and re-verified.
+A previous 2.3.0 APK/source candidate was built before the supplemental monochrome branding patch. Its recorded SHA-256 values are retained in `manifest.json` for audit only and are explicitly superseded; do not distribute or publish that older candidate. Rebuild 2.3.0 with the updated single entry point, re-run all checks, and recalculate artifact hashes. Public GitHub Release `v2.3.0` has not yet been published. The public `latest.json` still points to 2.1.0. Do not report the in-app updater live until the new release assets and manifest have been published and re-verified.
 
 The updater validates URL, version, package, signer, size and SHA-256 before handing off to Android's package installer. Android still requires the user to confirm installation.
 
