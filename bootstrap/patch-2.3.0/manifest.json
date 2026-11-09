@@ -100,7 +100,7 @@
   },
   "verified": {
     "mainPatchCleanApply": true,
-    "supplementalBrandingPatchCleanApply": false,
+    "supplementalBrandingPatchCleanApply": true,
     "localBuildFromSourceArchiveAndSdkBundleBeforeBrandingPatch": true,
     "localBuildWithCurrentBrandingPatch": false,
     "historicalAutomatedPassBeforeBrandingPatch": 266,
@@ -109,7 +109,9 @@
     "physicalDeviceInstall": false,
     "liveNetworkDns": false,
     "liveUpdaterInstall": false,
-    "githubReleasePublished": false
+    "githubReleasePublished": false,
+    "ciRun": 42584359364,
+    "ciUrl": "https://github.com/Krenas/DNS-Connect/actions/runs/42584359364"
   },
   "signing": {
     "certificateSha256": "4dc48085b7ea161b57e6266611c5d6a28514df6f2ddfc26df14f3ac972debf90",
