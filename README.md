@@ -25,12 +25,14 @@ Android-приложение для диагностики DNS-резолвер�
 
 Эта первая публикация не требует добавления секретов: APK уже подписан. Сам приватный ключ в ZIP не входит.
 
-## Сборка APK на GitHub для следующих выпусков
+## Автоматическая сборка APK на GitHub
 
-В репозитории также настроен workflow `.github/workflows/build-from-archive.yml`: при добавлении `DNS-Connect-MAJOR.MINOR.PATCH-source.zip` в `incoming/` он запускает тесты, собирает APK на Java 17 + Android SDK 35, подписывает, проверяет сертификат, публикует GitHub Release и обновляет `latest.json`.
+После первичного импорта исходников workflow `.github/workflows/build-release.yml` автоматически запускается при изменениях кода приложения на `main` (app, gradle, tests и параметры сборки). Он сам берёт версию и versionCode из `app/build.gradle.kts`, заметки — из `CHANGELOG.md`, запускает проверки, собирает и подписывает APK, проверяет сертификат и целостность Release assets и только после этого обновляет `latest.json`. Вручную запускать workflow или загружать ZIP с исходниками для каждого следующего выпуска не нужно.
 
-Для этой автоматической сборки нужен один защищённый repository secret: **`DNS_CONNECT_SIGNING_BUNDLE`** (Base64 ZIP, содержащий JKS и пароль). Секрет пока не добавлен, поэтому cloud-build workflow не следует запускать до отдельной настройки этой единственной записи. Настройка находится в [Settings → Secrets and variables → Actions](https://github.com/Krenas/DNS-Connect/settings/secrets/actions). Не помещай ключ или пароль в публичные файлы, ZIP исходников, Issue или коммиты.
+Для постоянной подписи нужен один защищённый GitHub Actions secret: `DNS_CONNECT_SIGNING_BUNDLE` — Base64 ZIP с ключом подписи и паролем. Его нельзя помещать в публичный репозиторий. Секрет пока не настроен; без него автоматическая сборка новых APK остановится на проверке перед сборкой. Это одноразовая настройка в [Settings → Secrets and variables → Actions](https://github.com/Krenas/DNS-Connect/settings/secrets/actions).
 
+Первый импорт текущей версии 2.4.0 — отдельный стартовый шаг: workflow `.github/workflows/publish-release-pack.yml` проверяет готовый подписанный пакет, публикует Release и переносит исходники в `main`. Для этого начального импорта пока требуется один раз добавить release-pack ZIP в `incoming/drop`. Этот шаг не нужен для последующих версий после импорта исходников.
+ 
 ## Подпись и совместимость
 
 Для 2.4.0 создан новый ключ, который нужно сохранять для всех следующих релизов. SHA-256 сертификата: `54b847350b8f4166ea3add400330f360cbc53c4b82e53d709d2c9ff084eb21f7`.
