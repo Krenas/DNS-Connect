@@ -20,7 +20,7 @@ diff --git a/app/src/main/res/drawable/ic_launcher_monochrome.xml b/app/src/main
 +        android:strokeLineCap="round"
 +        android:pathData="M44,25 H72 M44,51 H72 M44,77 H72" />
  </vector>
- 
+
 diff --git a/tests/verify-ui.sh b/tests/verify-ui.sh
 --- a/tests/verify-ui.sh
 +++ b/tests/verify-ui.sh
