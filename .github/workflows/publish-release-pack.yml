@@ -5,6 +5,7 @@ on:
     branches: [main]
     paths:
       - "incoming/drop/DNS-Connect-*-release-pack.zip"
+      - "incoming/drop/release-pack-url.txt"
       - "incoming/drop/README.md"
   workflow_dispatch:
 
@@ -47,13 +48,35 @@ jobs:
           mkdir -p "$RUNNER_TEMP/dns-connect"
           mapfile -t packs < <(find incoming/drop -maxdepth 1 -type f -name 'DNS-Connect-*-release-pack.zip' -print | sort)
           count="$(find incoming/drop -maxdepth 1 -type f -name 'DNS-Connect-*-release-pack.zip' | wc -l | tr -d ' ')"
-          if [[ "$count" == "0" ]]; then
-            echo "No release pack found; nothing to publish."
+          PACK="$RUNNER_TEMP/DNS-Connect-release-pack.zip"
+          if [[ "$count" == "1" ]]; then
+            cp "${packs[0]}" "$PACK"
+          elif [[ "$count" == "0" && -s incoming/drop/release-pack-url.txt ]]; then
+            PACK_URL="$(tr -d '\\r\\n' < incoming/drop/release-pack-url.txt)"
+            python3 - "$PACK_URL" <<'PY'
+          import sys
+          from urllib.parse import urlparse
+          u=urlparse(sys.argv[1])
+          if u.scheme != "https" or u.hostname not in {"www.dropbox.com","dropbox.com","dl.dropboxusercontent.com"}:
+              raise SystemExit("Only an HTTPS Dropbox shared link is accepted.")
+          if not u.path or u.path == "/":
+              raise SystemExit("The shared link has no file path.")
+          PY
+            case "$PACK_URL" in
+              *\?*) PACK_URL="${PACK_URL}&dl=1" ;;
+              *) PACK_URL="${PACK_URL}?dl=1" ;;
+            esac
+            curl --fail --location --silent --show-error --retry 3 --max-time 300 \
+              "$PACK_URL" --output "$PACK"
+          elif [[ "$count" == "0" ]]; then
+            echo "No release pack or Dropbox link is present; nothing to publish."
             echo "skip=true" >> "$GITHUB_OUTPUT"
             exit 0
+          else
+            echo "Only one release pack may be published at a time." >&2
+            exit 1
           fi
-          [[ "$count" == "1" ]] || { echo "Upload exactly one release pack at a time." >&2; exit 1; }
-          PACK="${packs[0]}"
+          test -s "$PACK"
           unzip -tq "$PACK" >/dev/null
           unzip -q "$PACK" -d "$RUNNER_TEMP/dns-connect"
 
@@ -280,8 +303,12 @@ jobs:
           git commit -m "Publish DNS Connect $VERSION updater manifest"
           git push origin HEAD:main
           PACK_PATH="$(find incoming/drop -maxdepth 1 -type f -name 'DNS-Connect-*-release-pack.zip' -print -quit)"
-          if [[ -n "$PACK_PATH" ]]; then
-            git rm -f "$PACK_PATH"
-            git commit -m "chore: remove processed DNS Connect release pack"
+          POINTER_PATH="incoming/drop/release-pack-url.txt"
+          if [[ -n "$PACK_PATH" || -f "$POINTER_PATH" ]]; then
+            [[ -z "$PACK_PATH" ]] || git rm -f "$PACK_PATH"
+            [[ ! -f "$POINTER_PATH" ]] || git rm -f "$POINTER_PATH"
+            git config user.name "github-actions[bot]"
+            git config user.email "41898282+github-actions[bot]@users.noreply.github.com"
+            git commit -m "chore: remove processed DNS Connect release-pack input"
             git push origin HEAD:main
           fi
