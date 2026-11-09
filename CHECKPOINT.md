@@ -35,7 +35,9 @@
 - Workflow verifies APK/source hashes and sizes, package/version, signature v2/v3, zipalign, safe source ZIP and updater UI. It then imports the source tree, creates/updates draft Release v2.4.0, uploads APK/source/QA/checksums, verifies GitHub asset digest+size, publishes the Release and only then advances `latest.json`. The one-time pack is removed after success.
 - It uses `GITHUB_TOKEN`; it does not need repository signing secrets and never uploads the private keystore or password.
 - actionlint/ShellCheck passed; GitHub Actions no-pack dry-run passed:
-  https://github.com/Krenas/DNS-Connect/actions/runs/42638377064
+  https://github.com/Krenas/DNS-Connect/actions/runs/42650867597
+- Current actionlint/ShellCheck run after the self-describing-pack validator change: https://github.com/Krenas/DNS-Connect/actions/runs/42650678457
+- The validator now derives version/package/versionCode/size/SHA-256/signer directly from the APK and source ZIP inside the pack; no extra JSON manifest is required. It verifies source archive safety before extraction.
 - Full candidate release-pack validator was run locally against the actual pack and passed all APK/source/hash/signature checks.
 - No public Release v2.4.0 exists yet, so `latest.json` correctly remains at 2.1.0. Do not claim in-app updates are live until pack upload and Release verification succeed.
 
