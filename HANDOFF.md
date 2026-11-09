@@ -74,8 +74,8 @@ The workflow then autonomously:
 This pre-signed publication route does not require repository signing secrets. The signing key remains private. User does not build locally or edit code.
 
 GitHub proof:
-- Publisher no-pack dry-run PASS: https://github.com/Krenas/DNS-Connect/actions/runs/42650867597
-- actionlint/ShellCheck and patch repo checks PASS: https://github.com/Krenas/DNS-Connect/actions/runs/42650678457
+- Publisher no-pack dry-run PASS: https://github.com/Krenas/DNS-Connect/actions/runs/42652482963
+- actionlint/ShellCheck and patch repo checks PASS: https://github.com/Krenas/DNS-Connect/actions/runs/42652466884
 
 These are static/no-pack dry runs only. Actual upload, Release creation and latest.json publish have NOT run because the pack is not committed yet. Do not say update discovery is live until it has.
 
