@@ -5,6 +5,7 @@ on:
     branches: [main]
     paths:
       - "incoming/drop/DNS-Connect-*-release-pack.zip"
+      - "incoming/drop/README.md"
   workflow_dispatch:
 
 permissions:
