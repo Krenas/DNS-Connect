@@ -95,7 +95,7 @@ jobs:
           [[ "$APK_PACKAGE" == "$PACKAGE" && "$APK_VERSION" == "$VERSION" && "$APK_CODE" == "$VERSION_CODE" ]]
 
           SIGNATURE="$("$ANDROID_HOME/build-tools/35.0.0/apksigner" verify --verbose --print-certs "$APK")"
-          CERT="$(sed -n 's/^Signer #1 certificate SHA-256 digest: *//p' <<< "$SIGNATURE" | head -n1 | tr '[:upper:]' '[:lower:]')"
+          CERT="$(awk '/^Signer #1 certificate SHA-256 digest:/ {sub(/^Signer #1 certificate SHA-256 digest:[[:space:]]*/, ""); print tolower($0); exit}' <<< "$SIGNATURE")"
           [[ "$CERT" == "$SIGNER" ]]
           grep -Fq 'Verified using v2 scheme (APK Signature Scheme v2): true' <<< "$SIGNATURE"
           grep -Fq 'Verified using v3 scheme (APK Signature Scheme v3): true' <<< "$SIGNATURE"
