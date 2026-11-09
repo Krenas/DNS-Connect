@@ -13,15 +13,16 @@
 
 ## 2.3.0 locally built release candidate
 - Version 2.3.0 / versionCode 24 / package `ru.krenas.dnsanalytics`.
-- APK size 1,202,232 bytes; SHA-256 `b376f8f15e6bcf815845bdb65bb6cd204703a5f9d21282b63a658f86d1407ff4`.
-- Source ZIP size 1,006,209 bytes; SHA-256 `6a2f58e6dda10a94963992c2ede9a2976a07c1d0a59e9a08b2873809b827ba0a`.
-- Release pack size 1,972,455 bytes; SHA-256 `64c616533adcddc5b5d193cdce759057cd916bc77a7ad1128acc087b93bc8ad3`.
-- Automated QA: 266 PASS / 0 FAIL (108 self-tests, 17 catalogue tests, 141 UI/resource/navigation/theme/updater checks).
+- APK: 1,202,232 bytes; SHA-256 `6bc23aeaf3dd45f0541c1f49b74425415d204bb433272a3348a1fced37d83eb9`.
+- Clean source ZIP: 994,948 bytes; SHA-256 `0476dbeb7d4e322007ad47c4d489ac52e730bfdb709be95f0564f336066b04ea`.
+- Release pack: 1,961,178 bytes; SHA-256 `52b6fb2a28676fffbd28c6c74f0e2f05107d5cb275d72a64f09ee7c2a62e6ad9`.
+- Automated QA: **266 PASS / 0 FAIL** = 108 self-tests + 17 catalogue tests + 141 UI/resource/navigation/theme/updater checks.
 - Separate icon audit: PASS (24 glyph types).
-- apksigner v2/v3: PASS. zipalign: PASS.
-- Source ZIP unzip/safety audit: PASS; no signing keys, passwords, private secrets, or unsafe paths.
-- Build does NOT prove physical-device installation or live network/updater runtime.
-
+- APK: package/version/versionCode verified; apksigner v2/v3 PASS; zipalign PASS; retained signer SHA-256 `4dc48085b7ea161b57e6266611c5d6a28514df6f2ddfc26df14f3ac972debf90`.
+- Source ZIP: 96 entries; ZIP integrity PASS; no unsafe paths, symlinks, signing material, APK/idsig, `.orig/.rej` or duplicate entries.
+- Packaging defect found and fixed: `zip -r` preserves stale entries in an existing archive. `package-release.sh` now deletes old source/release ZIPs before creating new ones and excludes temporary patch/build files.
+- Clean rebuild from original 2.1.0 source with the main patch and supplemental patches; main diff and branding diff applied with `--fuzz=0`. The packaging-fix supplemental patch is persisted in the public bootstrap.
+- This is a locally built release candidate, not a published GitHub Release.
 ## 2.3.0 patch bootstrap
 - Main diff stored in `bootstrap/patch-2.3.0/`, 13 Base64 chunks.
 - Base64 SHA-256: `9a77468bebbe2b5b5e5f412a125f9dec160c5f9e85e2dbd4971388c7a93233ba`.
