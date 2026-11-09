@@ -52,7 +52,7 @@ jobs:
           if [[ "$count" == "1" ]]; then
             cp "${packs[0]}" "$PACK"
           elif [[ "$count" == "0" && -s incoming/drop/release-pack-url.txt ]]; then
-            PACK_URL="$(tr -d '\\r\\n' < incoming/drop/release-pack-url.txt)"
+            PACK_URL="$(tr -d '\r\n' < incoming/drop/release-pack-url.txt)"
             python3 - "$PACK_URL" <<'PY'
           import sys
           from urllib.parse import urlparse
