@@ -65,7 +65,7 @@ Alias зафиксирован как `dnsconnect`; пароль ключа ис
 
 ## Сборка и QA
 
-<badge>2.3.0 локальный кандидат собран</badge>
+**Локальный кандидат 2.3.0 собран и проверен.**
 
 Последняя локальная сборка выполнена из Project source 2.1.0 + основного патча + supplemental branding/UI patch, с SDK platform/build-tools 35 и сохранённым signing key 2.2.x.
 
