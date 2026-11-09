@@ -16,10 +16,7 @@
   "publicRelease230": false,
   "latestJsonVersion": "2.1.0",
   "cloudSigningReady": false,
-  "requiredActionsSecrets": [
-    "ANDROID_KEYSTORE_BASE64",
-    "ANDROID_KEYSTORE_PASSWORD"
-  ],
+  "requiredActionsSecrets": [],
   "physicalDeviceTesting": false,
   "updaterRuntimeTested": false,
   "lastAutomatedQa": {
@@ -137,8 +134,18 @@
       "conclusion": "success",
       "url": "https://github.com/Krenas/DNS-Connect/actions/runs/42650678457"
     },
-    "status": "READY_FOR_ONE_TIME_RELEASE_PACK_UPLOAD_NOT_YET_PUBLISHED"
+    "status": "READY_FOR_ONE_TIME_RELEASE_PACK_UPLOAD_NOT_YET_PUBLISHED",
+    "endToEndTested": false,
+    "binaryUploadRequiredOnce": true,
+    "futureUpdatesInApp": true,
+    "publicReleaseCurrent": "2.1.0",
+    "publisherWorkflowLint": "PASS",
+    "dryRun": "PASS_NO_PACK"
   },
   "releasePackPath": "incoming/drop/DNS-Connect-2.4.0-release-pack.zip",
-  "lastGitHubMainSha": "1e33e8789e861270d26736791d872203a7c6f754"
+  "lastGitHubMainSha": "c399e012f031a7a8ef7a1c08af12cf2efef80ee2",
+  "optionalCloudBuildSecrets": [
+    "ANDROID_KEYSTORE_BASE64",
+    "ANDROID_KEYSTORE_PASSWORD"
+  ]
 }
