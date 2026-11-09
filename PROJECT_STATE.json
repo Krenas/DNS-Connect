@@ -1,0 +1,28 @@
+{
+  "project": "DNS Connect",
+  "repository": "Krenas/DNS-Connect",
+  "branch": "main",
+  "package": "ru.krenas.dnsanalytics",
+  "publicVersion": "2.1.0",
+  "publicVersionCode": 22,
+  "targetVersion": "2.3.0",
+  "targetVersionCode": 24,
+  "nextChatFile": "NEXT-CHAT.md",
+  "handoffFile": "HANDOFF.md",
+  "checkpointFile": "CHECKPOINT.md",
+  "sourceBaseline": "Project File 2.1.0.zip",
+  "patchDirectory": "bootstrap/patch-2.3.0/",
+  "brandingPatch": "bootstrap/patch-2.3.0/branding-3server-monochrome.patch",
+  "publicRelease230": false,
+  "latestJsonVersion": "2.1.0",
+  "cloudSigningReady": false,
+  "requiredActionsSecrets": ["ANDROID_KEYSTORE_BASE64", "ANDROID_KEYSTORE_PASSWORD"],
+  "physicalDeviceTesting": false,
+  "updaterRuntimeTested": false,
+  "lastAutomatedQa": {
+    "pass": 266,
+    "fail": 0,
+    "notes": "108 self-tests + 17 catalogue + 141 UI/resource/navigation/theme/updater checks; apksigner v2/v3 and zipalign previously passed"
+  },
+  "continuationRule": "Use Project Files and the persistent GitHub patch; do not ask the user to re-upload existing files. Re-check GitHub state before claiming release/build/update completion."
+}
