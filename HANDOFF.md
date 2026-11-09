@@ -154,3 +154,10 @@ Alias dnsconnect; сертификат SHA-256 4dc48085b7ea161b57e6266611c5d6a28
 - Отдельный аудит 2.3.0 patch через workflow 42567150343: patch изменяет Java/build/test файлы, включая GitHubUpdateManager.java и MainActivity.java, но не изменяет res/assets/drawable/mipmap/launcher/icon files. Поэтому требование пользователя поставить существующую иконку раздела «Сервисы» с тремя серверами как launcher/app icon и заменить все брендовые иконки ещё не выполнено.
 - Физическая проверка Android и live update installer остаются NOT TESTED. Кандидатные статические проверки 266 PASS / 0 FAIL из предыдущего runtime не являются доказательством установки/обновления на телефоне.
 - Следующие блокеры: добавить два secrets через Settings; получить/собрать source ZIP 2.3.0 из Project 2.1.0 source + checked-in patch; включить в source icon resource change только после нахождения точного трехсерверного значка из раздела «Сервисы»; build and publish Release v2.3.0 with cert SHA 4dc48085b7ea161b57e6266611c5d6a28514df6f2ddfc26df14f3ac972debf90; verify latest.json/assets; test on physical Android.
+
+
+## Последняя проверка после изменений CI — 2026-11-09
+- Добавлен workflow_dispatch в check-release-secrets.yml, чтобы владелец мог вручную повторить безопасную проверку после заполнения секретов.
+- Signing check run 42567494139: workflow SUCCESS, результат — оба секрета отсутствуют: ANDROID_KEYSTORE_BASE64 и ANDROID_KEYSTORE_PASSWORD.
+- Последний regression/lint run 42567494192: SUCCESS на commit 1cc6907b1f98a7cfeeafb48493d9c73702cc2a6d. Шаги actionlint, fragment verification, aggregate Base64/gzip/diff verification и artifact upload — все SUCCESS.
+- Для ручной повторной проверки: https://github.com/Krenas/DNS-Connect/actions/workflows/check-release-secrets.yml. Для настройки: https://github.com/Krenas/DNS-Connect/settings/secrets/actions.
