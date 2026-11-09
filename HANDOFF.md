@@ -102,7 +102,7 @@ Alias зафиксирован как `dnsconnect`; пароль ключа ис
 - Дополнительный патч `bootstrap/patch-2.3.0/branding-3server-monochrome.patch` включает также исправление теста UI, который проверял старый рисунок. Размер 3,710 bytes; SHA-256 `db74d35e8090a16dea74213703423d2073e2370da7dd3dbae79144c6c42e8362`.
 - Rebuild script применяет его после основной diff и проверяет SHA, launcher links, toolbar brand icon и monochrome three-server geometry.
 - Bottom-tab «Сервисы» в публичном APK 2.1.0 использует функциональный glyph `apps` (четыре квадрата); generic `server` glyph отображает два горизонтальных блока. Это не app logo. DNS Quick Settings tile и виджеты сохраняют функциональные glyphs, не подменяются логотипом.
-- Последняя проверка patch CI: run `42587450681` SUCCESS; запуск на обновлённом manifest после записи новых candidate hashes ещё выполняется/должен быть перепроверен.
+- Последняя проверка patch CI: run `42587923209` SUCCESS; manifest candidate metadata was validated by run `42587917151` SUCCESS.
 
 
 ## Фактический статус GitHub на 2026-11-09
