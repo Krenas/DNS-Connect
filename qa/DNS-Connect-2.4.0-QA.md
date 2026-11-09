@@ -34,7 +34,7 @@
 - Independent source rebuild was compared against the supplied APK: all 26 ZIP entries, including DEX, manifest and resources, match byte-for-byte.
 - Source ZIP: 96 entries, valid archive; no duplicate entries, unsafe paths, symlinks, private signing files, passwords, APK/idsig files or patch debris.
 - Candidate APK/source identity, size and SHA-256 values recorded. The public publisher derives release metadata directly from the embedded APK and source ZIP; it does not depend on a sidecar JSON manifest.
-- Public release workflow actionlint/ShellCheck: PASS. GitHub Actions no-pack dry-run: PASS; validation skips publishing when no pack exists. Full asset verification/Release creation/latest.json update have NOT been run because the pack has not yet been committed to the upload folder.
+- Public release workflow actionlint/ShellCheck: PASS. GitHub Actions no-pack dry-run: PASS (run 42652482963); actionlint/ShellCheck and full patch verification PASS (run 42652466884). The dry run correctly skips publishing when no pack exists. Full asset verification/Release creation/latest.json update have NOT been run because the pack has not yet been committed to the upload folder.
 
 ## Signing decision
 - Keep the existing private DNS Connect 2.2.x signing key for 2.4.0 and all later versions.
