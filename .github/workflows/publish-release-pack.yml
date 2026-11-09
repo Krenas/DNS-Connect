@@ -8,6 +8,11 @@ on:
       - "incoming/drop/release-pack-url.txt"
       - "incoming/drop/README.md"
   workflow_dispatch:
+    inputs:
+      release_pack_url:
+        description: "Optional HTTPS Dropbox shared link to the release-pack ZIP"
+        required: false
+        type: string
 
 permissions:
   contents: write
@@ -43,33 +48,47 @@ jobs:
       - name: Validate release pack
         id: candidate
         shell: bash
+        env:
+          RELEASE_PACK_URL_INPUT: ${{ inputs.release_pack_url }}
         run: |
           set -euo pipefail
           mkdir -p "$RUNNER_TEMP/dns-connect"
+          mkdir -p incoming/drop
           mapfile -t packs < <(find incoming/drop -maxdepth 1 -type f -name 'DNS-Connect-*-release-pack.zip' -print | sort)
           count="$(find incoming/drop -maxdepth 1 -type f -name 'DNS-Connect-*-release-pack.zip' | wc -l | tr -d ' ')"
           PACK="$RUNNER_TEMP/DNS-Connect-release-pack.zip"
-          if [[ "$count" == "1" ]]; then
-            cp "${packs[0]}" "$PACK"
-          elif [[ "$count" == "0" && -s incoming/drop/release-pack-url.txt ]]; then
+          PACK_URL="${RELEASE_PACK_URL_INPUT:-}"
+          if [[ -z "$PACK_URL" && "$count" == "0" && -s incoming/drop/release-pack-url.txt ]]; then
             PACK_URL="$(tr -d '\r\n' < incoming/drop/release-pack-url.txt)"
+          fi
+
+          if [[ -n "$PACK_URL" ]]; then
             python3 - "$PACK_URL" <<'PY'
           import sys
           from urllib.parse import urlparse
           u=urlparse(sys.argv[1])
           if u.scheme != "https" or u.hostname not in {"www.dropbox.com","dropbox.com","dl.dropboxusercontent.com"}:
               raise SystemExit("Only an HTTPS Dropbox shared link is accepted.")
+          if u.username or u.password or u.port not in (None, 443) or u.fragment:
+              raise SystemExit("The Dropbox link contains unsupported URL components.")
           if not u.path or u.path == "/":
               raise SystemExit("The shared link has no file path.")
           PY
-            case "$PACK_URL" in
-              *\?*) PACK_URL="${PACK_URL}&dl=1" ;;
-              *) PACK_URL="${PACK_URL}?dl=1" ;;
-            esac
-            curl --fail --location --silent --show-error --retry 3 --max-time 300 \
+            PACK_URL="$(python3 - "$PACK_URL" <<'PY'
+          import sys
+          from urllib.parse import urlparse, urlunparse, parse_qsl, urlencode
+          u=urlparse(sys.argv[1])
+          q=dict(parse_qsl(u.query, keep_blank_values=True))
+          q["dl"]="1"
+          print(urlunparse(u._replace(query=urlencode(q), fragment="")))
+          PY
+          )"
+            curl --fail --location --silent --show-error --retry 3 --max-time 300 --max-filesize 160000000 \
               "$PACK_URL" --output "$PACK"
+          elif [[ "$count" == "1" ]]; then
+            cp "${packs[0]}" "$PACK"
           elif [[ "$count" == "0" ]]; then
-            echo "No release pack or Dropbox link is present; nothing to publish."
+            echo "No release pack or Dropbox link was supplied; nothing to publish."
             echo "skip=true" >> "$GITHUB_OUTPUT"
             exit 0
           else
