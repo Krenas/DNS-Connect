@@ -21,9 +21,13 @@ Continue the existing DNS Connect Android app, not a redesign/rebuild from scrat
 - Do not assume any old `/mnt/data` path from a previous chat still exists. Materialize from Project Files into the current runtime and verify actual paths.
 - Fetch current `main`, latest releases, `latest.json`, workflow state, and the patch manifest from GitHub. Treat remote status as authoritative.
 - Reconstruct 2.3.0 from the 2.1.0 source and `bootstrap/patch-2.3.0/`; verify chunk length/SHA and patch SHA; use `patch --fuzz=0`.
-- Inspect exact existing three-server icon from the «Сервисы» section. Reuse the existing artwork/path; do not invent a replacement, generate a collage, or assume a generic server glyph is the same icon. Replace launcher foreground/adaptive icon and other true app-icon placements consistently. Add/extend icon tests.
+- Three-server app brand foreground has been identified: `app/src/main/res/drawable-nodpi/ic_dns_connect_foreground.png`. The adaptive launcher variants and toolbar already use it. The Android 13+ monochrome icon mismatch has been corrected in `bootstrap/patch-2.3.0/branding-3server-monochrome.patch`; the rebuild script applies it and verifies launcher/toolbar references. The generic «Сервисы» nav glyph in 2.1.0 is `apps` (four squares), while `server` is two bars — do not confuse those functional glyphs with the brand image. CI run 42584359364 passed the supplementary patch test. Rebuild 2.3.0 with this patch and recalculate all artifact hashes.
 - Rebuild, run all source tests, inspect APK identity and signer, run zipalign/signature verification, and make a QA report. Physical device, actual DNS, widgets, Quick Settings and live in-app update still need real device validation.
 - Keep the existing signing fingerprint. Do not expose or commit any JKS/password/Base64 signer data.
+
+## New app-icon finding
+
+The existing three-server brand image is already the launcher foreground and toolbar logo. The Android 13+ monochrome resource has now been aligned using the supplemental patch. Previous APK/source hashes from before this change are invalid for the next candidate; a fresh build is required.
 
 ## Known release blocker
 
