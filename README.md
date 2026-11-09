@@ -13,18 +13,12 @@ Android-приложение для диагностики DNS-резолвер�
 
 Ежедневная автопроверка включается отдельно; она только присылает уведомление и не устанавливает APK автоматически.
 
-## Первая публикация 2.4.0 — без ручной сборки
+## Первая публикация 2.4.0 — одноразовый импорт
 
-Готовый подписанный пакет: `DNS-Connect-2.4.0-release-pack.zip`.
+Готовый подписанный пакет: `DNS-Connect-2.4.0-release-pack.zip`. Workflow `.github/workflows/publish-release-pack.yml` принимает ZIP напрямую или скачивает его по одноразовой HTTPS-ссылке Dropbox из `incoming/drop/release-pack-url.txt`. Пакет проверяется, исходники импортируются в `main`, затем создаётся Release и обновляется `latest.json` только после проверки файлов.
 
-1. Открой [загрузку в incoming/drop](https://github.com/Krenas/DNS-Connect/upload/main/incoming/drop).
-2. Загрузи один ZIP `DNS-Connect-2.4.0-release-pack.zip`.
-3. Нажми **Commit changes**.
-4. GitHub Actions проверит APK и исходники, создаст Release, загрузит APK/source/QA/checksums, сверит SHA-256 и размер опубликованных assets и только после этого обновит `latest.json`.
-5. После успешного запуска открой [Releases](https://github.com/Krenas/DNS-Connect/releases/latest) и скачай отдельный `DNS-Connect-2.4.0-release.apk`.
-
-Эта первая публикация не требует добавления секретов: APK уже подписан. Сам приватный ключ в ZIP не входит.
-
+После передачи одноразовой ссылки никаких ручных запусков GitHub Actions и загрузки ZIP в репозиторий не требуется. Временный файл-ссылка автоматически удаляется после обработки.
+ 
 ## Автоматическая сборка APK на GitHub
 
 После первичного импорта исходников workflow `.github/workflows/build-release.yml` автоматически запускается при изменениях кода приложения на `main` (app, gradle, tests и параметры сборки). Он сам берёт версию и versionCode из `app/build.gradle.kts`, заметки — из `CHANGELOG.md`, запускает проверки, собирает и подписывает APK, проверяет сертификат и целостность Release assets и только после этого обновляет `latest.json`. Вручную запускать workflow или загружать ZIP с исходниками для каждого следующего выпуска не нужно.
