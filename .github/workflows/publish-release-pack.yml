@@ -103,7 +103,6 @@ jobs:
 
           SOURCE_DIR="$RUNNER_TEMP/dns-connect/source"
           mkdir -p "$SOURCE_DIR"
-          unzip -q "$SOURCE_PATH" -d "$SOURCE_DIR"
           python3 - "$SOURCE_PATH" <<'PY'
           import sys, stat, zipfile
           with zipfile.ZipFile(sys.argv[1]) as archive:
@@ -134,6 +133,7 @@ jobs:
               if not required.issubset(set(names)):
                   raise SystemExit("Source ZIP misses a required project or updater file.")
           PY
+          unzip -q "$SOURCE_PATH" -d "$SOURCE_DIR"
           SRC_VERSION="$(awk -F '"' '/versionName[[:space:]]*=/ {print $2; exit}' "$SOURCE_DIR/app/build.gradle.kts")"
           SRC_CODE="$(awk -F '=' '/versionCode[[:space:]]*=/ {gsub(/[[:space:]]/, "", $2); print $2; exit}' "$SOURCE_DIR/app/build.gradle.kts")"
           SRC_PACKAGE="$(awk -F '"' '/applicationId[[:space:]]*=/ {print $2; exit}' "$SOURCE_DIR/app/build.gradle.kts")"
@@ -148,11 +148,11 @@ jobs:
           dpkg --compare-versions "$VERSION" gt "$CURRENT_VERSION"
           [[ "$VERSION_CODE" -gt "$CURRENT_CODE" ]]
 
-          CHECKSUMS="$RUNNER_TEMP/dns-connect/SHA256SUMS.txt"
-          (cd "$RUNNER_TEMP/dns-connect" && sha256sum "$APK_PATH" "$SOURCE_PATH" > "$CHECKSUMS")
           cp "$APK_PATH" "$RUNNER_TEMP/dns-connect/$APK"
           cp "$SOURCE_PATH" "$RUNNER_TEMP/dns-connect/$SOURCE"
           cp "$QA_PATH" "$RUNNER_TEMP/dns-connect/$QA"
+          CHECKSUMS="$RUNNER_TEMP/dns-connect/SHA256SUMS.txt"
+          (cd "$RUNNER_TEMP/dns-connect" && sha256sum "$APK" "$SOURCE" > "$CHECKSUMS")
 
           {
             echo "version=$VERSION"
