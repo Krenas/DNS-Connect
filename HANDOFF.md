@@ -80,7 +80,8 @@ Alias зафиксирован как `dnsconnect`; пароль ключа ис
 Пользователь просил использовать существующую DNS Connect эмблему с тремя серверами во всех местах, где должна отображаться иконка приложения.
 
 - Исходная эмблема с тремя серверными блоками найдена в `app/src/main/res/drawable-nodpi/ic_dns_connect_foreground.png` (трёхсерверная иллюстрация с глобусом и щитом DNS).
-- Декомпиляция опубликованного APK 2.1.0 подтвердила, что regular и round adaptive launcher variants используют `@drawable/ic_dns_connect_foreground`; верхняя панель приложения также использует `R.drawable.ic_dns_connect_foreground`.
+- Декомпиляция опубликованного APK 2.1.0 подтвердила: manifest `android:icon` = `@mipmap/ic_launcher`, `android:roundIcon` = `@mipmap/ic_launcher_round`; оба ресурса и их API 33+ варианты используют `@drawable/ic_dns_connect_foreground`. Верхняя панель приложения также использует `R.drawable.ic_dns_connect_foreground`.
+- Полный mipmap audit не обнаружил отдельных legacy PNG launcher icons в density-папках. `android:icon="@drawable/ic_dns_tile"` относится к системной DNS-плитке, а не к launcher app icon; его оставляем функциональным.
 - Исключение: Android 13+ themed/monochrome launcher resource `app/src/main/res/drawable/ic_launcher_monochrome.xml` до этого показывал отдельный глобус/щит с двумя полосами. Он заменён на компактный монохромный символ из трёх серверных стоек.
 - Новый supplementary patch: `bootstrap/patch-2.3.0/branding-3server-monochrome.patch`; size 3,058; SHA-256 `549bc339abbc254c460775de3b12cf9337050674ca52b7f1e127af9847a43c2c`.
 - `bootstrap/rebuild-dns-connect-from-project-files.sh` теперь применяет этот патч после основной 2.3.0 diff, проверяет SHA и подтверждает, что все четыре launcher XML варианта и toolbar ссылаются на общий foreground. DNS Quick Settings tile и widget icons остаются функциональными значками, не заменяются брендингом.
