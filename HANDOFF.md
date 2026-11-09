@@ -1,125 +1,102 @@
-# DNS Connect — постоянная точка продолжения
+# DNS Connect — технический handoff
 
-Обновлено: 2026-11-09. Это основной технический handoff проекта. Для нового чата сначала прочитать `NEXT-CHAT.md`, затем этот файл и `CHECKPOINT.md`.
+Обновлено: 2026-11-09. Продолжать существующее Android-приложение, не начинать новый проект. Перед любыми изменениями сверить фактические GitHub Releases, latest.json, main и Actions. Не полагаться на устаревшие локальные пути.
 
-## Проект и исходные данные
+## Проект
 
 - Публичный репозиторий: https://github.com/Krenas/DNS-Connect
-- Package: `ru.krenas.dnsanalytics`
-- Название приложения: DNS Connect
-- Текущая публичная версия: 2.1.0, versionCode 22.
-- Цель следующей сборки: 2.3.0, versionCode 24.
-- Базовый Project File: `2.1.0.zip` (внутри исходники `DNS-Connect-2.1.0-source.zip` и APK 2.1.0).
-- Отдельная копия исходников: `DNS-Connect-2.1.0-source.zip`.
-- SDK bundle: `Download Zip.zip`; в Project ранее также были отдельные platform-35/build-tools-35 ZIP.
-- Windows reference: `HB_AI_Xbox_DNS.exe`.
-- Новый чат создаётся внутри того же ChatGPT Project «DNS». Не просить пользователя повторно загружать эти файлы — найти их через Project Files.
+- Package ID: `ru.krenas.dnsanalytics`
+- Название: DNS Connect
+- Последний опубликованный релиз: 2.1.0 / versionCode 22.
+- Текущий локально собранный и QA-проверенный кандидат: 2.4.0 / versionCode 25.
+- Project Files уже есть в текущем Project DNS: `2.1.0.zip`, `Download Zip.zip`, `HB_AI_Xbox_DNS.exe`. Не просить пользователя загружать их повторно.
+- Сохранять текущую идентичность интерфейса и логотип с тремя серверами; русская локализация, плавные переходы, отсутствие мелкого/налезающего текста, рабочие экраны и быстрые неблокирующие проверки — приоритеты пользователя.
 
-## Постоянные ссылки
+## 2.4.0 — текущий кандидат
 
-- [Репозиторий](https://github.com/Krenas/DNS-Connect)
-- [Релизы](https://github.com/Krenas/DNS-Connect/releases)
-- [Текущий latest.json](https://raw.githubusercontent.com/Krenas/DNS-Connect/main/latest.json)
-- [NEXT-CHAT.md — точная инструкция для нового чата](https://github.com/Krenas/DNS-Connect/blob/main/NEXT-CHAT.md)
-- [CHECKPOINT.md](https://github.com/Krenas/DNS-Connect/blob/main/CHECKPOINT.md)
-- [Патч 2.3.0](https://github.com/Krenas/DNS-Connect/tree/main/bootstrap/patch-2.3.0)
-- [Скрипт восстановления/сборки](https://github.com/Krenas/DNS-Connect/blob/main/bootstrap/rebuild-dns-connect-from-project-files.sh)
-- [Настройки GitHub Actions secrets](https://github.com/Krenas/DNS-Connect/settings/secrets/actions)
-- [Workflow сборки и публикации](https://github.com/Krenas/DNS-Connect/actions/workflows/build-from-archive.yml)
-- [Workflow проверки подписывающих secrets](https://github.com/Krenas/DNS-Connect/actions/workflows/check-release-secrets.yml)
+- APK: 1,198,136 bytes; SHA-256 `d8e0e07de730161015cdfa6d9d985ed83619969bb526390c72c8bf85e12b4822`.
+- Source ZIP: 995,791 bytes; SHA-256 `2ac314c55f5d553cdb62141d9e41ad109bcdca688b659710ef5ed005e361afd1`.
+- Release pack: 1,952,221 bytes; SHA-256 `a2b4e5561e35212ce3a36a8cbac252b11a2a3e216f0143358060a2237f6a430f`.
+- QA: 266 PASS / 0 FAIL (108 JVM self-tests, 17 DNS catalogue tests, 141 UI/resource/navigation/theme/updater checks); 24 icon glyph types audit PASS.
+- Package/version/versionCode checked; APK Signature Scheme v2/v3 PASS; zipalign PASS.
+- Source ZIP: 96 entries, integrity and safety PASS; no unsafe paths, symlinks, duplicate entries, keystore/passwords, APK/idsig or patch debris.
+- Independent clean source build: all 26 APK ZIP entry contents, including DEX, manifest and resources, matched the candidate byte-for-byte.
+- Full QA: [qa/DNS-Connect-2.4.0-QA.md](qa/DNS-Connect-2.4.0-QA.md).
+- Build files must be re-verified by hash before next use; never invent sandbox paths in later chats.
 
-## Постоянный патч 2.3.0
+## Обновления внутри приложения
 
-Публичный каталог `bootstrap/patch-2.3.0/` содержит `manifest.json`, README и 13 частей `000.b64`–`012.b64`.
+Settings → Updates has a single action **«Проверить и обновить»**. It fetches `latest.json`, compares version/versionCode, downloads the release APK, verifies GitHub URL/redirect host, byte size, SHA-256, package ID, versionName, increasing versionCode and signer certificate, then passes the verified APK to Android Package Installer.
 
-- Base64 payload: 38,132 bytes; SHA-256 `9a77468bebbe2b5b5e5f412a125f9dec160c5f9e85e2dbd4971388c7a93233ba`.
-- Gzip payload: 28,598 bytes; SHA-256 `c08066e4be234e3405baa0dc0a563b3e5dce07036a81194846169807033c4f47`.
-- Unified diff: 119,074 bytes; SHA-256 `0d2e4baaa30f1d336f32a6f92f293536f3b12498681f641d4870ff9c16a756d1`.
-- Все 13 частей ранее и повторно проверялись Actions по длине и SHA-256: 13/13 PASS.
-- В текущем чате база 2.1.0 была восстановлена, patch dry-run с `--fuzz=0` и применение прошли; идентичность результирующего исходного проекта: 2.3.0 / code 24 / package `ru.krenas.dnsanalytics`.
-- Для восстановления использовать Project File `2.1.0.zip` + patch из GitHub; не начинать заново с исходников 1.8.0.
+- User confirms the system installation prompt. Android may ask once to allow app installs from DNS Connect. No silent install bypass.
+- Optional daily auto-check is notification-only; it does not install or download silently.
+- After 2.4.0 is installed and its release is published, later updates can be initiated in-app by the one button; only Android's confirmation remains.
+- The updater must not advertise a candidate that is absent from a public verified Release.
 
-## Зафиксированные изменения 2.3.0
+## Подпись и совместимость
 
-- First run выбирает все включённые DNS, не только первые три.
-- Убраны произвольные лимиты количества DNS при комплексной проверке и сравнении; параллельность ограничена пулом задач, результаты поступают по мере завершения.
-- Независимый выбор DNS-направлений/категорий и категорий сервисов.
-- Разделение экранов настроек и меню.
-- 20 цветов акцента, видимая заливка выбранной категории и расширенное применение темы.
-- Исправлена нижняя системная панель в тёмной теме.
-- Обновление проверяет URL, версию, package, SHA-256 и сертификат APK до передачи Android Installer. Установка всё равно требует системного подтверждения Android.
-
-## Подпись и блокировка публикации
-
-Сохранённый signing identity хранится только в приватном репозитории `Krenas/DNS-Analytics`, каталог `signing/`. Сертификат SHA-256:
+Keep the private DNS Connect 2.2.x JKS. It matches the 2.4.0 APK signer exactly:
 `4dc48085b7ea161b57e6266611c5d6a28514df6f2ddfc26df14f3ac972debf90`.
 
-**В публичном workflow сейчас нужны ровно два secrets:**
+Public 2.1.0 uses another signer:
+`7767de2ba22670531c53ca6c76ea74e82c4d140f0907727644b2cd0864840c2b`.
+Its old private key was not found. No genuine Android signing-rotation lineage can be made without that old key. Therefore:
+- 2.1.0 → 2.4.0 requires one-time uninstall/reinstall and can erase app-local data; advise backup first.
+- 2.2.x/2.3.x/2.4.0 using retained signer are compatible for in-place updates.
+- Do not generate a new key or rotate signer in future versions.
+- Never expose JKS, password or Base64 signing material in public repo or ZIP.
 
-1. `ANDROID_KEYSTORE_BASE64`
-2. `ANDROID_KEYSTORE_PASSWORD`
+## Первая публикация 2.4.0 — один раз
 
-Alias зафиксирован как `dnsconnect`; пароль ключа использует тот же пароль, что и JKS. Не использовать прежние инструкции о четырёх secrets: они устарели. Не публиковать JKS, пароль, Base64 ключа или их содержимое в репозитории, логах, handoff или исходном ZIP.
+Public `latest.json` remains at 2.1.0. Release `v2.4.0` does not exist yet. Do not change latest.json until real Release assets exist and their SHA-256/size match.
 
-Последняя проверка secrets: workflow завершился штатно, но сообщил, что оба значения отсутствуют. GitHub connector в этой среде не предоставляет действия для создания/изменения repository Actions secrets. Поэтому не заявлять, что подпись облачной сборки уже настроена. Остающийся способ настройки — вручную добавить два значения в GitHub Settings → Secrets and variables → Actions.
+Active workflow: [publish-release-pack.yml](.github/workflows/publish-release-pack.yml).
 
-## Сборка и QA
+Upload folder: [incoming/drop](incoming/drop/README.md)
 
-**Локальный кандидат 2.3.0 собран и проверен.**
+One-time upload page:
+https://github.com/Krenas/DNS-Connect/upload/main/incoming/drop
 
-Последняя локальная сборка выполнена из Project source 2.1.0 + основного патча 2.3.0 + supplemental branding patch + packaging-fix patch, с Android SDK platform/build-tools 35 и сохранённым signing key 2.2.x.
+The owner downloads the release-pack ZIP from the current conversation artifact link, uploads exactly one file named `DNS-Connect-2.4.0-release-pack.zip` to that folder and commits it to main.
 
-- APK: `DNS-Connect-2.3.0-release.apk`, 1,202,232 bytes; SHA-256 `6bc23aeaf3dd45f0541c1f49b74425415d204bb433272a3348a1fced37d83eb9`.
-- Source ZIP: `DNS-Connect-2.3.0-source.zip`, 994,948 bytes; SHA-256 `0476dbeb7d4e322007ad47c4d489ac52e730bfdb709be95f0564f336066b04ea`.
-- Release pack: `DNS-Connect-2.3.0-release-pack.zip`, 1,961,178 bytes; SHA-256 `52b6fb2a28676fffbd28c6c74f0e2f05107d5cb275d72a64f09ee7c2a62e6ad9`.
-- QA: 108 self-tests PASS, 17 catalogue PASS, 141 UI/resource/navigation/theme/updater audit PASS; итого **266 PASS / 0 FAIL**.
-- `tests/verify-icons.py`: PASS (24 glyph types).
-- APK: package `ru.krenas.dnsanalytics`, version 2.3.0 / code 24; apksigner v2/v3 PASS, zipalign PASS; preserved signer SHA-256 `4dc48085b7ea161b57e6266611c5d6a28514df6f2ddfc26df14f3ac972debf90`.
-- Source ZIP: 96 entries; unzip/integrity PASS; no signing material, unsafe paths, symlinks, APK/idsig, duplicate entries or patch debris.
-- Found and fixed release packaging defect: `zip -r` updates but does not remove old entries. Packaging now recreates source/release ZIPs and excludes `.idsig/.orig/.rej`; fix is saved as supplemental patch in public bootstrap.
-- The current release pack includes APK, source ZIP, SHA-256 list, QA report, latest.json, release.json and build log.
+The workflow then autonomously:
+1. Finds exactly one release pack and checks ZIP integrity.
+2. Extracts exactly one APK, source ZIP and QA report.
+3. Derives version, package, versionCode, APK/source size and SHA-256 from the actual files; sidecar JSON manifest is not required.
+4. Verifies APK package/version/versionCode, fixed signer, v2/v3 signatures and zipalign.
+5. Validates source ZIP paths/symlinks/duplicates/secrets and checks updater entry point.
+6. Imports the verified Gradle source tree into main.
+7. Creates/updates draft GitHub Release and uploads APK/source/QA/checksums.
+8. Reads GitHub Release assets and verifies exact digest and byte size.
+9. Publishes Release and only then writes the new latest.json.
+10. Removes the temporary upload pack after success.
 
-**НЕ ПРОВЕРЕНО на физическом Android:** установка APK, доступ к реальным DNS/сервисам, виджеты, Quick Settings tile, скачивание APK обновления из приложения и системная установка. 266 автоматических PASS не означают, что физические проверки уже выполнены.
+This pre-signed publication route does not require repository signing secrets. The signing key remains private. User does not build locally or edit code.
 
-### Совместимость подписи — важное ограничение
+GitHub proof:
+- Publisher no-pack dry-run PASS: https://github.com/Krenas/DNS-Connect/actions/runs/42650867597
+- actionlint/ShellCheck and patch repo checks PASS: https://github.com/Krenas/DNS-Connect/actions/runs/42650678457
 
-- Публичный APK 2.1.0 подписан сертификатом SHA-256 `7767de2ba22670531c53ca6c76ea74e82c4d140f0907727644b2cd0864840c2b`.
-- Новый APK 2.3.0 подписан сохранённым сертификатом 2.2.x SHA-256 `4dc48085b7ea161b57e6266611c5d6a28514df6f2ddfc26df14f3ac972debf90`.
-- Эти сертификаты разные. APK 2.3.0 нельзя установить поверх оставшегося 2.1.0 как обычное обновление Android. Для устройств на 2.2.x с сохранённым сертификатом обновление совместимо. Для 2.1.0 потребуется отдельная миграция/переустановка; пользовательские данные могут быть удалены. Не обещать seamless update с 2.1.0.
+These are static/no-pack dry runs only. Actual upload, Release creation and latest.json publish have NOT run because the pack is not committed yet. Do not say update discovery is live until it has.
 
-### Публикация
+## Проверки на реальном устройстве
 
-Это проверенный локальный кандидат, но **GitHub Release v2.3.0 ещё НЕ опубликован**. Public `latest.json` по-прежнему остаётся 2.1.0; не обновлять его, пока APK/source/checksums не будут загружены в Release и SHA/размеры не будут сверены.
+No physical device is attached to this runtime; ADB device list empty, no KVM or Android Emulator/system image. Consequently the following remain NOT TESTED:
+- First install / in-place update / Android Package Installer.
+- Live Wi-Fi/mobile DNS probes and real ISP reachability.
+- Launcher widget add/resize/refresh/tap.
+- Quick Settings tile.
+- Daily WorkManager/notification behavior under Android power management.
+- In-app download from a public Release.
 
+Do not claim physical tests PASS. The user will perform them after initial install.
 
-## Иконка — итоговое состояние
+## Правила продолжения
 
-- Существующая эмблема с тремя серверами находится в `app/src/main/res/drawable-nodpi/ic_dns_connect_foreground.png`: три серверных блока, глобус и щит DNS.
-- Manifest `android:icon` и `android:roundIcon` направлены на regular/round adaptive launcher; все 4 adaptive XML (normal/API33+, regular/round) и верхний бренд-блок приложения используют этот же foreground.
-- Android 13+ themed/monochrome icon раньше отличался старым рисунком с двумя рядами. Теперь он заменён на три серверных блока.
-- Дополнительный патч `bootstrap/patch-2.3.0/branding-3server-monochrome.patch` включает также исправление теста UI, который проверял старый рисунок. Размер 3,710 bytes; SHA-256 `db74d35e8090a16dea74213703423d2073e2370da7dd3dbae79144c6c42e8362`.
-- Rebuild script применяет его после основной diff и проверяет SHA, launcher links, toolbar brand icon и monochrome three-server geometry.
-- Bottom-tab «Сервисы» в публичном APK 2.1.0 использует функциональный glyph `apps` (четыре квадрата); generic `server` glyph отображает два горизонтальных блока. Это не app logo. DNS Quick Settings tile и виджеты сохраняют функциональные glyphs, не подменяются логотипом.
-- Последняя проверка patch CI: run `54` (`42626033799`) SUCCESS; новая упаковочная patch-проверка также прошла (run `53`, `42626026896`).
-
-
-## Фактический статус GitHub на 2026-11-09
-
-- Public main всё ещё содержит workflows, docs и patch bootstrap; Android Gradle source ещё не импортирован в корень.
-- Public releases пока только дублируют версию 2.1.0. v2.3.0 не опубликован.
-- Public `latest.json` остаётся 2.1.0 / code 22 / SHA-256 `c05e9cb8af2b4193ba2c77fb29bcb889e7588af4e61825af34c92af900c09755`.
-- Build-from-archive workflow подготовлен, но cloud signing secrets отсутствуют.
-- Required secrets: ровно `ANDROID_KEYSTORE_BASE64` и `ANDROID_KEYSTORE_PASSWORD`. Connector не предоставляет безопасного API для их создания. Не публиковать signing files в public repo.
-- Запущен release candidate locally; APK/source/release-pack hashes приведены выше и в `bootstrap/patch-2.3.0/manifest.json`.
-- После проверки workflow новых метаданных обновить manifest/handoff; затем ещё требуется загрузка assets и публикация release (через поддерживаемый GitHub upload path).
-
-
-
-## Критические правила продолжения
-
-1. Сначала прочитать `NEXT-CHAT.md`, `HANDOFF.md`, `CHECKPOINT.md`.
-2. Сверить Project Files и реальный GitHub main/workflow/release status; не полагаться на старые локальные пути предыдущего runtime.
-3. Не просить пользователя повторно загрузить уже имеющиеся Project Files.
-4. Не публиковать подпись/пароль и не менять signing certificate без осознанной причины.
-5. Не заявлять об опубликованном 2.3.0, рабочем автообновлении или физическом тесте, пока это не подтверждено реальными данными.
-6. После каждого существенного действия обновлять этот handoff и checkpoint.
+1. Re-read this file, NEXT-CHAT.md, CHECKPOINT.md and PROJECT_STATE.json.
+2. Check live repository/releases/latest.json/Actions.
+3. Keep app Russian-first and continue the existing project; do not redesign it.
+4. Preserve 2.2.x signer.
+5. Do not change latest.json before verified Release assets.
+6. Keep PASS/FAIL/NOT TESTED evidence separate.
+7. Avoid asking user to perform code or local terminal work. The only expected user actions are the one-time pack upload/commit and installation confirmation; routine later updates happen through «Проверить и обновить».
