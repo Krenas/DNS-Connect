@@ -14,3 +14,5 @@ No signing secret is needed: the APK is already signed with the preserved privat
 A failed workflow leaves the upload ZIP in place so it can be inspected or retried. A successful workflow removes it. Only one release pack may be present at a time.
 
 A deployment dry-run was checked in GitHub Actions. No Release or latest.json is changed until a valid pack is committed.
+
+The dry-run also checks the retained signer using a pipefail-safe extraction command.
