@@ -33,8 +33,8 @@
 - Private retained JKS certificate SHA-256 exactly matches APK signer: `4dc48085b7ea161b57e6266611c5d6a28514df6f2ddfc26df14f3ac972debf90`.
 - Independent source rebuild was compared against the supplied APK: all 26 ZIP entries, including DEX, manifest and resources, match byte-for-byte.
 - Source ZIP: 96 entries, valid archive; no duplicate entries, unsafe paths, symlinks, private signing files, passwords, APK/idsig files or patch debris.
-- Local full release-pack validator: PASS (manifest, file sizes, both SHA-256 values, APK package/version, signer, v2/v3, zipalign, source archive safety and updater source assertions).
-- Public release workflow lint: PASS. GitHub Actions no-pack dry-run: PASS (it deliberately skips publishing when there is no uploaded pack). Full publish steps have not been run because the pack has not yet been committed to the upload folder.
+- Candidate APK/source identity, size and SHA-256 values recorded. The public publisher derives release metadata directly from the embedded APK and source ZIP; it does not depend on a sidecar JSON manifest.
+- Public release workflow actionlint/ShellCheck: PASS. GitHub Actions no-pack dry-run: PASS; validation skips publishing when no pack exists. Full asset verification/Release creation/latest.json update have NOT been run because the pack has not yet been committed to the upload folder.
 
 ## Signing decision
 - Keep the existing private DNS Connect 2.2.x signing key for 2.4.0 and all later versions.
