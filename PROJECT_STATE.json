@@ -125,14 +125,14 @@
       "remove temporary pack"
     ],
     "lastNoPackDryRun": {
-      "runId": 42650867597,
+      "runId": 42652482963,
       "conclusion": "success",
-      "url": "https://github.com/Krenas/DNS-Connect/actions/runs/42650867597"
+      "url": "https://github.com/Krenas/DNS-Connect/actions/runs/42652482963"
     },
     "lastActionlintRun": {
-      "runId": 42650678457,
+      "runId": 42652466884,
       "conclusion": "success",
-      "url": "https://github.com/Krenas/DNS-Connect/actions/runs/42650678457"
+      "url": "https://github.com/Krenas/DNS-Connect/actions/runs/42652466884"
     },
     "status": "READY_FOR_ONE_TIME_RELEASE_PACK_UPLOAD_NOT_YET_PUBLISHED",
     "endToEndTested": false,
@@ -143,7 +143,7 @@
     "dryRun": "PASS_NO_PACK"
   },
   "releasePackPath": "incoming/drop/DNS-Connect-2.4.0-release-pack.zip",
-  "lastGitHubMainSha": "c399e012f031a7a8ef7a1c08af12cf2efef80ee2",
+  "lastGitHubMainSha": "568fb87ed133422426844305f8a4c5cffee4c188",
   "optionalCloudBuildSecrets": [
     "ANDROID_KEYSTORE_BASE64",
     "ANDROID_KEYSTORE_PASSWORD"
