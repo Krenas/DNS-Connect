@@ -1,24 +1,12 @@
-# One-file release publishing
+# One-file fallback: publish a pre-signed release pack
 
-This folder is the only manual step for publishing a prepared DNS Connect release. The release-pack publisher workflow is active and validates both the asset and the source archive before publishing. Its Android SDK checks use the runner's installed SDK tools.
+Use this only when an already-built APK and source ZIP are ready. It publishes the package but does not compile the APK on GitHub. The main cloud-build route is documented in [../README.md](../README.md) and [incoming/README.md](../README.md).
 
 1. Open https://github.com/Krenas/DNS-Connect/upload/main/incoming/drop
 2. Upload exactly one file named `DNS-Connect-VERSION-release-pack.zip`.
-3. Commit the uploaded file to branch `main`.
-4. GitHub Actions automatically validates the embedded APK, source ZIP, SHA-256 values, package/version, APK v2/v3 signature, zipalign, source archive safety and retained signing certificate.
-5. If every check passes, Actions imports the source into `main`, creates/publishes the GitHub Release, verifies the uploaded Release asset digests and only then updates `latest.json`.
-6. After success, Actions removes the temporary ZIP from this folder.
+3. Commit the file to `main`.
+4. `publish-release-pack.yml` validates the APK package/version/versionCode, new 2.4.0 signer, v2/v3 signature, zipalign, source ZIP safety and the one-button updater source.
+5. It imports the verified source, creates the GitHub Release, uploads APK/source/QA/checksums, verifies the published asset digests and sizes, and only then advances `latest.json`.
+6. After success, the temporary pack is deleted.
 
-No signing secret is needed: the APK is already signed with the preserved private key. The key and password are never uploaded. Do not upload a raw APK here; upload the complete release pack.
-
-A failed workflow leaves the upload ZIP in place so it can be inspected or retried. A successful workflow removes it. Only one release pack may be present at a time.
-
-A deployment dry-run was checked in GitHub Actions. No Release or latest.json is changed until a valid pack is committed.
-
-The dry-run also checks the retained signer using a pipefail-safe extraction command.
-
-The source validation drains complete ZIP entries to avoid short-circuiting the stream under strict shell mode.
-
-The validator derives package version, versionCode, APK size, checksum and signer from the contents of the release pack itself; no sidecar JSON manifest is required.
-
-Source ZIP validation checks the core Gradle app, manifest and updater manager; it does not assume an optional test-script filename.
+This fallback does not need `DNS_CONNECT_SIGNING_BUNDLE` because the APK is already signed. Do not upload a raw APK or signing material. Only one release pack may be present at a time.
